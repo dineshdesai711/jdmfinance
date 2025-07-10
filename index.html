@@ -3,101 +3,46 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JDM Credit & Finance - Login</title>
+
+  <!-- ✅ Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
 
   <!-- ✅ SEO Meta Tags -->
-  <title>JDM Credit & Finance - Login</title>
   <meta name="description" content="Login to JDM Credit and Finance to access high interest FD and RD plans. Trusted financial services across India." />
   <meta name="keywords" content="FD Plans, RD Plans, Fixed Deposit India, High Interest FD, JDM Finance Login, Trusted Finance Company" />
   <meta name="author" content="JDM Credit and Finance Pvt Ltd" />
 
-  <!-- ✅ Open Graph / Social Share Preview -->
+  <!-- ✅ Open Graph / Social Share -->
   <meta property="og:title" content="JDM Credit & Finance - Login" />
   <meta property="og:description" content="Login to manage your Fixed Deposit (FD) and Recurring Deposit (RD) accounts with JDM Credit and Finance." />
   <meta property="og:image" content="https://i.ibb.co/5TpqK1H/banklogo.png" />
   <meta property="og:url" content="https://dineshdesai711.github.io/jdmfinance/" />
   <meta name="twitter:card" content="summary_large_image" />
 
-  <!-- 🔗 Firebase Scripts -->
+  <!-- ✅ Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
-
-  <!-- ✅ Inline CSS -->
-  <style>
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background: url('https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1950&q=80') no-repeat center center fixed;
-      background-size: cover;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-
-    .container {
-      background: rgba(255, 255, 255, 0.95);
-      padding: 30px;
-      border-radius: 15px;
-      max-width: 420px;
-      width: 90%;
-      box-shadow: 0 0 20px rgba(0,0,0,0.2);
-      text-align: center;
-    }
-
-    .logo {
-      height: 60px;
-      margin-bottom: 10px;
-    }
-
-    h2 {
-      margin-bottom: 20px;
-      color: #0a3d62;
-    }
-
-    input {
-      width: 100%;
-      padding: 12px;
-      margin-top: 15px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 15px;
-    }
-
-    button {
-      width: 100%;
-      padding: 12px;
-      background-color: #0a3d62;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      margin-top: 20px;
-      font-size: 16px;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background-color: #082d49;
-    }
-
-    .toggle {
-      margin-top: 15px;
-      color: #3498db;
-      font-size: 14px;
-      cursor: pointer;
-    }
-  </style>
 </head>
-<body>
-  <div class="container">
-    <img src="https://i.ibb.co/5TpqK1H/banklogo.png" class="logo" alt="JDM Logo">
-    <h2>JDM CREDIT & FINANCE</h2>
+<body class="bg-gradient-to-br from-blue-100 to-blue-300 min-h-screen flex items-center justify-center">
 
-    <input type="email" id="email" placeholder="Enter your Email">
-    <input type="password" id="password" placeholder="Enter Password">
+  <div class="bg-white shadow-2xl rounded-2xl p-8 w-full max-w-md mx-4 backdrop-blur-md bg-opacity-90">
+    <div class="flex flex-col items-center">
+      <img src="https://i.ibb.co/5TpqK1H/banklogo.png" alt="JDM Logo" class="h-14 mb-4" />
+      <h2 class="text-2xl font-bold text-blue-900 mb-6">JDM CREDIT & FINANCE</h2>
+    </div>
 
-    <button onclick="handleAuth()" id="authButton">Login</button>
-    <div class="toggle" onclick="toggleMode()">Don't have an account? Sign Up</div>
+    <input type="email" id="email" placeholder="Enter your Email" class="w-full px-4 py-3 mb-4 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400" />
+    <input type="password" id="password" placeholder="Enter Password" class="w-full px-4 py-3 mb-6 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400" />
+
+    <button onclick="handleAuth()" id="authButton" class="w-full bg-blue-800 hover:bg-blue-900 text-white font-semibold py-3 rounded-md transition-all duration-300">
+      Login
+    </button>
+
+    <div class="text-sm text-blue-600 mt-4 text-center cursor-pointer hover:underline" onclick="toggleMode()">
+      Don't have an account? Sign Up
+    </div>
   </div>
 
   <script>
@@ -120,7 +65,7 @@
     function toggleMode() {
       isLogin = !isLogin;
       document.getElementById("authButton").innerText = isLogin ? "Login" : "Sign Up";
-      document.querySelector(".toggle").innerText = isLogin
+      document.querySelector(".text-sm").innerText = isLogin
         ? "Don't have an account? Sign Up"
         : "Already have an account? Login";
     }

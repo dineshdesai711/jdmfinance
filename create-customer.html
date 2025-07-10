@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Create Customer</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f2f5;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      background: white;
+      max-width: 500px;
+      margin: auto;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      border-radius: 10px;
+    }
+    h2 {
+      text-align: center;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Create Customer Profile</h2>
+    <input type="text" id="name" placeholder="Customer Name" />
+    <input type="text" id="aadhaar" placeholder="Aadhaar Number" />
+    <input type="text" id="pan" placeholder="PAN Number" />
+    <input type="text" id="mobile" placeholder="Mobile Number" />
+    <button onclick="saveCustomer()">Save Customer</button>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDLvrY6y3SyvLrX-yk8UcdO8RmnC89XNG4",
+      authDomain: "jdms-207ba.firebaseapp.com",
+      projectId: "jdms-207ba",
+      storageBucket: "jdms-207ba.appspot.com",
+      messagingSenderId: "449814553435",
+      appId: "1:449814553435:web:008c7695473689f425307e"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+
+    function generateCustomerId() {
+      const prefix = "JDM-PRI";
+      const random = Math.floor(1000 + Math.random() * 9000);
+      const now = Date.now().toString().slice(-4);
+      return `${prefix}-${random}-${now}`;
+    }
+
+    function saveCustomer() {
+      const name = document.getElementById("name").value.trim();
+      const aadhaar = document.getElementById("aadhaar").value.trim();
+      const pan = document.getElementById("pan").value.trim();
+      const mobile = document.getElementById("mobile").value.trim();
+      const uid = localStorage.getItem("customerUid");
+
+      if (!name || !aadhaar || !mobile) {
+        alert("Please fill all required fields.");
+        return;
+      }
+
+      const customerId = generateCustomerId();
+
+      db.collection("customers").doc(uid).set({
+        name,
+        aadhaar,
+        pan,
+        mobile,
+        customerId
+      })
+      .then(() => {
+        alert("✅ Customer created successfully");
+        localStorage.setItem("customerId", customerId);
+        localStorage.setItem("customerName", name);
+        window.location.href = "customer-dashboard.html";
+      })
+      .catch((error) => {
+        alert("❌ Error saving customer: " + error.message);
+      });
+    }
+  </script>
+</body>
+</html>

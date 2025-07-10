@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>FD Form - JDM Credit & Finance</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background-color: #0a3d62;
+      color: white;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo-section {
+      display: flex;
+      align-items: center;
+    }
+
+    .logo-section img {
+      height: 40px;
+      margin-right: 10px;
+    }
+
+    form {
+      max-width: 600px;
+      margin: 40px auto;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    label {
+      display: block;
+      margin-top: 15px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      margin-top: 20px;
+      background-color: #0a3d62;
+      color: white;
+      padding: 10px;
+      border: none;
+      width: 100%;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo-section">
+    <img src="https://i.ibb.co/5TpqK1H/banklogo.png" alt="Logo">
+    <h2>JDM CREDIT & FINANCE</h2>
+  </div>
+</header>
+
+<form id="fdForm">
+  <h3 style="text-align:center;">Fixed Deposit (FD) Form</h3>
+  <label>Customer ID</label>
+  <input type="text" id="customerId" readonly>
+
+  <label>Name</label>
+  <input type="text" id="name" readonly>
+
+  <label>Aadhaar</label>
+  <input type="text" id="aadhaar" readonly>
+
+  <label>PAN</label>
+  <input type="text" id="pan" readonly>
+
+  <label>Start Date</label>
+  <input type="date" id="startDate">
+
+  <label>Duration (in years)</label>
+  <select id="duration">
+    <option value="1">1</option>
+    <option value="2">2</option>
+    <option value="3">3</option>
+  </select>
+
+  <label>Principal Amount (₹)</label>
+  <input type="number" id="principal">
+
+  <label>Interest Rate (%)</label>
+  <input type="number" id="interestRate" step="0.01" placeholder="e.g. 10.50">
+
+  <label>Maturity Date</label>
+  <input type="text" id="maturityDate" readonly>
+
+  <label>Maturity Amount (₹)</label>
+  <input type="text" id="maturityAmount" readonly>
+
+  <button type="submit">Submit FD</button>
+</form>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyDLvrY6y3SyvLrX-yk8UcdO8RmnC89XNG4",
+    authDomain: "jdms-207ba.firebaseapp.com",
+    projectId: "jdms-207ba",
+    storageBucket: "jdms-207ba.appspot.com",
+    messagingSenderId: "449814553435",
+    appId: "1:449814553435:web:008c7695473689f425307e"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  const customerId = localStorage.getItem("customerId");
+
+  db.collection("customers").where("customerId", "==", customerId).get().then(snapshot => {
+    if (!snapshot.empty) {
+      const data = snapshot.docs[0].data();
+      document.getElementById("customerId").value = data.customerId;
+      document.getElementById("name").value = data.name;
+      document.getElementById("aadhaar").value = data.aadhaar;
+      document.getElementById("pan").value = data.pan;
+    }
+  });
+
+  document.getElementById("startDate").addEventListener("change", updateMaturity);
+  document.getElementById("duration").addEventListener("change", updateMaturity);
+  document.getElementById("principal").addEventListener("input", updateMaturity);
+  document.getElementById("interestRate").addEventListener("input", updateMaturity);
+
+  function updateMaturity() {
+    const start = document.getElementById("startDate").value;
+    const years = parseInt(document.getElementById("duration").value);
+    const principal = parseFloat(document.getElementById("principal").value);
+    const rate = parseFloat(document.getElementById("interestRate").value);
+
+    if (!start || isNaN(years) || isNaN(principal) || isNaN(rate)) return;
+
+    const startDate = new Date(start);
+    const maturityDate = new Date(startDate.setFullYear(startDate.getFullYear() + years));
+    const formattedDate = maturityDate.toISOString().split("T")[0];
+    document.getElementById("maturityDate").value = formattedDate;
+
+    const maturityAmount = principal * Math.pow((1 + rate / 100), years);
+    document.getElementById("maturityAmount").value = maturityAmount.toFixed(2);
+  }
+
+  document.getElementById("fdForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const data = {
+      customerId: document.getElementById("customerId").value,
+      name: document.getElementById("name").value,
+      aadhaar: document.getElementById("aadhaar").value,
+      pan: document.getElementById("pan").value,
+      startDate: document.getElementById("startDate").value,
+      duration: document.getElementById("duration").value,
+      principal: document.getElementById("principal").value,
+      interestRate: document.getElementById("interestRate").value,
+      maturityDate: document.getElementById("maturityDate").value,
+      maturityAmount: document.getElementById("maturityAmount").value,
+      status: "pending",
+      timestamp: new Date()
+    };
+
+    await db.collection("fd").add(data);
+    alert("FD submitted successfully!");
+    window.location.href = "customer-dashboard.html";
+  });
+</script>
+
+</body>
+</html>

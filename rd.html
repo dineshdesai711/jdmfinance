@@ -1,0 +1,207 @@
+<!-- ✅ WORKING - Open RD Form with Auto Fetch Fix -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Open RD - JDM Credit & Finance</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background-color: #0a3d62;
+      color: white;
+      padding: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .logo-section {
+      display: flex;
+      align-items: center;
+    }
+    .logo-section img {
+      height: 40px;
+      margin-right: 10px;
+    }
+    form {
+      background: white;
+      padding: 20px;
+      margin: 30px auto;
+      width: 90%;
+      max-width: 600px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background-color: #0a3d62;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #074178;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo-section">
+    <img src="https://i.ibb.co/5TpqK1H/banklogo.png" alt="Logo">
+    <h2>JDM CREDIT & FINANCE - Open RD</h2>
+  </div>
+</header>
+
+<form onsubmit="submitRD(event)">
+  <label>Customer ID</label>
+  <input type="text" id="customerId" readonly />
+
+  <label>Customer Name</label>
+  <input type="text" id="name" readonly />
+
+  <label>Aadhaar Number</label>
+  <input type="text" id="aadhaar" readonly />
+
+  <label>PAN Number</label>
+  <input type="text" id="pan" readonly />
+
+  <label>Mobile Number</label>
+  <input type="text" id="mobile" readonly />
+
+  <label>Start Date</label>
+  <input type="date" id="startDate" required />
+
+  <label>Duration (in Years)</label>
+  <input type="number" id="duration" required min="1" />
+
+  <label>Principal Amount (₹)</label>
+  <input type="number" id="principal" required />
+
+  <label>Interest Rate (%)</label>
+  <input type="number" id="interestRate" required step="0.01" />
+
+  <label>Type</label>
+  <select id="rdType">
+    <option value="Monthly">Monthly RD</option>
+    <option value="Daily">Daily Pigmy</option>
+  </select>
+
+  <label>Maturity Amount (₹)</label>
+  <input type="text" id="maturityAmount" readonly />
+
+  <label>Maturity Date</label>
+  <input type="date" id="maturityDate" readonly />
+
+  <button type="submit">Submit RD</button>
+</form>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyDLvrY6y3SyvLrX-yk8UcdO8RmnC89XNG4",
+    authDomain: "jdms-207ba.firebaseapp.com",
+    projectId: "jdms-207ba",
+    storageBucket: "jdms-207ba.appspot.com",
+    messagingSenderId: "449814553435",
+    appId: "1:449814553435:web:008c7695473689f425307e"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+  const auth = firebase.auth();
+
+  const customerId = localStorage.getItem("customerId");
+  document.getElementById("customerId").value = customerId;
+
+  // ✅ Secure fetch: check if user logged in and match data
+  auth.onAuthStateChanged(user => {
+    if (!user) {
+      localStorage.clear();
+      window.location.href = "login.html";
+    }
+  });
+
+  // ✅ Fix fetch logic (match customerId field, not doc ID)
+  db.collection("customers").where("customerId", "==", customerId).get().then(snapshot => {
+    if (!snapshot.empty) {
+      const data = snapshot.docs[0].data();
+      document.getElementById("name").value = data.name || "";
+      document.getElementById("aadhaar").value = data.aadhaar || "";
+      document.getElementById("pan").value = data.pan || "";
+      document.getElementById("mobile").value = data.mobile || "";
+    }
+  });
+
+  const startDateInput = document.getElementById("startDate");
+  const durationInput = document.getElementById("duration");
+  const principalInput = document.getElementById("principal");
+  const rateInput = document.getElementById("interestRate");
+  const maturityDateInput = document.getElementById("maturityDate");
+  const maturityAmountInput = document.getElementById("maturityAmount");
+
+  function calculateMaturity() {
+    const startDate = new Date(startDateInput.value);
+    const years = parseInt(durationInput.value);
+    const principal = parseFloat(principalInput.value);
+    const rate = parseFloat(rateInput.value);
+
+    if (!isNaN(startDate) && !isNaN(principal) && !isNaN(rate) && years > 0) {
+      const maturityDate = new Date(startDate);
+      maturityDate.setFullYear(maturityDate.getFullYear() + years);
+      maturityDateInput.value = maturityDate.toISOString().split('T')[0];
+
+      const maturityAmount = principal * Math.pow(1 + rate / 100, years);
+      maturityAmountInput.value = maturityAmount.toFixed(2);
+    }
+  }
+
+  startDateInput.addEventListener("change", calculateMaturity);
+  durationInput.addEventListener("input", calculateMaturity);
+  principalInput.addEventListener("input", calculateMaturity);
+  rateInput.addEventListener("input", calculateMaturity);
+
+  function submitRD(event) {
+    event.preventDefault();
+
+    const rd = {
+      customerId,
+      name: document.getElementById("name").value,
+      aadhaar: document.getElementById("aadhaar").value,
+      pan: document.getElementById("pan").value,
+      mobile: document.getElementById("mobile").value,
+      startDate: startDateInput.value,
+      duration: durationInput.value,
+      principal: principalInput.value,
+      interestRate: rateInput.value,
+      maturityDate: maturityDateInput.value,
+      maturityAmount: maturityAmountInput.value,
+      type: document.getElementById("rdType").value,
+      status: "Pending",
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    db.collection("rd").add(rd).then(() => {
+      alert("RD submitted successfully!");
+      window.location.href = "customer-dashboard.html";
+    }).catch(error => {
+      alert("Error saving RD: " + error.message);
+    });
+  }
+</script>
+
+</body>
+</html>

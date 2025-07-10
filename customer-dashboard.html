@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Customer Dashboard - JDM Credit & Finance</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f6fa;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background-color: #0a3d62;
+      color: white;
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .header-left {
+      display: flex;
+      align-items: center;
+    }
+    .header-left img {
+      height: 40px;
+      margin-right: 10px;
+    }
+    .info {
+      font-size: 14px;
+    }
+    .section {
+      padding: 20px;
+    }
+    .card {
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .card h3 {
+      margin-top: 0;
+    }
+    .flex {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .card-small {
+      flex: 1;
+      min-width: 200px;
+      text-align: center;
+    }
+    .button-row {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-top: 15px;
+    }
+    button {
+      padding: 10px 18px;
+      background: #0a3d62;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .pending {
+      background-color: #f39c12;
+      padding: 6px 10px;
+      border-radius: 5px;
+      color: white;
+      display: inline-block;
+      font-size: 13px;
+    }
+    .approved {
+      background-color: #27ae60;
+      padding: 6px 10px;
+      border-radius: 5px;
+      color: white;
+      display: inline-block;
+      font-size: 13px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    th, td {
+      padding: 8px;
+      text-align: center;
+      border-bottom: 1px solid #ddd;
+    }
+    th {
+      background-color: #0a3d62;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <img src="https://i.ibb.co/5TpqK1H/banklogo.png" alt="Logo">
+    <h2>JDM CREDIT & FINANCE</h2>
+  </div>
+  <div class="info">
+    <strong id="customerName">Customer Name</strong> | ID: <span id="customerId"></span>
+  </div>
+</header>
+
+<div class="section">
+
+  <div class="card flex">
+    <div class="card-small">
+      <h3>Total FDs</h3>
+      <p id="fdCount">0</p>
+    </div>
+    <div class="card-small">
+      <h3>Total RDs</h3>
+      <p id="rdCount">0</p>
+    </div>
+    <div class="card-small">
+      <h3>Total Deposit (₹)</h3>
+      <p id="totalDeposit">0</p>
+    </div>
+    <div class="card-small">
+      <h3>Total Profit (₹)</h3>
+      <p id="totalProfit">0</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Investment Overview</h3>
+    <canvas id="investmentChart" height="100"></canvas>
+  </div>
+
+  <div class="button-row">
+    <button onclick="location.href='fd.html'">Create FD</button>
+    <button onclick="location.href='rd.html'">Create RD</button>
+    <button id="pdfBtn" disabled>Print PDF (Approved Only)</button>
+    <button onclick="logout()">Logout</button>
+  </div>
+
+  <div class="card">
+    <h3>Your FD Entries</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Principal</th>
+          <th>Maturity</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="fdTable"></tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>Your RD Entries</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Principal</th>
+          <th>Maturity</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="rdTable"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyDLvrY6y3SyvLrX-yk8UcdO8RmnC89XNG4",
+    authDomain: "jdms-207ba.firebaseapp.com",
+    projectId: "jdms-207ba",
+    storageBucket: "jdms-207ba.appspot.com",
+    messagingSenderId: "449814553435",
+    appId: "1:449814553435:web:008c7695473689f425307e"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  const customerId = localStorage.getItem("customerId");
+  const customerName = localStorage.getItem("customerName");
+  document.getElementById("customerName").innerText = customerName;
+  document.getElementById("customerId").innerText = customerId;
+
+  if (!customerId) {
+    window.location.href = "create-customer.html";
+  }
+
+  let totalFD = 0, totalRD = 0, totalDeposit = 0, totalProfit = 0;
+  let hasApproved = false;
+
+  function renderChart(fdAmt, rdAmt, profit) {
+    new Chart(document.getElementById("investmentChart"), {
+      type: "bar",
+      data: {
+        labels: ["FD", "RD", "Profit"],
+        datasets: [{
+          label: '₹ Amount',
+          backgroundColor: ["#3498db", "#9b59b6", "#2ecc71"],
+          data: [fdAmt, rdAmt, profit]
+        }]
+      }
+    });
+  }
+
+  function loadData() {
+    db.collection("fd").where("customerId", "==", customerId).onSnapshot(snapshot => {
+      document.getElementById("fdTable").innerHTML = "";
+      snapshot.forEach(doc => {
+        const d = doc.data();
+        const status = d.status || "pending";
+        const principal = parseFloat(d.principal) || 0;
+        const maturity = parseFloat(d.maturityAmount) || 0;
+
+        totalFD++;
+        totalDeposit += principal;
+        if (status === "approved") {
+          hasApproved = true;
+          totalProfit += maturity - principal;
+        }
+
+        document.getElementById("fdTable").innerHTML += `
+          <tr>
+            <td>₹${principal.toLocaleString()}</td>
+            <td>₹${maturity.toLocaleString()}</td>
+            <td><span class="${status === 'approved' ? 'approved' : 'pending'}">${status}</span></td>
+          </tr>
+        `;
+      });
+      updateUI();
+    });
+
+    db.collection("rd").where("customerId", "==", customerId).onSnapshot(snapshot => {
+      document.getElementById("rdTable").innerHTML = "";
+      snapshot.forEach(doc => {
+        const d = doc.data();
+        const status = d.status || "pending";
+        const principal = parseFloat(d.principal) || 0;
+        const maturity = parseFloat(d.maturityAmount) || 0;
+
+        totalRD++;
+        totalDeposit += principal;
+        if (status === "approved") {
+          hasApproved = true;
+          totalProfit += maturity - principal;
+        }
+
+        document.getElementById("rdTable").innerHTML += `
+          <tr>
+            <td>₹${principal.toLocaleString()}</td>
+            <td>₹${maturity.toLocaleString()}</td>
+            <td><span class="${status === 'approved' ? 'approved' : 'pending'}">${status}</span></td>
+          </tr>
+        `;
+      });
+      updateUI();
+    });
+  }
+
+  function updateUI() {
+    document.getElementById("fdCount").innerText = totalFD;
+    document.getElementById("rdCount").innerText = totalRD;
+    document.getElementById("totalDeposit").innerText = totalDeposit.toLocaleString();
+    document.getElementById("totalProfit").innerText = totalProfit.toLocaleString();
+    renderChart(totalDeposit, 0, totalProfit);
+
+    document.getElementById("pdfBtn").disabled = !hasApproved;
+  }
+
+  function logout() {
+    firebase.auth().signOut().then(() => {
+      localStorage.clear();
+      window.location.href = "login.html";
+    });
+  }
+
+  auth.onAuthStateChanged(user => {
+    if (!user) {
+      window.location.href = "login.html";
+    } else {
+      loadData();
+    }
+  });
+</script>
+
+</body>
+</html>

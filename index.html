@@ -4,27 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>JDM Credit & Finance - Login</title>
+
+  <!-- ✅ Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- SEO Meta -->
-  <meta name="description" content="Login to JDM Credit and Finance to access high interest FD and RD plans. Trusted financial services across India." />
-  <meta name="keywords" content="FD Plans, RD Plans, Fixed Deposit India, High Interest FD, JDM Finance Login" />
-  <meta name="author" content="JDM Credit and Finance Pvt Ltd" />
-  <meta property="og:title" content="JDM Credit & Finance - Login" />
-  <meta property="og:description" content="Login to manage your Fixed Deposit (FD) and Recurring Deposit (RD) accounts with JDM Credit and Finance." />
-  <meta property="og:image" content="https://i.ibb.co/5TpqK1H/banklogo.png" />
-  <meta property="og:url" content="https://dineshdesai711.github.io/jdmfinance/" />
-  <meta name="twitter:card" content="summary_large_image" />
-
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
-
-  <!-- Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600&display=swap" rel="stylesheet">
 
-  <!-- Custom CSS -->
   <style>
     body {
       background: url('https://images.unsplash.com/photo-1605902711622-cfb43c4437d3') no-repeat center center fixed;
@@ -33,13 +17,13 @@
     }
     .glass-box {
       background: rgba(255, 255, 255, 0.15);
+      border-radius: 20px;
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
       border: 1px solid rgba(255, 255, 255, 0.3);
-      border-radius: 20px;
     }
     .fade-in {
-      animation: fadeIn 1.2s ease-in-out;
+      animation: fadeIn 1.5s ease-in-out;
     }
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(-20px); }
@@ -49,35 +33,45 @@
 </head>
 <body class="min-h-screen flex items-center justify-center">
 
-  <div class="glass-box p-8 w-full max-w-md mx-4 shadow-2xl fade-in">
-    <div class="flex flex-col items-center">
-      <img src="https://i.ibb.co/5TpqK1H/banklogo.png" alt="JDM Logo" class="h-14 mb-3" />
-      <h2 class="text-2xl font-bold text-white mb-6 drop-shadow-md">JDM CREDIT & FINANCE</h2>
+  <!-- ✅ Firebase Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
+
+  <div class="text-center absolute top-8 fade-in">
+    <img src="https://i.ibb.co/5TpqK1H/banklogo.png" alt="Logo" class="mx-auto h-16 mb-2">
+    <h1 class="text-white text-3xl font-bold tracking-wider drop-shadow-md">JDM CREDIT & FINANCE</h1>
+  </div>
+
+  <div class="glass-box max-w-md w-full p-8 fade-in mt-36">
+    <input id="email" type="email" placeholder="Enter your Email" class="w-full px-4 py-3 mb-4 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400" />
+    
+    <div class="relative">
+      <input id="password" type="password" placeholder="Enter Password" class="w-full px-4 py-3 mb-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400" />
+      <span onclick="togglePassword()" class="absolute top-3 right-4 text-blue-600 cursor-pointer text-sm">Show</span>
     </div>
 
-    <input type="email" id="email" placeholder="Enter your Email" class="w-full px-4 py-3 mb-4 border rounded-md" />
-    <div class="relative mb-4">
-      <input type="password" id="password" placeholder="Enter Password" class="w-full px-4 py-3 border rounded-md" />
-      <span onclick="togglePassword()" class="absolute top-3 right-4 text-blue-800 text-sm cursor-pointer">Show</span>
-    </div>
+    <button onclick="handleAuth()" id="authButton" class="w-full bg-blue-800 hover:bg-blue-900 text-white font-semibold py-3 rounded-md transition-all duration-300">
+      Login
+    </button>
 
-    <button onclick="handleAuth()" id="authButton" class="w-full bg-blue-800 hover:bg-blue-900 text-white font-semibold py-3 rounded-md">Login</button>
-
-    <div class="text-sm text-blue-200 mt-4 text-center cursor-pointer hover:underline" onclick="toggleMode()">
+    <div class="text-sm text-blue-600 mt-4 text-center cursor-pointer hover:underline" onclick="toggleMode()">
       Don't have an account? Sign Up
     </div>
 
-    <div class="text-center mt-3">
-      <button onclick="forgotPassword()" class="text-sm text-red-300 hover:underline">Forgot Password?</button>
+    <div class="text-center mt-4">
+      <button onclick="forgotPassword()" class="text-sm text-red-500 hover:underline">Forgot Password?</button>
     </div>
 
     <div class="mt-6 text-center">
       <p class="text-white text-sm mb-2">or continue with</p>
-      <button onclick="signInWithGoogle()" class="bg-white border px-4 py-2 rounded-md shadow flex items-center justify-center gap-2 w-full">
+      <button onclick="signInWithGoogle()" class="bg-white border px-4 py-2 rounded-md shadow hover:shadow-lg transition flex items-center justify-center gap-2 w-full">
         <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" class="h-5" />
         <span class="text-sm text-gray-700">Sign in with Google</span>
       </button>
     </div>
+
+    <div class="text-center text-xs text-white mt-4">Need help? <a href="mailto:support@jdmfinance.in" class="underline">Contact Admin</a></div>
   </div>
 
   <script>
@@ -124,10 +118,11 @@
       if (isLogin) {
         auth.signInWithEmailAndPassword(email, password)
           .then(userCredential => {
-            const emailLower = email.toLowerCase();
             const user = userCredential.user;
+            const emailLower = email.toLowerCase();
             localStorage.setItem("customerEmail", emailLower);
             localStorage.setItem("customerUid", user.uid);
+
             if (adminEmails.includes(emailLower)) {
               window.location.href = "admin-dashboard.html";
             } else {

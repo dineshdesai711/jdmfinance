@@ -2,172 +2,79 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>JDM Credit & Finance - Login</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <!-- ✅ Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600&display=swap" rel="stylesheet">
+
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Inter', sans-serif;
-    }
-
     body {
-      background: url('https://images.unsplash.com/photo-1518779578993-ec3579fee39f?auto=format&fit=crop&w=1920&q=80') no-repeat center center fixed;
+      background: url('https://images.unsplash.com/photo-1605902711622-cfb43c4437d3') no-repeat center center fixed;
       background-size: cover;
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
+      font-family: 'Montserrat', sans-serif;
     }
-
-    .login-container {
-      background: rgba(255, 255, 255, 0.07);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      border-radius: 18px;
-      padding: 35px 30px;
-      width: 100%;
-      max-width: 400px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-      color: #fff;
+    .glass-box {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 20px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
     }
-
-    .logo {
-      text-align: center;
-      margin-bottom: 12px;
+    .fade-in {
+      animation: fadeIn 1.5s ease-in-out;
     }
-
-    .logo img {
-      width: 70px;
-      border-radius: 50%;
-    }
-
-    .company-name {
-      text-align: center;
-      font-size: 22px;
-      font-weight: bold;
-      background: linear-gradient(to right, #ff00cc, #3333ff);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      margin-bottom: 20px;
-    }
-
-    input {
-      width: 100%;
-      padding: 12px;
-      margin-top: 10px;
-      border-radius: 8px;
-      border: none;
-      outline: none;
-      background: #f0f0f0;
-    }
-
-    .show-password {
-      text-align: right;
-      font-size: 13px;
-      margin-top: 4px;
-      margin-bottom: 10px;
-      color: #ccc;
-      cursor: pointer;
-    }
-
-    .btn {
-      width: 100%;
-      background: #0d47a1;
-      color: white;
-      padding: 12px;
-      border: none;
-      border-radius: 8px;
-      font-weight: bold;
-      cursor: pointer;
-      margin-top: 10px;
-    }
-
-    .text-links {
-      text-align: center;
-      font-size: 14px;
-      margin-top: 12px;
-    }
-
-    .text-links a {
-      color: #bbdefb;
-      text-decoration: underline;
-    }
-
-    .google-btn {
-      margin-top: 20px;
-      width: 100%;
-      background: white;
-      color: #333;
-      padding: 10px;
-      border: none;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      font-weight: 600;
-      cursor: pointer;
-    }
-
-    .google-btn img {
-      height: 18px;
-    }
-
-    .help {
-      margin-top: 18px;
-      font-size: 13px;
-      text-align: center;
-      color: #fff;
-    }
-
-    .help a {
-      color: #80deea;
-      text-decoration: underline;
-    }
-
-    @media screen and (max-width: 480px) {
-      .company-name {
-        font-size: 18px;
-      }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
-<body>
-
-  <div class="login-container">
-    <div class="logo">
-      <img src="https://api.dicebear.com/8.x/shapes/svg?seed=JDM" alt="JDM Logo" />
-    </div>
-    <div class="company-name">JDM CREDIT & FINANCE</div>
-
-    <input type="email" id="email" placeholder="Email" required />
-    <input type="password" id="password" placeholder="Password" required />
-    <div class="show-password" onclick="togglePassword()">Show</div>
-
-    <button class="btn" onclick="login()">Login</button>
-
-    <div class="text-links">
-      <p>Don't have an account? <a href="signup.html">Sign Up</a></p>
-      <p><a href="forgot.html" style="color:#ffccbc;">Forgot Password?</a></p>
-    </div>
-
-    <button class="google-btn" onclick="googleLogin()">
-      <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" />
-      Sign in with Google
-    </button>
-
-    <div class="help">
-      Having trouble? <a href="#">Contact Admin</a>
-    </div>
-  </div>
+<body class="min-h-screen flex items-center justify-center">
 
   <!-- Firebase Scripts -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
+
+  <div class="text-center absolute top-8 fade-in">
+    <img src="https://i.ibb.co/5TpqK1H/banklogo.png" alt="Logo" class="mx-auto h-16 mb-2">
+    <h1 class="text-white text-3xl font-bold tracking-wider drop-shadow-md">JDM CREDIT & FINANCE</h1>
+  </div>
+
+  <div class="glass-box max-w-md w-full p-8 fade-in mt-36">
+    <input id="email" type="email" placeholder="Enter your Email" class="w-full px-4 py-3 mb-4 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400" />
+    <div class="relative">
+      <input id="password" type="password" placeholder="Enter Password" class="w-full px-4 py-3 mb-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400" />
+      <span onclick="togglePassword()" class="absolute top-3 right-4 text-blue-600 cursor-pointer text-sm">Show</span>
+    </div>
+
+    <button onclick="handleAuth()" id="authButton" class="w-full bg-blue-800 hover:bg-blue-900 text-white font-semibold py-3 rounded-md transition-all duration-300">
+      Login
+    </button>
+
+    <div class="text-sm text-blue-600 mt-4 text-center cursor-pointer hover:underline" onclick="toggleMode()">
+      Don't have an account? Sign Up
+    </div>
+
+    <div class="text-center mt-4">
+      <button onclick="forgotPassword()" class="text-sm text-red-500 hover:underline">Forgot Password?</button>
+    </div>
+
+    <div class="mt-6 text-center">
+      <p class="text-white text-sm mb-2">or continue with</p>
+      <button onclick="signInWithGoogle()" class="bg-white border px-4 py-2 rounded-md shadow hover:shadow-lg transition flex items-center justify-center gap-2 w-full">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" class="h-5" />
+        <span class="text-sm text-gray-700">Sign in with Google</span>
+      </button>
+    </div>
+
+    <div class="text-center text-xs text-white mt-4">Need help? <a href="mailto:support@jdmfinance.in" class="underline">Contact Admin</a></div>
+  </div>
+
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyDLvrY6y3SyvLrX-yk8UcdO8RmnC89XNG4",
@@ -177,48 +84,108 @@
       messagingSenderId: "449814553435",
       appId: "1:449814553435:web:008c7695473689f425307e"
     };
+
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    const adminEmails = ["ashutoshsharma@gmail.com", "dinesh@gmail.com", "desaidinesh055@gmail.com"];
+
+    let isLogin = true;
+
+    function toggleMode() {
+      isLogin = !isLogin;
+      document.getElementById("authButton").innerText = isLogin ? "Login" : "Sign Up";
+      document.querySelector(".text-sm").innerText = isLogin
+        ? "Don't have an account? Sign Up"
+        : "Already have an account? Login";
+    }
 
     function togglePassword() {
       const pwd = document.getElementById("password");
-      pwd.type = pwd.type === "password" ? "text" : "password";
+      if (pwd.type === "password") {
+        pwd.type = "text";
+        event.target.innerText = "Hide";
+      } else {
+        pwd.type = "password";
+        event.target.innerText = "Show";
+      }
     }
 
-    function login() {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
+    function handleAuth() {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+      if (!email || !password) return alert("❌ Please fill all fields");
 
-      auth.signInWithEmailAndPassword(email, password)
-        .then((userCredential) => {
-          const email = userCredential.user.email;
-          const adminEmails = ["ashutoshsharma@gmail.com", "dinesh@gmail.com", "desaidinesh055@gmail.com"];
-          if (adminEmails.includes(email)) {
-            window.location.href = "admin-dashboard.html";
-          } else {
-            window.location.href = "dashboard.html";
-          }
-        })
-        .catch((error) => {
-          alert("Login failed: " + error.message);
-        });
+      if (isLogin) {
+        auth.signInWithEmailAndPassword(email, password)
+          .then(userCredential => {
+            const user = userCredential.user;
+            localStorage.setItem("customerEmail", email);
+            localStorage.setItem("customerUid", user.uid);
+
+            if (adminEmails.includes(email)) {
+              window.location.href = "admin-dashboard.html";
+            } else {
+              db.collection("customers").doc(user.uid).get().then(doc => {
+                if (doc.exists) {
+                  const data = doc.data();
+                  localStorage.setItem("customerId", data.customerId);
+                  localStorage.setItem("customerName", data.name);
+                  window.location.href = "customer-dashboard.html";
+                } else {
+                  window.location.href = "create-customer.html";
+                }
+              });
+            }
+          })
+          .catch(err => alert("❌ Login failed: " + err.message));
+      } else {
+        auth.createUserWithEmailAndPassword(email, password)
+          .then(userCredential => {
+            const user = userCredential.user;
+            localStorage.setItem("customerUid", user.uid);
+            localStorage.setItem("customerEmail", email);
+            window.location.href = "create-customer.html";
+          })
+          .catch(err => alert("❌ Signup failed: " + err.message));
+      }
     }
 
-    function googleLogin() {
+    function forgotPassword() {
+      const email = document.getElementById("email").value.trim();
+      if (!email) return alert("❌ Enter your email to reset password");
+
+      auth.sendPasswordResetEmail(email)
+        .then(() => alert("✅ Password reset email sent! Check your inbox"))
+        .catch(error => alert("❌ " + error.message));
+    }
+
+    function signInWithGoogle() {
       const provider = new firebase.auth.GoogleAuthProvider();
       auth.signInWithPopup(provider)
-        .then((result) => {
-          const email = result.user.email;
-          const adminEmails = ["ashutoshsharma@gmail.com", "dinesh@gmail.com", "desaidinesh055@gmail.com"];
+        .then(result => {
+          const user = result.user;
+          const email = user.email;
+          localStorage.setItem("customerEmail", email);
+          localStorage.setItem("customerUid", user.uid);
+
           if (adminEmails.includes(email)) {
             window.location.href = "admin-dashboard.html";
           } else {
-            window.location.href = "dashboard.html";
+            db.collection("customers").doc(user.uid).get().then(doc => {
+              if (doc.exists) {
+                const data = doc.data();
+                localStorage.setItem("customerId", data.customerId);
+                localStorage.setItem("customerName", data.name);
+                window.location.href = "customer-dashboard.html";
+              } else {
+                window.location.href = "create-customer.html";
+              }
+            });
           }
         })
-        .catch((error) => {
-          alert("Google Login failed: " + error.message);
-        });
+        .catch(err => alert("❌ Google Login Failed: " + err.message));
     }
   </script>
 </body>

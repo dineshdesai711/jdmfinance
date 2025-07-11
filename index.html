@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Login - JDM Credit & Finance</title>
+  <title>JDM Credit & Finance - Login</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     * {
       margin: 0;
       padding: 0;
-      font-family: 'Inter', sans-serif;
       box-sizing: border-box;
+      font-family: 'Inter', sans-serif;
     }
 
     body {
@@ -20,46 +20,56 @@
       display: flex;
       justify-content: center;
       align-items: center;
+      padding: 20px;
     }
 
     .login-container {
-      background: rgba(255, 255, 255, 0.08);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border-radius: 16px;
-      padding: 30px;
-      width: 90%;
+      background: rgba(255, 255, 255, 0.07);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-radius: 18px;
+      padding: 35px 30px;
+      width: 100%;
       max-width: 400px;
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
       color: #fff;
-      text-align: center;
     }
 
     .logo {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin-bottom: 10px;
+      text-align: center;
+      margin-bottom: 12px;
     }
 
     .logo img {
-      height: 60px;
-      margin-right: 10px;
+      width: 70px;
+      border-radius: 50%;
     }
 
     .company-name {
+      text-align: center;
       font-size: 22px;
       font-weight: bold;
-      color: #4fc3f7; /* Bright blue */
+      color: #e1bee7; /* Purple shade */
+      margin-bottom: 20px;
     }
 
     input {
       width: 100%;
       padding: 12px;
-      margin: 10px 0;
+      margin-top: 10px;
       border-radius: 8px;
       border: none;
       outline: none;
+      background: #f0f0f0;
+    }
+
+    .show-password {
+      text-align: right;
+      font-size: 13px;
+      margin-top: 4px;
+      margin-bottom: 10px;
+      color: #ccc;
+      cursor: pointer;
     }
 
     .btn {
@@ -74,20 +84,22 @@
       margin-top: 10px;
     }
 
-    .show-password {
-      float: right;
-      margin-top: -30px;
-      margin-right: 10px;
-      color: #ddd;
-      cursor: pointer;
+    .text-links {
+      text-align: center;
       font-size: 14px;
+      margin-top: 12px;
+    }
+
+    .text-links a {
+      color: #bbdefb;
+      text-decoration: underline;
     }
 
     .google-btn {
       margin-top: 20px;
       width: 100%;
       background: white;
-      color: #444;
+      color: #333;
       padding: 10px;
       border: none;
       border-radius: 8px;
@@ -96,6 +108,7 @@
       justify-content: center;
       gap: 10px;
       font-weight: 600;
+      cursor: pointer;
     }
 
     .google-btn img {
@@ -103,16 +116,18 @@
     }
 
     .help {
-      margin-top: 15px;
-      font-size: 14px;
+      margin-top: 18px;
+      font-size: 13px;
+      text-align: center;
+      color: #fff;
     }
 
     .help a {
-      color: #81d4fa;
+      color: #80deea;
       text-decoration: underline;
     }
 
-    @media screen and (max-width: 500px) {
+    @media screen and (max-width: 480px) {
       .company-name {
         font-size: 18px;
       }
@@ -125,27 +140,30 @@
     <div class="logo">
       <img src="https://api.dicebear.com/8.x/shapes/svg?seed=JDM" alt="JDM Logo" />
     </div>
-    <div class="company-name">JDM Credit & Finance</div>
+    <div class="company-name">JDM CREDIT & FINANCE</div>
 
     <input type="email" id="email" placeholder="Email" required />
     <input type="password" id="password" placeholder="Password" required />
     <div class="show-password" onclick="togglePassword()">Show</div>
+
     <button class="btn" onclick="login()">Login</button>
 
-    <p style="margin-top:10px;">Don't have an account? <a href="signup.html" style="color: #fff; text-decoration: underline;">Sign Up</a></p>
-    <p><a href="forgot.html" style="color: #ff8a65;">Forgot Password?</a></p>
-
-    <div class="google-btn" onclick="googleLogin()">
-      <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="G Logo" />
-      Sign in with Google
+    <div class="text-links">
+      <p>Don't have an account? <a href="signup.html">Sign Up</a></p>
+      <p><a href="forgot.html" style="color:#ffccbc;">Forgot Password?</a></p>
     </div>
 
+    <button class="google-btn" onclick="googleLogin()">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" />
+      Sign in with Google
+    </button>
+
     <div class="help">
-      Need help? <a href="#">Contact Admin</a>
+      Having trouble? <a href="#">Contact Admin</a>
     </div>
   </div>
 
-  <!-- Firebase SDKs -->
+  <!-- Firebase Scripts -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script>
@@ -201,6 +219,5 @@
         });
     }
   </script>
-
 </body>
 </html>

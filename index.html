@@ -151,15 +151,18 @@
         if (adminEmails.includes(email)) {
           window.location.href = "admin-dashboard.html";
         } else {
-          const doc = await db.collection("customers").doc(uid).get();
-          if (doc.exists) {
-            const data = doc.data();
-            localStorage.setItem("customerId", data.customerId);
-            localStorage.setItem("customerName", data.name);
-            window.location.href = "customer-dashboard.html";
-          } else {
-            window.location.href = "create-customer.html";
-          }
+          db.collection("customers").doc(uid).get().then(doc => {
+            if (doc.exists) {
+              const data = doc.data();
+              localStorage.setItem("customerId", data.customerId);
+              localStorage.setItem("customerName", data.name);
+              window.location.href = "customer-dashboard.html";
+            } else {
+              window.location.href = "create-customer.html";
+            }
+          }).catch(err => {
+            alert("❌ Error fetching customer data: " + err.message);
+          });
         }
       } catch (err) {
         alert("❌ Google Login Failed: " + err.message);

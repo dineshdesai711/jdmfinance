@@ -1,26 +1,19 @@
+<!-- ✅ Full index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>JDM Credit & Finance - Login</title>
-
-  <!-- ✅ Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- ✅ SEO Meta Tags -->
   <meta name="description" content="Login to JDM Credit and Finance to access high interest FD and RD plans. Trusted financial services across India." />
-  <meta name="keywords" content="FD Plans, RD Plans, Fixed Deposit India, High Interest FD, JDM Finance Login, Trusted Finance Company" />
+  <meta name="keywords" content="FD Plans, RD Plans, Fixed Deposit India, High Interest FD, JDM Finance Login" />
   <meta name="author" content="JDM Credit and Finance Pvt Ltd" />
-
-  <!-- ✅ Open Graph / Social Share -->
   <meta property="og:title" content="JDM Credit & Finance - Login" />
   <meta property="og:description" content="Login to manage your Fixed Deposit (FD) and Recurring Deposit (RD) accounts with JDM Credit and Finance." />
   <meta property="og:image" content="https://i.ibb.co/5TpqK1H/banklogo.png" />
   <meta property="og:url" content="https://dineshdesai711.github.io/jdmfinance/" />
   <meta name="twitter:card" content="summary_large_image" />
-
-  <!-- ✅ Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
@@ -33,12 +26,10 @@
       <h2 class="text-2xl font-bold text-blue-900 mb-6">JDM CREDIT & FINANCE</h2>
     </div>
 
-    <input type="email" id="email" placeholder="Enter your Email" class="w-full px-4 py-3 mb-4 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400" />
-    <input type="password" id="password" placeholder="Enter Password" class="w-full px-4 py-3 mb-4 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400" />
+    <input type="email" id="email" placeholder="Enter your Email" class="w-full px-4 py-3 mb-4 border rounded-md" />
+    <input type="password" id="password" placeholder="Enter Password" class="w-full px-4 py-3 mb-4 border rounded-md" />
 
-    <button onclick="handleAuth()" id="authButton" class="w-full bg-blue-800 hover:bg-blue-900 text-white font-semibold py-3 rounded-md transition-all duration-300">
-      Login
-    </button>
+    <button onclick="handleAuth()" id="authButton" class="w-full bg-blue-800 hover:bg-blue-900 text-white font-semibold py-3 rounded-md">Login</button>
 
     <div class="text-sm text-blue-600 mt-4 text-center cursor-pointer hover:underline" onclick="toggleMode()">
       Don't have an account? Sign Up
@@ -50,7 +41,7 @@
 
     <div class="mt-6 text-center">
       <p class="text-gray-600 text-sm mb-2">or continue with</p>
-      <button onclick="signInWithGoogle()" class="bg-white border px-4 py-2 rounded-md shadow hover:shadow-lg transition flex items-center justify-center gap-2 w-full">
+      <button onclick="signInWithGoogle()" class="bg-white border px-4 py-2 rounded-md shadow flex items-center justify-center gap-2 w-full">
         <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" class="h-5" />
         <span class="text-sm text-gray-700">Sign in with Google</span>
       </button>
@@ -96,11 +87,12 @@
       if (isLogin) {
         auth.signInWithEmailAndPassword(email, password)
           .then(userCredential => {
+            const emailLower = email.toLowerCase();
             const user = userCredential.user;
-            localStorage.setItem("customerEmail", email);
+            localStorage.setItem("customerEmail", emailLower);
             localStorage.setItem("customerUid", user.uid);
 
-            if (adminEmails.includes(email)) {
+            if (adminEmails.includes(emailLower)) {
               window.location.href = "admin-dashboard.html";
             } else {
               db.collection("customers").doc(user.uid).get().then(doc => {
@@ -131,42 +123,37 @@
     function forgotPassword() {
       const email = document.getElementById("email").value.trim();
       if (!email) return alert("❌ Enter your email to reset password");
-
       auth.sendPasswordResetEmail(email)
         .then(() => alert("✅ Password reset email sent! Check your inbox"))
         .catch(error => alert("❌ " + error.message));
     }
 
-    async function signInWithGoogle() {
+    function signInWithGoogle() {
       const provider = new firebase.auth.GoogleAuthProvider();
-      try {
-        const result = await auth.signInWithPopup(provider);
-        const user = result.user;
-        const email = user.email;
-        const uid = user.uid;
+      auth.signInWithPopup(provider)
+        .then(result => {
+          const user = result.user;
+          const email = user.email.toLowerCase();
 
-        localStorage.setItem("customerEmail", email);
-        localStorage.setItem("customerUid", uid);
+          localStorage.setItem("customerEmail", email);
+          localStorage.setItem("customerUid", user.uid);
 
-        if (adminEmails.includes(email)) {
-          window.location.href = "admin-dashboard.html";
-        } else {
-          db.collection("customers").doc(uid).get().then(doc => {
-            if (doc.exists) {
-              const data = doc.data();
-              localStorage.setItem("customerId", data.customerId);
-              localStorage.setItem("customerName", data.name);
-              window.location.href = "customer-dashboard.html";
-            } else {
-              window.location.href = "create-customer.html";
-            }
-          }).catch(err => {
-            alert("❌ Error fetching customer data: " + err.message);
-          });
-        }
-      } catch (err) {
-        alert("❌ Google Login Failed: " + err.message);
-      }
+          if (adminEmails.includes(email)) {
+            window.location.href = "admin-dashboard.html";
+          } else {
+            db.collection("customers").doc(user.uid).get().then(doc => {
+              if (doc.exists) {
+                const data = doc.data();
+                localStorage.setItem("customerId", data.customerId);
+                localStorage.setItem("customerName", data.name);
+                window.location.href = "customer-dashboard.html";
+              } else {
+                window.location.href = "create-customer.html";
+              }
+            });
+          }
+        })
+        .catch(err => alert("❌ Google Login Failed: " + err.message));
     }
   </script>
 </body>

@@ -2,95 +2,77 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>JDM Credit & Finance - Login</title>
+
+  <!-- ✅ Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          animation: {
-            'fade-in': 'fadeIn 2s ease-in-out',
-            'slide-in': 'slideIn 1.5s ease-out'
-          },
-          keyframes: {
-            fadeIn: {
-              '0%': { opacity: 0 },
-              '100%': { opacity: 1 }
-            },
-            slideIn: {
-              '0%': { transform: 'translateY(-20px)', opacity: 0 },
-              '100%': { transform: 'translateY(0)', opacity: 1 }
-            }
-          }
-        }
-      }
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      background: url('https://images.unsplash.com/photo-1588776814546-ec7aa79b2cf0') no-repeat center center fixed;
+      background-size: cover;
+      font-family: 'Montserrat', sans-serif;
     }
-  </script>
+    .glass-box {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 20px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    .fade-in {
+      animation: fadeIn 1.5s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
 
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
-
-  <style>
-    body {
-      background-image: url("https://images.unsplash.com/photo-1563013544-824ae1b704d3");
-      background-size: cover;
-      background-position: center;
-    }
-    .glass {
-      background: rgba(255, 255, 255, 0.2);
-      backdrop-filter: blur(10px);
-      border-radius: 20px;
-      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-    }
-  </style>
 </head>
 <body class="min-h-screen flex items-center justify-center">
 
-  <div class="glass p-8 w-full max-w-md mx-4 animate-fade-in">
-    <div class="flex flex-col items-center animate-slide-in">
-      <img src="https://i.ibb.co/5TpqK1H/banklogo.png" alt="JDM Logo" class="h-14 mb-2 animate-fade-in"/>
-      <h2 class="text-2xl font-bold text-white mb-6 tracking-wide">JDM CREDIT & FINANCE</h2>
+  <div class="text-center absolute top-8 fade-in">
+    <img src="https://i.ibb.co/5TpqK1H/banklogo.png" alt="Logo" class="mx-auto h-16 mb-2">
+    <h1 class="text-white text-3xl font-bold tracking-wider drop-shadow-md">JDM CREDIT & FINANCE</h1>
+  </div>
+
+  <div class="glass-box max-w-md w-full p-8 fade-in mt-36">
+    <input id="email" type="email" placeholder="Enter your Email" class="w-full px-4 py-3 mb-4 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400" />
+    <div class="relative">
+      <input id="password" type="password" placeholder="Enter Password" class="w-full px-4 py-3 mb-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400" />
+      <span onclick="togglePassword()" class="absolute top-3 right-4 text-blue-600 cursor-pointer text-sm">Show</span>
     </div>
 
-    <input type="email" id="email" placeholder="Enter your Email"
-      class="w-full px-4 py-3 mb-4 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400" />
-
-    <div class="relative mb-4">
-      <input type="password" id="password" placeholder="Enter Password"
-        class="w-full px-4 py-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 pr-10" />
-      <button onclick="togglePassword()" class="absolute top-3 right-3 text-sm text-blue-800 hover:underline">
-        Show
-      </button>
-    </div>
-
-    <button onclick="handleAuth()" id="authButton"
-      class="w-full bg-blue-800 hover:bg-blue-900 text-white font-semibold py-3 rounded-md transition duration-300">
+    <button onclick="handleAuth()" id="authButton" class="w-full bg-blue-800 hover:bg-blue-900 text-white font-semibold py-3 rounded-md transition-all duration-300">
       Login
     </button>
 
-    <div class="text-sm text-white mt-4 text-center cursor-pointer hover:underline" onclick="toggleMode()">
+    <div class="text-sm text-blue-600 mt-4 text-center cursor-pointer hover:underline" onclick="toggleMode()">
       Don't have an account? Sign Up
     </div>
 
     <div class="text-center mt-4">
-      <button onclick="forgotPassword()" class="text-sm text-red-100 hover:underline">Forgot Password?</button>
+      <button onclick="forgotPassword()" class="text-sm text-red-500 hover:underline">Forgot Password?</button>
     </div>
 
     <div class="mt-6 text-center">
       <p class="text-white text-sm mb-2">or continue with</p>
-      <button onclick="signInWithGoogle()"
-        class="bg-white px-4 py-2 rounded-md shadow hover:shadow-lg transition flex items-center justify-center gap-2 w-full">
+      <button onclick="signInWithGoogle()" class="bg-white border px-4 py-2 rounded-md shadow hover:shadow-lg transition flex items-center justify-center gap-2 w-full">
         <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" class="h-5" />
         <span class="text-sm text-gray-700">Sign in with Google</span>
       </button>
     </div>
 
-    <div class="mt-6 text-center">
-      <a href="mailto:desaidinesh055@gmail.com" class="text-xs text-white underline">Need Help? Contact Admin</a>
-    </div>
+    <div class="text-center text-xs text-white mt-4">Need help? <a href="mailto:support@jdmfinance.in" class="underline">Contact Admin</a></div>
   </div>
 
   <script>
@@ -107,11 +89,7 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    const adminEmails = [
-      "ashutoshsharma@gmail.com",
-      "dinesh@gmail.com",
-      "desaidinesh055@gmail.com"
-    ];
+    const adminEmails = ["ashutoshsharma@gmail.com", "dinesh@gmail.com", "desaidinesh055@gmail.com"];
 
     let isLogin = true;
 
@@ -124,11 +102,13 @@
     }
 
     function togglePassword() {
-      const passwordInput = document.getElementById("password");
-      if (passwordInput.type === "password") {
-        passwordInput.type = "text";
+      const pwd = document.getElementById("password");
+      if (pwd.type === "password") {
+        pwd.type = "text";
+        event.target.innerText = "Hide";
       } else {
-        passwordInput.type = "password";
+        pwd.type = "password";
+        event.target.innerText = "Show";
       }
     }
 
@@ -143,7 +123,21 @@
             const user = userCredential.user;
             localStorage.setItem("customerEmail", email);
             localStorage.setItem("customerUid", user.uid);
-            redirectUser(email, user.uid);
+
+            if (adminEmails.includes(email)) {
+              window.location.href = "admin-dashboard.html";
+            } else {
+              db.collection("customers").doc(user.uid).get().then(doc => {
+                if (doc.exists) {
+                  const data = doc.data();
+                  localStorage.setItem("customerId", data.customerId);
+                  localStorage.setItem("customerName", data.name);
+                  window.location.href = "customer-dashboard.html";
+                } else {
+                  window.location.href = "create-customer.html";
+                }
+              });
+            }
           })
           .catch(err => alert("❌ Login failed: " + err.message));
       } else {
@@ -163,7 +157,7 @@
       if (!email) return alert("❌ Enter your email to reset password");
 
       auth.sendPasswordResetEmail(email)
-        .then(() => alert("✅ Password reset email sent!"))
+        .then(() => alert("✅ Password reset email sent! Check your inbox"))
         .catch(error => alert("❌ " + error.message));
     }
 
@@ -175,26 +169,23 @@
           const email = user.email;
           localStorage.setItem("customerEmail", email);
           localStorage.setItem("customerUid", user.uid);
-          redirectUser(email, user.uid);
+
+          if (adminEmails.includes(email)) {
+            window.location.href = "admin-dashboard.html";
+          } else {
+            db.collection("customers").doc(user.uid).get().then(doc => {
+              if (doc.exists) {
+                const data = doc.data();
+                localStorage.setItem("customerId", data.customerId);
+                localStorage.setItem("customerName", data.name);
+                window.location.href = "customer-dashboard.html";
+              } else {
+                window.location.href = "create-customer.html";
+              }
+            });
+          }
         })
         .catch(err => alert("❌ Google Login Failed: " + err.message));
-    }
-
-    function redirectUser(email, uid) {
-      if (adminEmails.includes(email)) {
-        window.location.href = "admin-dashboard.html";
-      } else {
-        db.collection("customers").doc(uid).get().then(doc => {
-          if (doc.exists) {
-            const data = doc.data();
-            localStorage.setItem("customerId", data.customerId);
-            localStorage.setItem("customerName", data.name);
-            window.location.href = "customer-dashboard.html";
-          } else {
-            window.location.href = "create-customer.html";
-          }
-        });
-      }
     }
   </script>
 </body>

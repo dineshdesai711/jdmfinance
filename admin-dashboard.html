@@ -212,26 +212,6 @@
       });
     }
 
-    // ✅ Google Login Safe Check and Load Dashboard
-    auth.onAuthStateChanged(user => {
-      if (user) {
-        const email = user.email;
-        if (!adminEmails.includes(email)) {
-          alert("❌ Unauthorized access!");
-          auth.signOut().then(() => {
-            window.location.href = "index.html";
-          });
-        } else {
-          loadStats();
-          loadTodayData();
-          loadPendingFDs();
-        }
-      } else {
-        alert("❌ Not logged in");
-        window.location.href = "index.html";
-      }
-    });
-
     function loadStats() {
       db.collection("fd").get().then(snapshot => {
         let totalFD = 0, totalFDPrincipal = 0, pending = 0;
@@ -348,6 +328,25 @@
         loadTodayData();
       });
     }
+
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        const email = user.email.toLowerCase();
+        if (!adminEmails.includes(email)) {
+          alert("❌ Unauthorized access!");
+          auth.signOut().then(() => {
+            window.location.href = "index.html";
+          });
+        } else {
+          loadStats();
+          loadTodayData();
+          loadPendingFDs();
+        }
+      } else {
+        alert("❌ Not logged in");
+        window.location.href = "index.html";
+      }
+    });
   </script>
 
 </body>

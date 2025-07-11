@@ -12,8 +12,6 @@
   <meta name="description" content="Login to JDM Credit and Finance to access high interest FD and RD plans. Trusted financial services across India." />
   <meta name="keywords" content="FD Plans, RD Plans, Fixed Deposit India, High Interest FD, JDM Finance Login, Trusted Finance Company" />
   <meta name="author" content="JDM Credit and Finance Pvt Ltd" />
-
-  <!-- ✅ Open Graph / Social Share -->
   <meta property="og:title" content="JDM Credit & Finance - Login" />
   <meta property="og:description" content="Login to manage your Fixed Deposit (FD) and Recurring Deposit (RD) accounts with JDM Credit and Finance." />
   <meta property="og:image" content="https://i.ibb.co/5TpqK1H/banklogo.png" />
@@ -74,7 +72,7 @@
     const adminEmails = [
       "ashutoshsharma@gmail.com",
       "dinesh@gmail.com",
-      "desaidinesh055@gmail.com" // ✅ your real Gmail
+      "desaidinesh055@gmail.com"
     ];
 
     let isLogin = true;
@@ -90,7 +88,6 @@
     function handleAuth() {
       const email = document.getElementById("email").value.trim();
       const password = document.getElementById("password").value.trim();
-
       if (!email || !password) return alert("❌ Please fill all fields");
 
       if (isLogin) {
@@ -99,29 +96,15 @@
             const user = userCredential.user;
             localStorage.setItem("customerEmail", email);
             localStorage.setItem("customerUid", user.uid);
-
-            if (adminEmails.includes(email)) {
-              window.location.href = "admin-dashboard.html";
-            } else {
-              db.collection("customers").doc(user.uid).get().then(doc => {
-                if (doc.exists) {
-                  const data = doc.data();
-                  localStorage.setItem("customerId", data.customerId);
-                  localStorage.setItem("customerName", data.name);
-                  window.location.href = "customer-dashboard.html";
-                } else {
-                  window.location.href = "create-customer.html";
-                }
-              });
-            }
+            redirectAfterLogin(email, user.uid);
           })
           .catch(err => alert("❌ Login failed: " + err.message));
       } else {
         auth.createUserWithEmailAndPassword(email, password)
           .then(userCredential => {
             const user = userCredential.user;
-            localStorage.setItem("customerUid", user.uid);
             localStorage.setItem("customerEmail", email);
+            localStorage.setItem("customerUid", user.uid);
             window.location.href = "create-customer.html";
           })
           .catch(err => alert("❌ Signup failed: " + err.message));
@@ -139,29 +122,34 @@
 
     function signInWithGoogle() {
       const provider = new firebase.auth.GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: "select_account" });
+
       auth.signInWithPopup(provider)
         .then(result => {
           const user = result.user;
           const email = user.email;
           localStorage.setItem("customerEmail", email);
           localStorage.setItem("customerUid", user.uid);
-
-          if (adminEmails.includes(email)) {
-            window.location.href = "admin-dashboard.html";
-          } else {
-            db.collection("customers").doc(user.uid).get().then(doc => {
-              if (doc.exists) {
-                const data = doc.data();
-                localStorage.setItem("customerId", data.customerId);
-                localStorage.setItem("customerName", data.name);
-                window.location.href = "customer-dashboard.html";
-              } else {
-                window.location.href = "create-customer.html";
-              }
-            });
-          }
+          redirectAfterLogin(email, user.uid);
         })
         .catch(err => alert("❌ Google Login Failed: " + err.message));
+    }
+
+    function redirectAfterLogin(email, uid) {
+      if (adminEmails.includes(email)) {
+        window.location.href = "admin-dashboard.html";
+      } else {
+        db.collection("customers").doc(uid).get().then(doc => {
+          if (doc.exists) {
+            const data = doc.data();
+            localStorage.setItem("customerId", data.customerId);
+            localStorage.setItem("customerName", data.name);
+            window.location.href = "customer-dashboard.html";
+          } else {
+            window.location.href = "create-customer.html";
+          }
+        });
+      }
     }
   </script>
 </body>

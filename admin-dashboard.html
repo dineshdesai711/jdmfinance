@@ -201,9 +201,15 @@
 
     function logout() {
       auth.signOut().then(() => {
+        const googleLogout = document.createElement("iframe");
+        googleLogout.src = "https://accounts.google.com/Logout";
+        googleLogout.style.display = "none";
+        document.body.appendChild(googleLogout);
         localStorage.clear();
-        window.location.href = "index.html";
-      });
+        setTimeout(() => {
+          window.location.href = "index.html";
+        }, 1000);
+      }).catch(err => alert("Logout Error: " + err.message));
     }
 
     function loadStats() {
@@ -334,6 +340,5 @@
       }
     });
   </script>
-
 </body>
 </html>

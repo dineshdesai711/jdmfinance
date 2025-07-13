@@ -2,138 +2,67 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>JDM Credit & Finance - Login</title>
 
-  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600&display=swap" rel="stylesheet">
 
   <style>
     body {
+      background: radial-gradient(circle at center, #0f172a, #1e293b);
       font-family: 'Montserrat', sans-serif;
-      background: #0f2027;
-      overflow: hidden;
     }
-    canvas#bg-bubbles {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100vw;
-      height: 100vh;
-      z-index: -1;
-    }
-    .glass {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      backdrop-filter: blur(14px);
+    .glass-box {
+      background: rgba(255, 255, 255, 0.1);
       border-radius: 20px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-    }
-    .gradient-text {
-      background: linear-gradient(to right, #00ffe7, #ff00f7);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
     }
   </style>
 </head>
-<body class="flex items-center justify-center min-h-screen">
+<body class="min-h-screen flex items-center justify-center">
 
-  <!-- Bubbles Animation -->
-  <canvas id="bg-bubbles"></canvas>
-
-  <!-- Logo Top Left (Increased Size) -->
-  <img src="JDM LOGO.png" alt="JDM Logo" class="absolute top-6 left-6 w-20 h-20 rounded-full" />
-
-  <!-- Login Box -->
-  <div class="glass w-full max-w-md p-8 text-white text-center">
-    <h2 class="text-3xl font-bold gradient-text mb-1">JDM</h2>
-    <h3 class="text-xl tracking-wide mb-6 gradient-text">CREDIT & FINANCE</h3>
-
-    <input id="email" type="email" placeholder="Enter your Email" class="w-full px-4 py-3 mb-4 bg-transparent border rounded-md border-gray-400 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" />
-
-    <div class="relative">
-      <input id="password" type="password" placeholder="Enter Password" class="w-full px-4 py-3 mb-2 bg-transparent border rounded-md border-gray-400 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400" />
-      <span onclick="togglePassword()" class="absolute top-3 right-4 text-blue-300 cursor-pointer text-sm">Show</span>
-    </div>
-
-    <button onclick="handleAuth()" id="authButton" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold py-3 rounded-md mt-2 transition duration-300">
-      Login
-    </button>
-
-    <div class="text-sm text-blue-300 mt-4 cursor-pointer hover:underline" onclick="toggleMode()">
-      Don't have an account? Sign Up
-    </div>
-
-    <div class="text-sm mt-2">
-      <button onclick="forgotPassword()" class="text-red-400 hover:underline">Forgot Password?</button>
-    </div>
-
-    <div class="mt-6">
-      <p class="text-sm text-gray-300 mb-2">or continue with</p>
-      <button onclick="signInWithGoogle()" class="bg-white border px-4 py-2 rounded-md shadow hover:shadow-lg flex items-center justify-center gap-2 w-full">
-        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="h-5 w-5" />
-        <span class="text-sm text-gray-700">Sign in with Google</span>
-      </button>
-    </div>
-
-    <p class="text-xs text-gray-300 mt-4">Need help? <a href="mailto:support@jdmfinance.in" class="underline">Contact Admin</a></p>
-  </div>
-
-  <!-- Firebase SDK -->
+  <!-- Firebase Scripts -->
   <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
 
-  <!-- Bubbles Animation Script -->
-  <script>
-    const canvas = document.getElementById('bg-bubbles');
-    const ctx = canvas.getContext('2d');
-    let bubbles = [];
+  <div class="absolute top-8 left-8 flex items-center gap-3">
+    <img src="JDM LOGO.png" class="h-12 w-auto" />
+    <h1 class="text-white text-2xl font-bold drop-shadow-xl">JDM CREDIT & FINANCE</h1>
+  </div>
 
-    function resizeCanvas() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    }
+  <div class="glass-box max-w-md w-full p-8 mt-36 text-white">
+    <input id="email" type="email" placeholder="Enter your Email" class="w-full px-4 py-3 mb-4 border rounded-md text-black" />
+    <div class="relative">
+      <input id="password" type="password" placeholder="Enter Password" class="w-full px-4 py-3 mb-2 border rounded-md text-black" />
+      <span onclick="togglePassword()" class="absolute top-3 right-4 text-blue-200 cursor-pointer text-sm">Show</span>
+    </div>
 
-    function Bubble() {
-      this.x = Math.random() * canvas.width;
-      this.y = canvas.height + Math.random() * 100;
-      this.radius = Math.random() * 8 + 2;
-      this.speed = Math.random() * 1 + 0.5;
-      this.opacity = Math.random() * 0.5 + 0.2;
-    }
+    <button onclick="handleAuth()" id="authButton" class="w-full bg-blue-800 hover:bg-blue-900 text-white font-semibold py-3 rounded-md">
+      Login
+    </button>
 
-    function drawBubbles() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      for (let i = 0; i < bubbles.length; i++) {
-        let b = bubbles[i];
-        ctx.beginPath();
-        ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2, false);
-        ctx.fillStyle = `rgba(255,255,255,${b.opacity})`;
-        ctx.fill();
-        b.y -= b.speed;
-        if (b.y < -10) {
-          bubbles[i] = new Bubble();
-        }
-      }
-    }
+    <div class="text-sm text-blue-300 mt-4 text-center cursor-pointer hover:underline" onclick="toggleMode()">
+      Don't have an account? Sign Up
+    </div>
 
-    function animateBubbles() {
-      drawBubbles();
-      requestAnimationFrame(animateBubbles);
-    }
+    <div class="text-center mt-4">
+      <button onclick="forgotPassword()" class="text-sm text-red-300 hover:underline">Forgot Password?</button>
+    </div>
 
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
+    <div class="mt-6 text-center">
+      <p class="text-white text-sm mb-2">or continue with</p>
+      <button onclick="signInWithGoogle()" class="bg-white px-4 py-2 rounded-md shadow flex items-center justify-center gap-2 w-full">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" class="h-5" />
+        <span class="text-sm text-gray-700">Sign in with Google</span>
+      </button>
+    </div>
 
-    for (let i = 0; i < 60; i++) {
-      bubbles.push(new Bubble());
-    }
+    <div class="text-center text-xs text-white mt-4">Need help? <a href="#" class="underline">Contact Admin</a></div>
+  </div>
 
-    animateBubbles();
-  </script>
-
-  <!-- Firebase Auth Logic -->
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyDLvrY6y3SyvLrX-yk8UcdO8RmnC89XNG4",
@@ -147,24 +76,22 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
+
     const adminEmails = ["ashutoshsharma@gmail.com", "dinesh@gmail.com", "desaidinesh055@gmail.com"];
     let isLogin = true;
 
     function toggleMode() {
       isLogin = !isLogin;
       document.getElementById("authButton").innerText = isLogin ? "Login" : "Sign Up";
-      document.querySelector(".text-sm").innerText = isLogin ? "Don't have an account? Sign Up" : "Already have an account? Login";
+      document.querySelector(".text-sm").innerText = isLogin
+        ? "Don't have an account? Sign Up"
+        : "Already have an account? Login";
     }
 
     function togglePassword() {
       const pwd = document.getElementById("password");
-      if (pwd.type === "password") {
-        pwd.type = "text";
-        event.target.innerText = "Hide";
-      } else {
-        pwd.type = "password";
-        event.target.innerText = "Show";
-      }
+      pwd.type = pwd.type === "password" ? "text" : "password";
+      event.target.innerText = pwd.type === "text" ? "Hide" : "Show";
     }
 
     function handleAuth() {
@@ -208,10 +135,17 @@
 
     function forgotPassword() {
       const email = document.getElementById("email").value.trim();
-      if (!email) return alert("❌ Enter your email to reset password");
-      auth.sendPasswordResetEmail(email)
-        .then(() => alert("✅ Password reset email sent!"))
-        .catch(error => alert("❌ " + error.message));
+      if (!email) return alert("❌ Enter your email");
+
+      db.collection("forgot_requests").add({
+        email: email,
+        status: "pending",
+        createdAt: new Date()
+      }).then(() => {
+        alert("📩 Your request has been sent to admin. You will be notified when it's approved.");
+      }).catch(error => {
+        alert("❌ Failed to send request: " + error.message);
+      });
     }
 
     function signInWithGoogle() {
@@ -222,6 +156,7 @@
           const email = user.email;
           localStorage.setItem("customerEmail", email);
           localStorage.setItem("customerUid", user.uid);
+
           if (adminEmails.includes(email)) {
             window.location.href = "admin-dashboard.html";
           } else {

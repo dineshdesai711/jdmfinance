@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>JDM Credit & Finance - Login</title>
 
-  <!-- ✅ Tailwind CSS CDN -->  
+  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -75,7 +75,8 @@
     <div class="mt-6 text-center">
       <p class="text-white text-sm mb-2">or continue with</p>
       <button onclick="signInWithGoogle()" class="bg-white border px-4 py-2 rounded-md shadow hover:shadow-lg transition flex items-center justify-center gap-2 w-full">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" class="h-5" alt="G Logo" onerror="this.src='https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg'"/>
+        <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" class="h-5" alt="G Logo"
+          onerror="this.src='https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg'" />
         <span class="text-sm text-gray-700">Sign in with Google</span>
       </button>
     </div>
@@ -83,9 +84,117 @@
     <div class="text-center text-xs text-white mt-4">Need help? <a href="mailto:support@jdmfinance.in" class="underline">Contact Admin</a></div>
   </div>
 
-  <!-- 💡 Your existing script remains unchanged -->
   <script>
-    // (Your full script remains exactly the same here...)
+    const firebaseConfig = {
+      apiKey: "AIzaSyDLvrY6y3SyvLrX-yk8UcdO8RmnC89XNG4",
+      authDomain: "jdms-207ba.firebaseapp.com",
+      projectId: "jdms-207ba",
+      storageBucket: "jdms-207ba.appspot.com",
+      messagingSenderId: "449814553435",
+      appId: "1:449814553435:web:008c7695473689f425307e"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    const adminEmails = ["ashutoshsharma@gmail.com", "dinesh@gmail.com", "desaidinesh055@gmail.com"];
+    let isLogin = true;
+
+    function toggleMode() {
+      isLogin = !isLogin;
+      document.getElementById("authButton").innerText = isLogin ? "Login" : "Sign Up";
+      document.querySelector(".text-sm").innerText = isLogin
+        ? "Don't have an account? Sign Up"
+        : "Already have an account? Login";
+    }
+
+    function togglePassword() {
+      const pwd = document.getElementById("password");
+      if (pwd.type === "password") {
+        pwd.type = "text";
+        event.target.innerText = "Hide";
+      } else {
+        pwd.type = "password";
+        event.target.innerText = "Show";
+      }
+    }
+
+    function handleAuth() {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+      if (!email || !password) return alert("❌ Please fill all fields");
+
+      if (isLogin) {
+        auth.signInWithEmailAndPassword(email, password)
+          .then(userCredential => {
+            const user = userCredential.user;
+            localStorage.setItem("customerEmail", email);
+            localStorage.setItem("customerUid", user.uid);
+
+            if (adminEmails.includes(email)) {
+              window.location.href = "admin-dashboard.html";
+            } else {
+              db.collection("customers").doc(user.uid).get().then(doc => {
+                if (doc.exists) {
+                  const data = doc.data();
+                  localStorage.setItem("customerId", data.customerId);
+                  localStorage.setItem("customerName", data.name);
+                  window.location.href = "customer-dashboard.html";
+                } else {
+                  window.location.href = "create-customer.html";
+                }
+              });
+            }
+          })
+          .catch(err => alert("❌ Login failed: " + err.message));
+      } else {
+        auth.createUserWithEmailAndPassword(email, password)
+          .then(userCredential => {
+            const user = userCredential.user;
+            localStorage.setItem("customerUid", user.uid);
+            localStorage.setItem("customerEmail", email);
+            window.location.href = "create-customer.html";
+          })
+          .catch(err => alert("❌ Signup failed: " + err.message));
+      }
+    }
+
+    function forgotPassword() {
+      const email = document.getElementById("email").value.trim();
+      if (!email) return alert("❌ Enter your email to reset password");
+
+      auth.sendPasswordResetEmail(email)
+        .then(() => alert("✅ Password reset email sent! Check your inbox"))
+        .catch(error => alert("❌ " + error.message));
+    }
+
+    function signInWithGoogle() {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      auth.signInWithPopup(provider)
+        .then(result => {
+          const user = result.user;
+          const email = user.email;
+          localStorage.setItem("customerEmail", email);
+          localStorage.setItem("customerUid", user.uid);
+
+          if (adminEmails.includes(email)) {
+            window.location.href = "admin-dashboard.html";
+          } else {
+            db.collection("customers").doc(user.uid).get().then(doc => {
+              if (doc.exists) {
+                const data = doc.data();
+                localStorage.setItem("customerId", data.customerId);
+                localStorage.setItem("customerName", data.name);
+                window.location.href = "customer-dashboard.html";
+              } else {
+                window.location.href = "create-customer.html";
+              }
+            });
+          }
+        })
+        .catch(err => alert("❌ Google Login Failed: " + err.message));
+    }
   </script>
 </body>
 </html>

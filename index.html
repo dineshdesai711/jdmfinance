@@ -41,8 +41,8 @@
   <!-- Bubbles Animation -->
   <canvas id="bg-bubbles"></canvas>
 
-  <!-- Logo Top Left -->
-  <img src="JDM LOGO.png" alt="JDM Logo" class="absolute top-6 left-6 w-14 h-14 rounded-full" />
+  <!-- Logo Top Left (Increased Size) -->
+  <img src="JDM LOGO.png" alt="JDM Logo" class="absolute top-6 left-6 w-20 h-20 rounded-full" />
 
   <!-- Login Box -->
   <div class="glass w-full max-w-md p-8 text-white text-center">
@@ -71,7 +71,7 @@
     <div class="mt-6">
       <p class="text-sm text-gray-300 mb-2">or continue with</p>
       <button onclick="signInWithGoogle()" class="bg-white border px-4 py-2 rounded-md shadow hover:shadow-lg flex items-center justify-center gap-2 w-full">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" class="h-5" />
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="h-5 w-5" />
         <span class="text-sm text-gray-700">Sign in with Google</span>
       </button>
     </div>
@@ -79,12 +79,12 @@
     <p class="text-xs text-gray-300 mt-4">Need help? <a href="mailto:support@jdmfinance.in" class="underline">Contact Admin</a></p>
   </div>
 
-  <!-- Firebase Config -->
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
 
-  <!-- Bubble Animation Script -->
+  <!-- Bubbles Animation Script -->
   <script>
     const canvas = document.getElementById('bg-bubbles');
     const ctx = canvas.getContext('2d');
@@ -105,7 +105,6 @@
 
     function drawBubbles() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
       for (let i = 0; i < bubbles.length; i++) {
         let b = bubbles[i];
         ctx.beginPath();

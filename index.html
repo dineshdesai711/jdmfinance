@@ -41,8 +41,8 @@
   <!-- Bubbles Animation -->
   <canvas id="bg-bubbles"></canvas>
 
-  <!-- Logo Top Left (Increased Size) -->
-  <img src="JDM LOGO.png" alt="JDM Logo" class="absolute top-6 left-6 w-20 h-20 rounded-full" />
+  <!-- Logo Top Left -->
+  <img src="JDM LOGO.png" alt="JDM Logo" class="absolute top-6 left-6 w-30 h-30 rounded-full" />
 
   <!-- Login Box -->
   <div class="glass w-full max-w-md p-8 text-white text-center">
@@ -84,7 +84,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
 
-  <!-- Bubbles Animation Script -->
+  <!-- Background Bubbles -->
   <script>
     const canvas = document.getElementById('bg-bubbles');
     const ctx = canvas.getContext('2d');
@@ -125,11 +125,9 @@
 
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
-
     for (let i = 0; i < 60; i++) {
       bubbles.push(new Bubble());
     }
-
     animateBubbles();
   </script>
 
@@ -209,9 +207,16 @@
     function forgotPassword() {
       const email = document.getElementById("email").value.trim();
       if (!email) return alert("❌ Enter your email to reset password");
-      auth.sendPasswordResetEmail(email)
-        .then(() => alert("✅ Password reset email sent!"))
-        .catch(error => alert("❌ " + error.message));
+
+      db.collection("resetRequests").add({
+        email: email,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        status: "pending"
+      }).then(() => {
+        alert("✅ Your reset request has been received. Admin will reset it within 24 hours.");
+      }).catch((error) => {
+        alert("❌ Something went wrong: " + error.message);
+      });
     }
 
     function signInWithGoogle() {

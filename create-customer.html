@@ -19,9 +19,7 @@
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
       border-radius: 10px;
     }
-    h2 {
-      text-align: center;
-    }
+    h2 { text-align: center; }
     input {
       width: 100%;
       padding: 10px;
@@ -74,13 +72,14 @@
       return `${prefix}-${random}-${now}`;
     }
 
-    function saveCustomer() {
+    async function saveCustomer() {
       const name = document.getElementById("name").value.trim();
       const aadhaar = document.getElementById("aadhaar").value.trim();
       const pan = document.getElementById("pan").value.trim().toUpperCase();
       const mobile = document.getElementById("mobile").value.trim();
       const uid = localStorage.getItem("customerUid");
 
+      // ✅ Basic Format Validations
       if (!name || !aadhaar || !pan || !mobile) {
         alert("❌ Please fill all fields");
         return;
@@ -91,55 +90,62 @@
         return;
       }
 
+      if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(pan)) {
+        alert("❌ Invalid PAN format");
+        return;
+      }
+
       if (!/^\d{10}$/.test(mobile)) {
-        alert("❌ Mobile number must be 10 digits");
+        alert("❌ Mobile must be 10 digits");
         return;
       }
 
-      if (!/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(pan)) {
-        alert("❌ Invalid PAN format (e.g., ABCDE1234F)");
-        return;
-      }
+      try {
+        // 🔍 Duplicate Check
+        const duplicateQuery = await db.collection("customers")
+          .where("aadhaar", "==", aadhaar)
+          .get();
 
-      const customerId = generateCustomerId();
+        if (!duplicateQuery.empty) {
+          alert("❌ This Aadhaar already exists.");
+          return;
+        }
 
-      db.collection("customers")
-        .where("aadhaar", "==", aadhaar)
-        .get()
-        .then(snapshot => {
-          if (!snapshot.empty) {
-            throw new Error("❌ Aadhaar already exists");
-          }
-          return db.collection("customers").where("pan", "==", pan).get();
-        })
-        .then(snapshot => {
-          if (!snapshot.empty) {
-            throw new Error("❌ PAN already exists");
-          }
-          return db.collection("customers").where("mobile", "==", mobile).get();
-        })
-        .then(snapshot => {
-          if (!snapshot.empty) {
-            throw new Error("❌ Mobile number already exists");
-          }
+        const duplicatePan = await db.collection("customers")
+          .where("pan", "==", pan)
+          .get();
 
-          return db.collection("customers").doc(uid).set({
-            name,
-            aadhaar,
-            pan,
-            mobile,
-            customerId
-          });
-        })
-        .then(() => {
-          alert("✅ Customer created successfully");
-          localStorage.setItem("customerId", customerId);
-          localStorage.setItem("customerName", name);
-          window.location.href = "customer-dashboard.html";
-        })
-        .catch(error => {
-          alert(error.message);
+        if (!duplicatePan.empty) {
+          alert("❌ This PAN already exists.");
+          return;
+        }
+
+        const duplicateMobile = await db.collection("customers")
+          .where("mobile", "==", mobile)
+          .get();
+
+        if (!duplicateMobile.empty) {
+          alert("❌ This Mobile Number already exists.");
+          return;
+        }
+
+        const customerId = generateCustomerId();
+        await db.collection("customers").doc(uid).set({
+          name,
+          aadhaar,
+          pan,
+          mobile,
+          customerId
         });
+
+        localStorage.setItem("customerId", customerId);
+        localStorage.setItem("customerName", name);
+        alert("✅ Customer created successfully");
+        window.location.href = "customer-dashboard.html";
+
+      } catch (error) {
+        alert("❌ Error: " + error.message);
+      }
     }
   </script>
 </body>

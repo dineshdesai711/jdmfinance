@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Create Customer</title>
   <style>
     body {
@@ -21,7 +21,6 @@
     }
     h2 {
       text-align: center;
-      color: #007bff;
     }
     input {
       width: 100%;
@@ -47,7 +46,7 @@
     <h2>Create Customer Profile</h2>
     <input type="text" id="name" placeholder="Customer Name" />
     <input type="text" id="aadhaar" placeholder="Aadhaar Number (12 digits)" />
-    <input type="text" id="pan" placeholder="PAN Number (10 chars)" />
+    <input type="text" id="pan" placeholder="PAN Number (ABCDE1234F)" />
     <input type="text" id="mobile" placeholder="Mobile Number (10 digits)" />
     <button onclick="saveCustomer()">Save Customer</button>
   </div>
@@ -75,7 +74,7 @@
       return `${prefix}-${random}-${now}`;
     }
 
-    async function saveCustomer() {
+    function saveCustomer() {
       const name = document.getElementById("name").value.trim();
       const aadhaar = document.getElementById("aadhaar").value.trim();
       const pan = document.getElementById("pan").value.trim().toUpperCase();
@@ -83,70 +82,64 @@
       const uid = localStorage.getItem("customerUid");
 
       if (!name || !aadhaar || !pan || !mobile) {
-        alert("❌ Please fill all fields.");
+        alert("❌ Please fill all fields");
         return;
       }
 
       if (!/^\d{12}$/.test(aadhaar)) {
-        alert("❌ Aadhaar must be exactly 12 digits.");
-        return;
-      }
-
-      if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(pan)) {
-        alert("❌ Invalid PAN format. Should be 5 letters, 4 digits, 1 letter.");
+        alert("❌ Aadhaar must be 12 digits");
         return;
       }
 
       if (!/^\d{10}$/.test(mobile)) {
-        alert("❌ Mobile number must be exactly 10 digits.");
+        alert("❌ Mobile number must be 10 digits");
         return;
       }
 
-      try {
-        // Aadhaar check
-        const aadhaarSnap = await db.collection("customers")
-          .where("aadhaar", "==", aadhaar)
-          .get();
-        if (!aadhaarSnap.empty) {
-          alert("❌ Aadhaar number already exists.");
-          return;
-        }
-
-        // PAN check
-        const panSnap = await db.collection("customers")
-          .where("pan", "==", pan)
-          .get();
-        if (!panSnap.empty) {
-          alert("❌ PAN number already exists.");
-          return;
-        }
-
-        // Mobile check
-        const mobileSnap = await db.collection("customers")
-          .where("mobile", "==", mobile)
-          .get();
-        if (!mobileSnap.empty) {
-          alert("❌ Mobile number already exists.");
-          return;
-        }
-
-        const customerId = generateCustomerId();
-
-        await db.collection("customers").doc(uid).set({
-          name,
-          aadhaar,
-          pan,
-          mobile,
-          customerId
-        });
-
-        alert("✅ Customer created successfully!");
-        localStorage.setItem("customerId", customerId);
-        localStorage.setItem("customerName", name);
-        window.location.href = "customer-dashboard.html";
-      } catch (error) {
-        alert("❌ Error saving customer: " + error.message);
+      if (!/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(pan)) {
+        alert("❌ Invalid PAN format (e.g., ABCDE1234F)");
+        return;
       }
+
+      const customerId = generateCustomerId();
+
+      db.collection("customers")
+        .where("aadhaar", "==", aadhaar)
+        .get()
+        .then(snapshot => {
+          if (!snapshot.empty) {
+            throw new Error("❌ Aadhaar already exists");
+          }
+          return db.collection("customers").where("pan", "==", pan).get();
+        })
+        .then(snapshot => {
+          if (!snapshot.empty) {
+            throw new Error("❌ PAN already exists");
+          }
+          return db.collection("customers").where("mobile", "==", mobile).get();
+        })
+        .then(snapshot => {
+          if (!snapshot.empty) {
+            throw new Error("❌ Mobile number already exists");
+          }
+
+          return db.collection("customers").doc(uid).set({
+            name,
+            aadhaar,
+            pan,
+            mobile,
+            customerId
+          });
+        })
+        .then(() => {
+          alert("✅ Customer created successfully");
+          localStorage.setItem("customerId", customerId);
+          localStorage.setItem("customerName", name);
+          window.location.href = "customer-dashboard.html";
+        })
+        .catch(error => {
+          alert(error.message);
+        });
     }
   </script>
 </body>

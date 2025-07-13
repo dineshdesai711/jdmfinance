@@ -69,7 +69,7 @@
     </div>
 
     <div class="mt-6">
-      <p class="text-sm text-gray-300 mb-2">or continue with</p>
+      <p class="text-sm text-gray-300 mb-2">or continue with</p> 
       <button onclick="signInWithGoogle()" class="bg-white border px-4 py-2 rounded-md shadow hover:shadow-lg flex items-center justify-center gap-2 w-full">
         <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="h-5 w-5" />
         <span class="text-sm text-gray-700">Sign in with Google</span>
@@ -84,7 +84,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
 
-  <!-- Background Bubbles -->
+  <!-- Bubbles Animation Script -->
   <script>
     const canvas = document.getElementById('bg-bubbles');
     const ctx = canvas.getContext('2d');
@@ -125,9 +125,11 @@
 
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
+
     for (let i = 0; i < 60; i++) {
       bubbles.push(new Bubble());
     }
+
     animateBubbles();
   </script>
 
@@ -210,12 +212,14 @@
 
       db.collection("resetRequests").add({
         email: email,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-        status: "pending"
-      }).then(() => {
-        alert("✅ Your reset request has been received. Admin will reset it within 24 hours.");
-      }).catch((error) => {
-        alert("❌ Something went wrong: " + error.message);
+        requestedAt: firebase.firestore.FieldValue.serverTimestamp()
+      })
+      .then(() => {
+        alert("✅ Your reset request has been submitted! Our team will reset your password within 24 hours.");
+      })
+      .catch((error) => {
+        console.error("❌ Firestore Error:", error);
+        alert("❌ Failed to submit reset request. Try again later.");
       });
     }
 

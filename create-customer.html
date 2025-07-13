@@ -4,26 +4,57 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Create Customer</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f2f5;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      background: white;
+      max-width: 500px;
+      margin: auto;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      border-radius: 10px;
+    }
+    h2 {
+      text-align: center;
+      color: #007bff;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex items-center justify-center">
-
-  <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-    <h2 class="text-2xl font-bold text-center text-blue-700 mb-6">Create Customer Profile</h2>
-
-    <input type="text" id="name" placeholder="Customer Name" class="w-full p-3 mb-4 border border-gray-300 rounded" />
-    <input type="text" id="aadhaar" placeholder="Aadhaar Number (12 digits)" class="w-full p-3 mb-4 border border-gray-300 rounded" />
-    <input type="text" id="pan" placeholder="PAN Number (10 chars)" class="w-full p-3 mb-4 border border-gray-300 rounded" />
-    <input type="text" id="mobile" placeholder="Mobile Number (10 digits)" class="w-full p-3 mb-4 border border-gray-300 rounded" />
-
-    <button onclick="saveCustomer()" class="w-full bg-blue-600 text-white py-3 rounded hover:bg-blue-700 transition">Save Customer</button>
+<body>
+  <div class="container">
+    <h2>Create Customer Profile</h2>
+    <input type="text" id="name" placeholder="Customer Name" />
+    <input type="text" id="aadhaar" placeholder="Aadhaar Number (12 digits)" />
+    <input type="text" id="pan" placeholder="PAN Number (10 chars)" />
+    <input type="text" id="mobile" placeholder="Mobile Number (10 digits)" />
+    <button onclick="saveCustomer()">Save Customer</button>
   </div>
 
-  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyDLvrY6y3SyvLrX-yk8UcdO8RmnC89XNG4",
@@ -57,36 +88,47 @@
       }
 
       if (!/^\d{12}$/.test(aadhaar)) {
-        alert("❌ Aadhaar number must be 12 digits.");
+        alert("❌ Aadhaar must be exactly 12 digits.");
         return;
       }
 
       if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(pan)) {
-        alert("❌ Invalid PAN format.");
+        alert("❌ Invalid PAN format. Should be 5 letters, 4 digits, 1 letter.");
         return;
       }
 
       if (!/^\d{10}$/.test(mobile)) {
-        alert("❌ Mobile number must be 10 digits.");
+        alert("❌ Mobile number must be exactly 10 digits.");
         return;
       }
 
       try {
-        // 🔍 Duplicate check
-        const snapshot = await db.collection("customers")
+        // Aadhaar check
+        const aadhaarSnap = await db.collection("customers")
           .where("aadhaar", "==", aadhaar)
           .get();
-        if (!snapshot.empty) return alert("❌ Aadhaar number already exists.");
+        if (!aadhaarSnap.empty) {
+          alert("❌ Aadhaar number already exists.");
+          return;
+        }
 
-        const snapshot2 = await db.collection("customers")
+        // PAN check
+        const panSnap = await db.collection("customers")
           .where("pan", "==", pan)
           .get();
-        if (!snapshot2.empty) return alert("❌ PAN number already exists.");
+        if (!panSnap.empty) {
+          alert("❌ PAN number already exists.");
+          return;
+        }
 
-        const snapshot3 = await db.collection("customers")
+        // Mobile check
+        const mobileSnap = await db.collection("customers")
           .where("mobile", "==", mobile)
           .get();
-        if (!snapshot3.empty) return alert("❌ Mobile number already exists.");
+        if (!mobileSnap.empty) {
+          alert("❌ Mobile number already exists.");
+          return;
+        }
 
         const customerId = generateCustomerId();
 
@@ -98,12 +140,12 @@
           customerId
         });
 
-        alert("✅ Customer profile created successfully!");
+        alert("✅ Customer created successfully!");
         localStorage.setItem("customerId", customerId);
         localStorage.setItem("customerName", name);
         window.location.href = "customer-dashboard.html";
-      } catch (err) {
-        alert("❌ Error saving customer: " + err.message);
+      } catch (error) {
+        alert("❌ Error saving customer: " + error.message);
       }
     }
   </script>

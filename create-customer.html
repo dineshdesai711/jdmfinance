@@ -79,7 +79,6 @@
       const mobile = document.getElementById("mobile").value.trim();
       const uid = localStorage.getItem("customerUid");
 
-      // ✅ Basic Format Validations
       if (!name || !aadhaar || !pan || !mobile) {
         alert("❌ Please fill all fields");
         return;
@@ -101,32 +100,37 @@
       }
 
       try {
-        // 🔍 Duplicate Check
-        const duplicateQuery = await db.collection("customers")
-          .where("aadhaar", "==", aadhaar)
-          .get();
-
-        if (!duplicateQuery.empty) {
-          alert("❌ This Aadhaar already exists.");
-          return;
+        // 🔍 Check Aadhaar
+        const aadhaarSnap = await db.collection("customers")
+          .where("aadhaar", "==", aadhaar).get();
+        if (!aadhaarSnap.empty) {
+          const doc = aadhaarSnap.docs[0];
+          if (doc.id !== uid) {
+            alert("❌ This Aadhaar is already registered.");
+            return;
+          }
         }
 
-        const duplicatePan = await db.collection("customers")
-          .where("pan", "==", pan)
-          .get();
-
-        if (!duplicatePan.empty) {
-          alert("❌ This PAN already exists.");
-          return;
+        // 🔍 Check PAN
+        const panSnap = await db.collection("customers")
+          .where("pan", "==", pan).get();
+        if (!panSnap.empty) {
+          const doc = panSnap.docs[0];
+          if (doc.id !== uid) {
+            alert("❌ This PAN is already registered.");
+            return;
+          }
         }
 
-        const duplicateMobile = await db.collection("customers")
-          .where("mobile", "==", mobile)
-          .get();
-
-        if (!duplicateMobile.empty) {
-          alert("❌ This Mobile Number already exists.");
-          return;
+        // 🔍 Check Mobile
+        const mobSnap = await db.collection("customers")
+          .where("mobile", "==", mobile).get();
+        if (!mobSnap.empty) {
+          const doc = mobSnap.docs[0];
+          if (doc.id !== uid) {
+            alert("❌ This Mobile number is already registered.");
+            return;
+          }
         }
 
         const customerId = generateCustomerId();

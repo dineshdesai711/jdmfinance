@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>FD/RD PDF Generator - JDM Credit & Finance</title>
+  <title>FD/RD Certificate - JDM Credit & Finance</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
@@ -10,127 +10,110 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f0f0f0;
+      background: #f4f4f4;
       padding: 20px;
     }
     .container {
       background: white;
       padding: 30px;
       border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      max-width: 900px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      max-width: 800px;
       margin: auto;
+      animation: fadeIn 0.6s ease-in-out;
     }
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .header, .footer {
+      text-align: center;
     }
     .header img {
       height: 60px;
     }
     .header h2 {
-      margin: 0;
+      margin: 10px 0 0;
       color: #0a3d62;
     }
-    h3 {
+    .certificate {
       margin-top: 30px;
-      color: #0a3d62;
+      padding: 20px;
+      border: 2px solid #0a3d62;
+      border-radius: 10px;
     }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
+    .details {
+      margin-top: 20px;
+      line-height: 1.7;
     }
-    th, td {
-      border: 1px solid #ccc;
-      padding: 10px;
+    .select-section {
       text-align: center;
+      margin-bottom: 20px;
     }
-    th {
-      background: #0a3d62;
-      color: white;
-    }
-    .footer {
-      margin-top: 60px;
-      display: flex;
-      justify-content: space-between;
-      font-weight: bold;
+    select {
+      padding: 10px;
+      margin: 0 10px;
+      border-radius: 5px;
     }
     button {
-      margin-top: 20px;
       padding: 10px 20px;
+      margin: 10px;
       background: #0a3d62;
       color: white;
       border: none;
       border-radius: 5px;
       cursor: pointer;
     }
-    select {
-      margin-top: 20px;
-      padding: 10px;
-      width: 100%;
-      max-width: 500px;
+    .stamp-sign {
+      margin-top: 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
-    .center {
-      text-align: center;
+    .stamp-sign img {
+      height: 80px;
     }
   </style>
 </head>
 <body>
 
-<div class="container" id="pdfContent">
+<div class="select-section">
+  <select id="entryType">
+    <option value="fd">Fixed Deposit (FD)</option>
+    <option value="rd">Recurring Deposit (RD)</option>
+  </select>
+
+  <select id="entryList">
+    <option value="">Select Entry</option>
+  </select>
+  <button onclick="generatePDF()">Download Certificate</button>
+  <button onclick="window.location.href='customer-dashboard.html'">Back to Dashboard</button>
+</div>
+
+<div class="container" id="pdfContent" style="display:none;">
   <div class="header">
-    <div><img src="JDM LOGO.png" alt="Logo" /></div>
-    <div>
-      <h2>JDM CREDIT & FINANCE</h2>
-      <p id="customerName" style="text-align:right; font-weight:bold;"></p>
+    <img src="JDM LOGO.png" alt="Logo">
+    <h2>JDM CREDIT & FINANCE</h2>
+    <h3 id="certTitle">Deposit Certificate</h3>
+  </div>
+
+  <div class="certificate">
+    <p>This is to certify that <strong id="custName"></strong> has invested under the following scheme:</p>
+    <div class="details" id="entryDetails">
+      <!-- Entry details inserted here -->
+    </div>
+
+    <div class="stamp-sign">
+      <div>
+        <p><strong>ASHUTOSH SHARMA</strong><br>Director</p>
+      </div>
+      <img src="https://i.ibb.co/X2CjBVK/stamp-placeholder.png" alt="Company Stamp">
     </div>
   </div>
 
-  <div class="center">
-    <select id="entrySelector" onchange="filterRows()">
-      <option value="">🔽 Select FD or RD Entry</option>
-    </select>
-  </div>
-
-  <h3>Approved FD Entries</h3>
-  <table id="fdTable">
-    <thead>
-      <tr>
-        <th>Principal</th>
-        <th>Maturity Amount</th>
-        <th>Start Date</th>
-        <th>Maturity Date</th>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-
-  <h3>Approved RD Entries</h3>
-  <table id="rdTable">
-    <thead>
-      <tr>
-        <th>Principal</th>
-        <th>Maturity Amount</th>
-        <th>Start Date</th>
-        <th>Maturity Date</th>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-
   <div class="footer">
-    <p>Director: Bhawana Sharma</p>
-    <p id="footerName"></p>
+    <p>Certificate issued by JDM Credit & Finance</p>
   </div>
-</div>
-
-<div class="center">
-  <button onclick="downloadPDF()">📄 Download Selected PDF</button>
-  <button onclick="goBack()">⬅ Back to Dashboard</button>
 </div>
 
 <script>
@@ -149,123 +132,66 @@
 
   const customerId = localStorage.getItem("customerId");
   const customerName = localStorage.getItem("customerName");
+  document.getElementById("custName").innerText = customerName;
 
-  if (!customerId) {
-    alert("Not logged in as customer");
-    window.location.href = "index.html"; // ✅ use index.html
-  }
+  const entryTypeSelect = document.getElementById("entryType");
+  const entryListSelect = document.getElementById("entryList");
 
-  document.getElementById("customerName").innerText = `Customer: ${customerName}`;
-  document.getElementById("footerName").innerText = `Issued to: ${customerName}`;
-
-  const entrySelector = document.getElementById("entrySelector");
-
-  function loadApprovedData() {
-    const fdBody = document.querySelector("#fdTable tbody");
-    const rdBody = document.querySelector("#rdTable tbody");
-    fdBody.innerHTML = "";
-    rdBody.innerHTML = "";
-
-    db.collection("fd")
-      .where("customerId", "==", customerId)
-      .where("status", "==", "approved")
-      .get()
-      .then(snapshot => {
-        snapshot.forEach(doc => {
-          const fd = doc.data();
-          fd.id = doc.id;
-
-          fdBody.innerHTML += `
-            <tr data-type="fd" data-id="${fd.id}">
-              <td>₹${parseFloat(fd.principal).toLocaleString()}</td>
-              <td>₹${parseFloat(fd.maturityAmount).toLocaleString()}</td>
-              <td>${fd.startDate}</td>
-              <td>${fd.maturityDate}</td>
-              <td>${fd.status}</td>
-            </tr>
-          `;
-
-          const opt = document.createElement("option");
-          opt.value = `fd-${fd.id}`;
-          opt.text = `FD ₹${fd.principal} (${fd.startDate})`;
-          entrySelector.appendChild(opt);
-        });
-      });
-
-    db.collection("rd")
-      .where("customerId", "==", customerId)
-      .where("status", "==", "approved")
-      .get()
-      .then(snapshot => {
-        snapshot.forEach(doc => {
-          const rd = doc.data();
-          rd.id = doc.id;
-
-          rdBody.innerHTML += `
-            <tr data-type="rd" data-id="${rd.id}">
-              <td>₹${parseFloat(rd.principal).toLocaleString()}</td>
-              <td>₹${parseFloat(rd.maturityAmount).toLocaleString()}</td>
-              <td>${rd.startDate}</td>
-              <td>${rd.maturityDate}</td>
-              <td>${rd.status}</td>
-            </tr>
-          `;
-
-          const opt = document.createElement("option");
-          opt.value = `rd-${rd.id}`;
-          opt.text = `RD ₹${rd.principal} (${rd.startDate})`;
-          entrySelector.appendChild(opt);
-        });
-      });
-  }
-
-  function filterRows() {
-    const selected = entrySelector.value;
-    const rows = document.querySelectorAll("tbody tr");
-
-    if (selected === "") {
-      rows.forEach(row => row.style.display = "");
-      return;
-    }
-
-    const [type, id] = selected.split("-");
-    rows.forEach(row => {
-      if (row.dataset.type === type && row.dataset.id === id) {
-        row.style.display = "";
-      } else {
-        row.style.display = "none";
-      }
-    });
-  }
-
-  function downloadPDF() {
-    if (entrySelector.value === "") {
-      alert("Please select an entry to download PDF.");
-      return;
-    }
-
-    const element = document.getElementById("pdfContent");
-    const opt = {
-      margin: 0.4,
-      filename: `FD_RD_Certificate_${customerId}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2 },
-      jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
-    };
-    html2pdf().from(element).set(opt).save();
-  }
-
-  function goBack() {
-    window.location.href = "customer-dashboard.html";
-  }
+  entryTypeSelect.addEventListener("change", loadEntries);
 
   auth.onAuthStateChanged(user => {
-    if (!user) {
-      window.location.href = "index.html";
-    } else {
-      loadApprovedData();
-    }
+    if (!user) window.location.href = "index.html";
+    else loadEntries();
   });
+
+  function loadEntries() {
+    const type = entryTypeSelect.value;
+    entryListSelect.innerHTML = '<option value="">Select Entry</option>';
+
+    db.collection(type)
+      .where("customerId", "==", customerId)
+      .where("status", "==", "approved")
+      .get()
+      .then(snapshot => {
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const label = `${data.principal} → ${data.maturityAmount} (${data.startDate})`;
+          const option = document.createElement("option");
+          option.value = JSON.stringify(data);
+          option.textContent = label;
+          entryListSelect.appendChild(option);
+        });
+      });
+  }
+
+  function generatePDF() {
+    const data = entryListSelect.value;
+    if (!data) return alert("Please select a valid entry.");
+    
+    const entry = JSON.parse(data);
+    document.getElementById("entryDetails").innerHTML = `
+      <p><strong>Customer ID:</strong> ${customerId}</p>
+      <p><strong>Principal Amount:</strong> ₹${parseFloat(entry.principal).toLocaleString()}</p>
+      <p><strong>Maturity Amount:</strong> ₹${parseFloat(entry.maturityAmount).toLocaleString()}</p>
+      <p><strong>Start Date:</strong> ${entry.startDate}</p>
+      <p><strong>Maturity Date:</strong> ${entry.maturityDate}</p>
+      <p><strong>Interest Rate:</strong> ${entry.interestRate}%</p>
+      <p><strong>Status:</strong> ${entry.status}</p>
+    `;
+
+    document.getElementById("pdfContent").style.display = "block";
+
+    setTimeout(() => {
+      const opt = {
+        margin: 0.3,
+        filename: `Certificate_${customerId}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+      };
+      html2pdf().from(document.getElementById("pdfContent")).set(opt).save();
+    }, 500);
+  }
 </script>
 
 </body>

@@ -10,7 +10,6 @@
       margin: 0;
       padding: 0;
     }
-
     header {
       background-color: #0a3d62;
       color: white;
@@ -19,17 +18,14 @@
       align-items: center;
       justify-content: space-between;
     }
-
     .logo-section {
       display: flex;
       align-items: center;
     }
-
     .logo-section img {
       height: 40px;
       margin-right: 10px;
     }
-
     form {
       max-width: 600px;
       margin: 40px auto;
@@ -38,12 +34,10 @@
       border-radius: 8px;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
-
     label {
       display: block;
       margin-top: 15px;
     }
-
     input, select {
       width: 100%;
       padding: 8px;
@@ -51,7 +45,6 @@
       border-radius: 5px;
       border: 1px solid #ccc;
     }
-
     button {
       margin-top: 20px;
       background-color: #0a3d62;
@@ -68,13 +61,14 @@
 
 <header>
   <div class="logo-section">
-    <img src="https://i.ibb.co/5TpqK1H/banklogo.png" alt="Logo">
+    <img src="JDM LOGO.png" alt="Logo" />
     <h2>JDM CREDIT & FINANCE</h2>
   </div>
 </header>
 
 <form id="fdForm">
   <h3 style="text-align:center;">Fixed Deposit (FD) Form</h3>
+
   <label>Customer ID</label>
   <input type="text" id="customerId" readonly>
 
@@ -88,20 +82,28 @@
   <input type="text" id="pan" readonly>
 
   <label>Start Date</label>
-  <input type="date" id="startDate">
+  <input type="date" id="startDate" readonly>
+
+  <label>Customer Type</label>
+  <select id="customerType" required>
+    <option value="Individual">Individual</option>
+    <option value="Senior">Senior Citizen</option>
+  </select>
 
   <label>Duration (in years)</label>
   <select id="duration">
     <option value="1">1</option>
     <option value="2">2</option>
     <option value="3">3</option>
+    <option value="4">4</option>
+    <option value="5">5</option>
   </select>
 
   <label>Principal Amount (₹)</label>
   <input type="number" id="principal">
 
   <label>Interest Rate (%)</label>
-  <input type="number" id="interestRate" step="0.01" placeholder="e.g. 10.50">
+  <input type="number" id="interestRate" readonly>
 
   <label>Maturity Date</label>
   <input type="text" id="maturityDate" readonly>
@@ -142,27 +144,53 @@
     }
   });
 
-  document.getElementById("startDate").addEventListener("change", updateMaturity);
-  document.getElementById("duration").addEventListener("change", updateMaturity);
-  document.getElementById("principal").addEventListener("input", updateMaturity);
-  document.getElementById("interestRate").addEventListener("input", updateMaturity);
+  // Auto-fill today's date
+  const today = new Date().toISOString().split("T")[0];
+  document.getElementById("startDate").value = today;
+
+  const durationEl = document.getElementById("duration");
+  const principalEl = document.getElementById("principal");
+  const rateEl = document.getElementById("interestRate");
+  const maturityDateEl = document.getElementById("maturityDate");
+  const maturityAmountEl = document.getElementById("maturityAmount");
+  const customerTypeEl = document.getElementById("customerType");
 
   function updateMaturity() {
-    const start = document.getElementById("startDate").value;
-    const years = parseInt(document.getElementById("duration").value);
-    const principal = parseFloat(document.getElementById("principal").value);
-    const rate = parseFloat(document.getElementById("interestRate").value);
+    const years = parseInt(durationEl.value);
+    const principal = parseFloat(principalEl.value);
+    const customerType = customerTypeEl.value;
 
-    if (!start || isNaN(years) || isNaN(principal) || isNaN(rate)) return;
+    if (isNaN(years) || isNaN(principal)) return;
 
-    const startDate = new Date(start);
-    const maturityDate = new Date(startDate.setFullYear(startDate.getFullYear() + years));
-    const formattedDate = maturityDate.toISOString().split("T")[0];
-    document.getElementById("maturityDate").value = formattedDate;
+    // Interest logic
+    let rate = 10;
+    if (customerType === "Individual") {
+      if (years >= 5) rate = 12;
+      else if (years >= 4) rate = 11.5;
+      else if (years >= 3) rate = 11;
+      else if (years >= 2) rate = 10.5;
+      else rate = 10;
+    } else if (customerType === "Senior") {
+      if (years >= 5) rate = 12.5;
+      else if (years >= 4) rate = 12;
+      else if (years >= 3) rate = 11.5;
+      else if (years >= 2) rate = 11;
+      else rate = 10.5;
+    }
+
+    rateEl.value = rate;
 
     const maturityAmount = principal * Math.pow((1 + rate / 100), years);
-    document.getElementById("maturityAmount").value = maturityAmount.toFixed(2);
+    maturityAmountEl.value = maturityAmount.toFixed(2);
+
+    const startDate = new Date(document.getElementById("startDate").value);
+    const maturityDate = new Date(startDate.setFullYear(startDate.getFullYear() + years));
+    maturityDateEl.value = maturityDate.toISOString().split("T")[0];
   }
+
+  durationEl.addEventListener("change", updateMaturity);
+  principalEl.addEventListener("input", updateMaturity);
+  customerTypeEl.addEventListener("change", updateMaturity);
 
   document.getElementById("fdForm").addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -173,11 +201,12 @@
       aadhaar: document.getElementById("aadhaar").value,
       pan: document.getElementById("pan").value,
       startDate: document.getElementById("startDate").value,
-      duration: document.getElementById("duration").value,
-      principal: document.getElementById("principal").value,
-      interestRate: document.getElementById("interestRate").value,
-      maturityDate: document.getElementById("maturityDate").value,
-      maturityAmount: document.getElementById("maturityAmount").value,
+      duration: durationEl.value,
+      principal: principalEl.value,
+      interestRate: rateEl.value,
+      maturityDate: maturityDateEl.value,
+      maturityAmount: maturityAmountEl.value,
+      customerType: customerTypeEl.value,
       status: "pending",
       timestamp: new Date()
     };

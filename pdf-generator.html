@@ -75,6 +75,21 @@
     .center {
       text-align: center;
     }
+
+    .certificate {
+      display: none;
+      margin-top: 50px;
+      border: 2px dashed #0a3d62;
+      padding: 20px;
+      text-align: center;
+      font-size: 18px;
+      font-weight: bold;
+      color: #0a3d62;
+    }
+    .certificate img {
+      height: 80px;
+      margin-top: 20px;
+    }
   </style>
 </head>
 <body>
@@ -122,6 +137,12 @@
     <tbody></tbody>
   </table>
 
+  <div class="certificate" id="certificate">
+    <p>This is to certify that the customer has successfully initiated the investment.</p>
+    <p>Certified by JDM Credit & Finance</p>
+    <img src="stamp-placeholder.png" alt="Official Stamp" />
+  </div>
+
   <div class="footer">
     <p>Director: Bhawana Sharma</p>
     <p id="footerName"></p>
@@ -152,7 +173,7 @@
 
   if (!customerId) {
     alert("Not logged in as customer");
-    window.location.href = "index.html"; // ✅ use index.html
+    window.location.href = "index.html";
   }
 
   document.getElementById("customerName").innerText = `Customer: ${customerName}`;
@@ -244,6 +265,8 @@
       return;
     }
 
+    document.getElementById("certificate").style.display = "block";
+
     const element = document.getElementById("pdfContent");
     const opt = {
       margin: 0.4,
@@ -252,7 +275,10 @@
       html2canvas: { scale: 2 },
       jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
     };
-    html2pdf().from(element).set(opt).save();
+
+    html2pdf().from(element).set(opt).save().then(() => {
+      document.getElementById("certificate").style.display = "none";
+    });
   }
 
   function goBack() {

@@ -1,4 +1,4 @@
-<!-- ✅ FIXED: Logout Redirect to index.html + Logo Branding -->
+<!-- ✅ FIXED: Logo src = "JDM LOGO.PNG" + Logout redirect to index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -102,7 +102,7 @@
 
 <header>
   <div class="header-left">
-    <img src="https://i.ibb.co/5TpqK1H/banklogo.png" alt="Logo">
+    <img src="JDM LOGO.PNG" alt="Logo">
     <h2>JDM CREDIT & FINANCE</h2>
   </div>
   <div class="info">
@@ -240,7 +240,6 @@
           </tr>
         `;
       });
-      updateUI();
     });
 
     db.collection("rd").where("customerId", "==", customerId).onSnapshot(snapshot => {
@@ -279,13 +278,13 @@
   function logout() {
     firebase.auth().signOut().then(() => {
       localStorage.clear();
-      window.location.href = "index.html"; // ✅ redirect fixed
+      window.location.href = "index.html";
     });
   }
 
   auth.onAuthStateChanged(user => {
     if (!user) {
-      window.location.href = "index.html"; // ✅ redirect fixed
+      window.location.href = "index.html";
     } else {
       loadData();
     }

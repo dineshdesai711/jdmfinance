@@ -34,7 +34,7 @@
       color: #0a3d62;
     }
     h3 {
-      margin-top: 30px;
+      margin-top: 40px;
       color: #0a3d62;
     }
     table {
@@ -52,29 +52,28 @@
       color: white;
     }
     .footer {
-      margin-top: 40px;
+      margin-top: 60px;
       display: flex;
       justify-content: space-between;
       font-weight: bold;
     }
-    .actions {
-      text-align: center;
-      margin-top: 20px;
-    }
-    select, button {
-      padding: 10px 20px;
-      margin: 5px;
-      font-size: 16px;
-    }
     button {
+      margin-top: 20px;
+      padding: 10px 20px;
       background: #0a3d62;
       color: white;
       border: none;
       border-radius: 5px;
       cursor: pointer;
     }
-    .dropdowns {
+    select {
       margin-top: 20px;
+      padding: 8px;
+      font-size: 16px;
+      width: 100%;
+      max-width: 400px;
+    }
+    .button-group {
       text-align: center;
     }
   </style>
@@ -92,18 +91,30 @@
     </div>
   </div>
 
-  <div class="dropdowns">
-    <label>Select FD/RD: </label>
-    <select id="entrySelect" onchange="showSelectedEntry()">
-      <option value="">-- Select an Entry --</option>
+  <div style="text-align:center;">
+    <select id="entrySelect" onchange="filterEntry()">
+      <option value="">🔽 Select FD or RD to Print</option>
     </select>
   </div>
 
-  <h3>Certificate</h3>
-  <table id="entryTable">
+  <h3>Approved FD Entries</h3>
+  <table id="fdTable">
     <thead>
       <tr>
-        <th>Type</th>
+        <th>Principal</th>
+        <th>Maturity Amount</th>
+        <th>Start Date</th>
+        <th>Maturity Date</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <h3>Approved RD Entries</h3>
+  <table id="rdTable">
+    <thead>
+      <tr>
         <th>Principal</th>
         <th>Maturity Amount</th>
         <th>Start Date</th>
@@ -120,7 +131,7 @@
   </div>
 </div>
 
-<div class="actions">
+<div class="button-group">
   <button onclick="downloadPDF()">Download PDF</button>
   <button onclick="goBack()">⬅ Back to Dashboard</button>
 </div>
@@ -142,31 +153,45 @@
   const customerId = localStorage.getItem("customerId");
   const customerName = localStorage.getItem("customerName");
 
-  if (!customerId) {
-    alert("Not logged in as customer");
-    window.location.href = "login.html";
-  }
+  const fdData = [];
+  const rdData = [];
+
+  const fdTable = document.querySelector("#fdTable tbody");
+  const rdTable = document.querySelector("#rdTable tbody");
+  const select = document.getElementById("entrySelect");
 
   document.getElementById("customerName").innerText = `Customer: ${customerName}`;
   document.getElementById("footerName").innerText = `Issued to: ${customerName}`;
 
-  const select = document.getElementById("entrySelect");
-  const tbody = document.querySelector("#entryTable tbody");
-  const entries = []; // Store all approved entries
-
   function loadApprovedData() {
+    fdTable.innerHTML = "";
+    rdTable.innerHTML = "";
+    select.innerHTML = `<option value="">🔽 Select FD or RD to Print</option>`;
+
     db.collection("fd")
       .where("customerId", "==", customerId)
       .where("status", "==", "approved")
       .get()
       .then(snapshot => {
-        snapshot.forEach(doc => {
+        snapshot.forEach((doc, index) => {
           const fd = doc.data();
-          fd.type = "FD";
           fd.id = doc.id;
-          entries.push(fd);
+          fdData.push(fd);
+
+          // Add row
+          fdTable.innerHTML += `
+            <tr data-id="${fd.id}">
+              <td>₹${parseFloat(fd.principal).toLocaleString()}</td>
+              <td>₹${parseFloat(fd.maturityAmount).toLocaleString()}</td>
+              <td>${fd.startDate}</td>
+              <td>${fd.maturityDate}</td>
+              <td>${fd.status}</td>
+            </tr>
+          `;
+
+          // Add to select
           const opt = document.createElement("option");
-          opt.value = entries.length - 1;
+          opt.value = `fd-${fd.id}`;
           opt.text = `FD - ₹${fd.principal} (${fd.startDate})`;
           select.appendChild(opt);
         });
@@ -177,36 +202,48 @@
       .where("status", "==", "approved")
       .get()
       .then(snapshot => {
-        snapshot.forEach(doc => {
+        snapshot.forEach((doc, index) => {
           const rd = doc.data();
-          rd.type = "RD";
           rd.id = doc.id;
-          entries.push(rd);
+          rdData.push(rd);
+
+          // Add row
+          rdTable.innerHTML += `
+            <tr data-id="${rd.id}">
+              <td>₹${parseFloat(rd.principal).toLocaleString()}</td>
+              <td>₹${parseFloat(rd.maturityAmount).toLocaleString()}</td>
+              <td>${rd.startDate}</td>
+              <td>${rd.maturityDate}</td>
+              <td>${rd.status}</td>
+            </tr>
+          `;
+
+          // Add to select
           const opt = document.createElement("option");
-          opt.value = entries.length - 1;
+          opt.value = `rd-${rd.id}`;
           opt.text = `RD - ₹${rd.principal} (${rd.startDate})`;
           select.appendChild(opt);
         });
       });
   }
 
-  function showSelectedEntry() {
-    const index = select.value;
-    tbody.innerHTML = "";
+  function filterEntry() {
+    const selected = select.value;
+    const [type, id] = selected.split("-");
 
-    if (index === "") return;
+    // Show only selected FD
+    document.querySelectorAll("#fdTable tbody tr").forEach(row => {
+      row.style.display = type === "fd" && row.getAttribute("data-id") === id ? "" : "none";
+    });
 
-    const entry = entries[index];
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${entry.type}</td>
-      <td>₹${parseFloat(entry.principal).toLocaleString()}</td>
-      <td>₹${parseFloat(entry.maturityAmount).toLocaleString()}</td>
-      <td>${entry.startDate}</td>
-      <td>${entry.maturityDate}</td>
-      <td>${entry.status}</td>
-    `;
-    tbody.appendChild(tr);
+    // Show only selected RD
+    document.querySelectorAll("#rdTable tbody tr").forEach(row => {
+      row.style.display = type === "rd" && row.getAttribute("data-id") === id ? "" : "none";
+    });
+
+    if (selected === "") {
+      document.querySelectorAll("tbody tr").forEach(row => row.style.display = "");
+    }
   }
 
   function downloadPDF() {
@@ -216,11 +253,11 @@
     }
     const element = document.getElementById("pdfContent");
     const opt = {
-      margin:       0.4,
-      filename:     `FD_RD_Certificate_${customerId}.pdf`,
-      image:        { type: 'jpeg', quality: 0.98 },
-      html2canvas:  { scale: 2 },
-      jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+      margin: 0.4,
+      filename: `FD_RD_Certificate_${customerId}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
     };
     html2pdf().from(element).set(opt).save();
   }

@@ -33,10 +33,6 @@
       margin: 0;
       color: #0a3d62;
     }
-    h3 {
-      margin-top: 30px;
-      color: #0a3d62;
-    }
     table {
       width: 100%;
       border-collapse: collapse;
@@ -57,8 +53,27 @@
       justify-content: space-between;
       font-weight: bold;
     }
-    button {
+    .center {
+      text-align: center;
+    }
+    .certificate-only {
+      display: none;
+      margin-top: 30px;
+      text-align: center;
+      font-size: 18px;
+      padding: 20px;
+      border: 2px solid #0a3d62;
+      border-radius: 10px;
+    }
+    .certificate-only img {
+      margin-top: 30px;
+      width: 120px;
+    }
+    .btns {
+      text-align: center;
       margin-top: 20px;
+    }
+    button {
       padding: 10px 20px;
       background: #0a3d62;
       color: white;
@@ -71,24 +86,6 @@
       padding: 10px;
       width: 100%;
       max-width: 500px;
-    }
-    .center {
-      text-align: center;
-    }
-
-    .certificate {
-      display: none;
-      margin-top: 50px;
-      border: 2px dashed #0a3d62;
-      padding: 20px;
-      text-align: center;
-      font-size: 18px;
-      font-weight: bold;
-      color: #0a3d62;
-    }
-    .certificate img {
-      height: 80px;
-      margin-top: 20px;
     }
   </style>
 </head>
@@ -137,11 +134,7 @@
     <tbody></tbody>
   </table>
 
-  <div class="certificate" id="certificate">
-    <p>This is to certify that the customer has successfully initiated the investment.</p>
-    <p>Certified by JDM Credit & Finance</p>
-    <img src="stamp-placeholder.png" alt="Official Stamp" />
-  </div>
+  <div class="certificate-only" id="certificateSection"></div>
 
   <div class="footer">
     <p>Director: Bhawana Sharma</p>
@@ -149,7 +142,7 @@
   </div>
 </div>
 
-<div class="center">
+<div class="btns">
   <button onclick="downloadPDF()">📄 Download Selected PDF</button>
   <button onclick="goBack()">⬅ Back to Dashboard</button>
 </div>
@@ -260,24 +253,43 @@
   }
 
   function downloadPDF() {
-    if (entrySelector.value === "") {
+    const selected = entrySelector.value;
+    if (!selected) {
       alert("Please select an entry to download PDF.");
       return;
     }
 
-    document.getElementById("certificate").style.display = "block";
+    const [type, id] = selected.split("-");
 
-    const element = document.getElementById("pdfContent");
-    const opt = {
-      margin: 0.4,
-      filename: `FD_RD_Certificate_${customerId}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2 },
-      jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
-    };
+    db.collection(type).doc(id).get().then(doc => {
+      const data = doc.data();
+      const certSection = document.getElementById("certificateSection");
 
-    html2pdf().from(element).set(opt).save().then(() => {
-      document.getElementById("certificate").style.display = "none";
+      certSection.innerHTML = `
+        <h2>Certificate of Investment</h2>
+        <p>This is to certify that <strong>${customerName}</strong> has successfully invested in a <strong>${type.toUpperCase()}</strong> on <strong>${data.startDate}</strong>.</p>
+        <p><strong>Principal Amount:</strong> ₹${data.principal}</p>
+        <p><strong>Maturity Date:</strong> ${data.maturityDate}</p>
+        <p><strong>Maturity Amount:</strong> ₹${data.maturityAmount}</p>
+        <p>Thank you for investing with <strong>JDM Credit & Finance</strong>.</p>
+        <br>
+        <p>Director: Bhawana Sharma</p>
+        <img src="stamp.png" alt="stamp" />
+        <p style="margin-top:5px;">Signature: Bhawana Sharma</p>
+      `;
+
+      certSection.style.display = "block";
+
+      const element = document.getElementById("pdfContent");
+      html2pdf().from(element).set({
+        margin: 0.4,
+        filename: `FD_RD_Certificate_${customerId}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+      }).save().then(() => {
+        certSection.style.display = "none";
+      });
     });
   }
 

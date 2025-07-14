@@ -1,4 +1,3 @@
-<!-- ✅ FIXED: Logo src = "JDM LOGO.PNG" + Logout redirect to index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,30 +7,28 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f5f6fa;
+      background: #0a3d62;
       margin: 0;
       padding: 0;
+      color: white;
     }
     header {
-      background-color: #0a3d62;
-      color: white;
-      padding: 15px 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .header-left {
+      position: absolute;
+      top: 20px;
+      left: 20px;
       display: flex;
       align-items: center;
+      gap: 10px;
     }
-    .header-left img {
-      height: 40px;
-      margin-right: 10px;
-    }
-    .info {
-      font-size: 14px;
+    header img {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: 2px solid white;
+      box-shadow: 0 0 5px rgba(0,0,0,0.5);
     }
     .section {
+      margin-top: 100px;
       padding: 20px;
     }
     .card {
@@ -40,6 +37,7 @@
       padding: 20px;
       margin-bottom: 20px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      color: #333;
     }
     .card h3 {
       margin-top: 0;
@@ -101,13 +99,8 @@
 <body>
 
 <header>
-  <div class="header-left">
-    <img src="JDM LOGO.PNG" alt="Logo">
-    <h2>JDM CREDIT & FINANCE</h2>
-  </div>
-  <div class="info">
-    <strong id="customerName">Customer Name</strong> | ID: <span id="customerId"></span>
-  </div>
+  <img src="JDM LOGO.png" alt="JDM Logo">
+  <h1 class="text-lg font-bold tracking-widest text-white">JDM CREDIT & FINANCE</h1>
 </header>
 
 <div class="section">
@@ -192,8 +185,8 @@
 
   const customerId = localStorage.getItem("customerId");
   const customerName = localStorage.getItem("customerName");
-  document.getElementById("customerName").innerText = customerName;
-  document.getElementById("customerId").innerText = customerId;
+  document.getElementById("customerName")?.innerText = customerName;
+  document.getElementById("customerId")?.innerText = customerId;
 
   if (!customerId) {
     window.location.href = "create-customer.html";
@@ -240,6 +233,7 @@
           </tr>
         `;
       });
+      updateUI();
     });
 
     db.collection("rd").where("customerId", "==", customerId).onSnapshot(snapshot => {
@@ -278,13 +272,13 @@
   function logout() {
     firebase.auth().signOut().then(() => {
       localStorage.clear();
-      window.location.href = "index.html";
+      window.location.href = "login.html";
     });
   }
 
   auth.onAuthStateChanged(user => {
     if (!user) {
-      window.location.href = "index.html";
+      window.location.href = "login.html";
     } else {
       loadData();
     }

@@ -1,3 +1,4 @@
+<!-- ✅ FIXED: Double RD Count + Status Check + Logo Layout -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -72,7 +73,6 @@
       padding: 6px 10px;
       border-radius: 5px;
       color: white;
-      display: inline-block;
       font-size: 13px;
     }
     .approved {
@@ -80,7 +80,6 @@
       padding: 6px 10px;
       border-radius: 5px;
       color: white;
-      display: inline-block;
       font-size: 13px;
     }
     table {
@@ -200,9 +199,6 @@
     window.location.href = "create-customer.html";
   }
 
-  let totalFD = 0, totalRD = 0, totalDeposit = 0, totalProfit = 0;
-  let hasApproved = false;
-
   function renderChart(fdAmt, rdAmt, profit) {
     new Chart(document.getElementById("investmentChart"), {
       type: "bar",
@@ -218,11 +214,14 @@
   }
 
   function loadData() {
+    let totalFD = 0, totalRD = 0, totalDeposit = 0, totalProfit = 0;
+    let hasApproved = false;
+
     db.collection("fd").where("customerId", "==", customerId).onSnapshot(snapshot => {
       document.getElementById("fdTable").innerHTML = "";
       snapshot.forEach(doc => {
         const d = doc.data();
-        const status = d.status || "pending";
+        const status = d.status?.toLowerCase() || "pending";
         const principal = parseFloat(d.principal) || 0;
         const maturity = parseFloat(d.maturityAmount) || 0;
 
@@ -248,7 +247,7 @@
       document.getElementById("rdTable").innerHTML = "";
       snapshot.forEach(doc => {
         const d = doc.data();
-        const status = d.status || "pending";
+        const status = d.status?.toLowerCase() || "pending";
         const principal = parseFloat(d.principal) || 0;
         const maturity = parseFloat(d.maturityAmount) || 0;
 
@@ -267,18 +266,14 @@
           </tr>
         `;
       });
-      updateUI();
+
+      document.getElementById("fdCount").innerText = totalFD;
+      document.getElementById("rdCount").innerText = totalRD;
+      document.getElementById("totalDeposit").innerText = totalDeposit.toLocaleString();
+      document.getElementById("totalProfit").innerText = totalProfit.toLocaleString();
+      renderChart(totalDeposit, 0, totalProfit);
+      document.getElementById("pdfBtn").disabled = !hasApproved;
     });
-  }
-
-  function updateUI() {
-    document.getElementById("fdCount").innerText = totalFD;
-    document.getElementById("rdCount").innerText = totalRD;
-    document.getElementById("totalDeposit").innerText = totalDeposit.toLocaleString();
-    document.getElementById("totalProfit").innerText = totalProfit.toLocaleString();
-    renderChart(totalDeposit, 0, totalProfit);
-
-    document.getElementById("pdfBtn").disabled = !hasApproved;
   }
 
   function logout() {

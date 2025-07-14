@@ -58,7 +58,7 @@
       font-weight: bold;
     }
     button {
-      margin: 10px;
+      margin-top: 20px;
       padding: 10px 20px;
       background: #0a3d62;
       color: white;
@@ -68,12 +68,11 @@
     }
     select {
       margin-top: 20px;
-      padding: 8px;
-      font-size: 16px;
+      padding: 10px;
       width: 100%;
-      max-width: 400px;
+      max-width: 500px;
     }
-    .btn-group {
+    .center {
       text-align: center;
     }
   </style>
@@ -91,9 +90,9 @@
     </div>
   </div>
 
-  <div style="text-align:center;">
-    <select id="entrySelect" onchange="filterEntry()">
-      <option value="">🔽 Select FD or RD to Print</option>
+  <div class="center">
+    <select id="entrySelector" onchange="filterRows()">
+      <option value="">🔽 Select FD or RD Entry to Download</option>
     </select>
   </div>
 
@@ -131,9 +130,9 @@
   </div>
 </div>
 
-<div class="btn-group">
+<div class="center">
   <button onclick="downloadPDF()">Download PDF</button>
-  <button onclick="window.location.href='customer-dashboard.html'">⬅ Back to Dashboard</button>
+  <button onclick="goBack()">⬅ Back to Dashboard</button>
 </div>
 
 <script>
@@ -153,17 +152,21 @@
   const customerId = localStorage.getItem("customerId");
   const customerName = localStorage.getItem("customerName");
 
+  if (!customerId) {
+    alert("Not logged in as customer");
+    window.location.href = "index.html";
+  }
+
   document.getElementById("customerName").innerText = `Customer: ${customerName}`;
   document.getElementById("footerName").innerText = `Issued to: ${customerName}`;
 
-  const fdTable = document.querySelector("#fdTable tbody");
-  const rdTable = document.querySelector("#rdTable tbody");
-  const entrySelect = document.getElementById("entrySelect");
+  const entrySelector = document.getElementById("entrySelector");
 
   function loadApprovedData() {
-    fdTable.innerHTML = "";
-    rdTable.innerHTML = "";
-    entrySelect.innerHTML = `<option value="">🔽 Select FD or RD to Print</option>`;
+    const fdBody = document.querySelector("#fdTable tbody");
+    const rdBody = document.querySelector("#rdTable tbody");
+    fdBody.innerHTML = "";
+    rdBody.innerHTML = "";
 
     db.collection("fd")
       .where("customerId", "==", customerId)
@@ -174,8 +177,8 @@
           const fd = doc.data();
           fd.id = doc.id;
 
-          fdTable.innerHTML += `
-            <tr data-id="${fd.id}">
+          fdBody.innerHTML += `
+            <tr data-type="fd" data-id="${fd.id}">
               <td>₹${parseFloat(fd.principal).toLocaleString()}</td>
               <td>₹${parseFloat(fd.maturityAmount).toLocaleString()}</td>
               <td>${fd.startDate}</td>
@@ -184,10 +187,10 @@
             </tr>
           `;
 
-          const option = document.createElement("option");
-          option.value = `fd-${fd.id}`;
-          option.text = `FD - ₹${fd.principal} (${fd.startDate})`;
-          entrySelect.appendChild(option);
+          const opt = document.createElement("option");
+          opt.value = `fd-${fd.id}`;
+          opt.text = `FD: ₹${fd.principal} (${fd.startDate})`;
+          entrySelector.appendChild(opt);
         });
       });
 
@@ -200,8 +203,8 @@
           const rd = doc.data();
           rd.id = doc.id;
 
-          rdTable.innerHTML += `
-            <tr data-id="${rd.id}">
+          rdBody.innerHTML += `
+            <tr data-type="rd" data-id="${rd.id}">
               <td>₹${parseFloat(rd.principal).toLocaleString()}</td>
               <td>₹${parseFloat(rd.maturityAmount).toLocaleString()}</td>
               <td>${rd.startDate}</td>
@@ -210,32 +213,39 @@
             </tr>
           `;
 
-          const option = document.createElement("option");
-          option.value = `rd-${rd.id}`;
-          option.text = `RD - ₹${rd.principal} (${rd.startDate})`;
-          entrySelect.appendChild(option);
+          const opt = document.createElement("option");
+          opt.value = `rd-${rd.id}`;
+          opt.text = `RD: ₹${rd.principal} (${rd.startDate})`;
+          entrySelector.appendChild(opt);
         });
       });
   }
 
-  function filterEntry() {
-    const selected = entrySelect.value;
+  function filterRows() {
+    const selected = entrySelector.value;
+    const rows = document.querySelectorAll("tbody tr");
+
+    if (selected === "") {
+      rows.forEach(row => row.style.display = "");
+      return;
+    }
+
     const [type, id] = selected.split("-");
-
-    document.querySelectorAll("#fdTable tbody tr").forEach(row => {
-      row.style.display = (type === "fd" && row.getAttribute("data-id") === id) || selected === "" ? "" : "none";
-    });
-
-    document.querySelectorAll("#rdTable tbody tr").forEach(row => {
-      row.style.display = (type === "rd" && row.getAttribute("data-id") === id) || selected === "" ? "" : "none";
+    rows.forEach(row => {
+      if (row.dataset.type === type && row.dataset.id === id) {
+        row.style.display = "";
+      } else {
+        row.style.display = "none";
+      }
     });
   }
 
   function downloadPDF() {
-    if (entrySelect.value === "") {
-      alert("Please select an FD or RD entry first.");
+    if (entrySelector.value === "") {
+      alert("Please select a specific FD or RD entry to print.");
       return;
     }
+
     const element = document.getElementById("pdfContent");
     const opt = {
       margin: 0.4,
@@ -247,9 +257,13 @@
     html2pdf().from(element).set(opt).save();
   }
 
+  function goBack() {
+    window.location.href = "customer-dashboard.html";
+  }
+
   auth.onAuthStateChanged(user => {
     if (!user) {
-      window.location.href = "login.html";
+      window.location.href = "index.html";
     } else {
       loadApprovedData();
     }

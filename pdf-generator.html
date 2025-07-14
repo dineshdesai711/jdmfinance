@@ -79,34 +79,26 @@
       display: none;
       background: white;
       padding: 40px;
-      border: 2px solid #444;
-      border-radius: 10px;
-      max-width: 800px;
-      margin: 20px auto;
-      font-family: 'Georgia', serif;
-      color: #333;
-      position: relative;
+      text-align: center;
+      border: 2px dashed #333;
+      margin-top: 30px;
     }
     .certificate h2 {
+      margin-bottom: 20px;
       color: #0a3d62;
-      text-align: center;
     }
-    .certificate img.stamp {
-      position: absolute;
-      bottom: 40px;
-      right: 40px;
-      height: 80px;
-    }
-    .certificate .director {
+    .stamp {
+      margin-top: 30px;
       text-align: right;
-      margin-top: 50px;
-      font-weight: bold;
+    }
+    .stamp img {
+      height: 80px;
     }
   </style>
 </head>
 <body>
 
-<div class="container" id="pdfContent">
+<div class="container">
   <div class="header">
     <div><img src="JDM LOGO.png" alt="Logo" /></div>
     <div>
@@ -153,43 +145,66 @@
     <p>Director: Bhawana Sharma</p>
     <p id="footerName"></p>
   </div>
+
+  <div class="center">
+    <button onclick="downloadPDF()">📄 Download Selected Certificate</button>
+    <button onclick="goBack()">⬅ Back to Dashboard</button>
+  </div>
 </div>
 
-<div id="certificate" class="certificate"></div>
-
-<div class="center">
-  <button onclick="downloadCertificate()">📄 Download Certificate</button>
-  <button onclick="goBack()">⬅ Back to Dashboard</button>
-</div>
+<!-- Hidden Certificate Div -->
+<div id="certificateDiv" class="certificate"></div>
 
 <script>
-  const firebaseConfig = { /* your config */ };
+  const firebaseConfig = {
+    apiKey: "AIzaSyDLvrY6y3SyvLrX-yk8UcdO8RmnC89XNG4",
+    authDomain: "jdms-207ba.firebaseapp.com",
+    projectId: "jdms-207ba",
+    storageBucket: "jdms-207ba.appspot.com",
+    messagingSenderId: "449814553435",
+    appId: "1:449814553435:web:008c7695473689f425307e"
+  };
+
   firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
   const db = firebase.firestore();
 
   const customerId = localStorage.getItem("customerId");
   const customerName = localStorage.getItem("customerName");
+
+  if (!customerId) {
+    alert("Not logged in as customer");
+    window.location.href = "index.html";
+  }
+
   document.getElementById("customerName").innerText = `Customer: ${customerName}`;
   document.getElementById("footerName").innerText = `Issued to: ${customerName}`;
 
   const entrySelector = document.getElementById("entrySelector");
-  const certificate = document.getElementById("certificate");
-
-  let fdEntries = {}, rdEntries = {};
 
   function loadApprovedData() {
     const fdBody = document.querySelector("#fdTable tbody");
     const rdBody = document.querySelector("#rdTable tbody");
     fdBody.innerHTML = "";
     rdBody.innerHTML = "";
+    entrySelector.innerHTML = '<option value="">🔽 Select FD or RD Entry</option>';
 
-    db.collection("fd").where("customerId", "==", customerId).where("status", "==", "approved").get().then(snapshot => {
+    db.collection("fd").where("customerId", "==", customerId).where("status", "==", "approved").get()
+    .then(snapshot => {
       snapshot.forEach(doc => {
         const fd = doc.data();
         fd.id = doc.id;
-        fdEntries[fd.id] = fd;
-        fdBody.innerHTML += `<tr data-type="fd" data-id="${fd.id}"><td>₹${fd.principal}</td><td>₹${fd.maturityAmount}</td><td>${fd.startDate}</td><td>${fd.maturityDate}</td><td>${fd.status}</td></tr>`;
+
+        fdBody.innerHTML += `
+          <tr data-type="fd" data-id="${fd.id}">
+            <td>₹${parseFloat(fd.principal).toLocaleString()}</td>
+            <td>₹${parseFloat(fd.maturityAmount).toLocaleString()}</td>
+            <td>${fd.startDate}</td>
+            <td>${fd.maturityDate}</td>
+            <td>${fd.status}</td>
+          </tr>
+        `;
+
         const opt = document.createElement("option");
         opt.value = `fd-${fd.id}`;
         opt.text = `FD ₹${fd.principal} (${fd.startDate})`;
@@ -197,12 +212,22 @@
       });
     });
 
-    db.collection("rd").where("customerId", "==", customerId).where("status", "==", "approved").get().then(snapshot => {
+    db.collection("rd").where("customerId", "==", customerId).where("status", "==", "approved").get()
+    .then(snapshot => {
       snapshot.forEach(doc => {
         const rd = doc.data();
         rd.id = doc.id;
-        rdEntries[rd.id] = rd;
-        rdBody.innerHTML += `<tr data-type="rd" data-id="${rd.id}"><td>₹${rd.principal}</td><td>₹${rd.maturityAmount}</td><td>${rd.startDate}</td><td>${rd.maturityDate}</td><td>${rd.status}</td></tr>`;
+
+        rdBody.innerHTML += `
+          <tr data-type="rd" data-id="${rd.id}">
+            <td>₹${parseFloat(rd.principal).toLocaleString()}</td>
+            <td>₹${parseFloat(rd.maturityAmount).toLocaleString()}</td>
+            <td>${rd.startDate}</td>
+            <td>${rd.maturityDate}</td>
+            <td>${rd.status}</td>
+          </tr>
+        `;
+
         const opt = document.createElement("option");
         opt.value = `rd-${rd.id}`;
         opt.text = `RD ₹${rd.principal} (${rd.startDate})`;
@@ -214,33 +239,60 @@
   function filterRows() {
     const selected = entrySelector.value;
     const rows = document.querySelectorAll("tbody tr");
-    if (!selected) return rows.forEach(row => row.style.display = "");
+
+    if (selected === "") {
+      rows.forEach(row => row.style.display = "");
+      return;
+    }
+
     const [type, id] = selected.split("-");
-    rows.forEach(row => row.style.display = row.dataset.type === type && row.dataset.id === id ? "" : "none");
+    rows.forEach(row => {
+      if (row.dataset.type === type && row.dataset.id === id) {
+        row.style.display = "";
+      } else {
+        row.style.display = "none";
+      }
+    });
   }
 
-  function downloadCertificate() {
+  function downloadPDF() {
     const selected = entrySelector.value;
-    if (!selected) return alert("Please select FD or RD entry.");
+    if (!selected) {
+      alert("Please select an FD or RD entry to generate certificate.");
+      return;
+    }
+
     const [type, id] = selected.split("-");
-    const data = type === "fd" ? fdEntries[id] : rdEntries[id];
-    if (!data) return;
+    const row = document.querySelector(`tr[data-type="${type}"][data-id="${id}"]`);
+    const cells = row.querySelectorAll("td");
 
-    certificate.innerHTML = `
-      <h2>Certificate of Deposit</h2>
-      <p>This is to certify that <strong>${customerName}</strong> has successfully opened a <strong>${type.toUpperCase()}</strong> with the following details:</p>
-      <ul>
-        <li><strong>Principal Amount:</strong> ₹${data.principal}</li>
-        <li><strong>Maturity Amount:</strong> ₹${data.maturityAmount}</li>
-        <li><strong>Start Date:</strong> ${data.startDate}</li>
-        <li><strong>Maturity Date:</strong> ${data.maturityDate}</li>
-        <li><strong>Status:</strong> ${data.status}</li>
-      </ul>
-      <div class="director">Director: Bhawana Sharma</div>
-      <img class="stamp" src="https://i.imgur.com/Zy43vJL.png" alt="Stamp" />
+    const certDiv = document.getElementById("certificateDiv");
+    certDiv.innerHTML = `
+      <h2>Certificate of ${type.toUpperCase()}</h2>
+      <p>This is to certify that <strong>${customerName}</strong> has invested in a ${type.toUpperCase()} with the following details:</p>
+      <table style="margin: 20px auto; border: 1px solid #000;">
+        <tr><td><strong>Principal</strong></td><td>${cells[0].innerText}</td></tr>
+        <tr><td><strong>Maturity Amount</strong></td><td>${cells[1].innerText}</td></tr>
+        <tr><td><strong>Start Date</strong></td><td>${cells[2].innerText}</td></tr>
+        <tr><td><strong>Maturity Date</strong></td><td>${cells[3].innerText}</td></tr>
+        <tr><td><strong>Status</strong></td><td>${cells[4].innerText}</td></tr>
+      </table>
+      <div class="stamp">
+        <p>Director: Bhawana Sharma</p>
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/50/Stamp_icon_red.svg/1024px-Stamp_icon_red.svg.png" />
+      </div>
     `;
+    certDiv.style.display = "block";
 
-    html2pdf().from(certificate).set({ filename: `Certificate_${type}_${id}.pdf` }).save();
+    html2pdf().from(certDiv).set({
+      margin: 0.5,
+      filename: `Certificate_${customerId}_${type.toUpperCase()}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+    }).save().then(() => {
+      certDiv.style.display = "none";
+    });
   }
 
   function goBack() {
@@ -248,8 +300,11 @@
   }
 
   auth.onAuthStateChanged(user => {
-    if (user) loadApprovedData();
-    else window.location.href = "index.html";
+    if (!user) {
+      window.location.href = "index.html";
+    } else {
+      loadApprovedData();
+    }
   });
 </script>
 

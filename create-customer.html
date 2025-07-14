@@ -22,20 +22,24 @@
     }
   </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-6 text-white">
+<body class="min-h-screen flex items-center justify-center p-6 text-white relative">
 
+  <!-- Top Left Logo & Company Name -->
+  <div class="absolute top-6 left-6 flex items-center gap-4">
+    <img src="JDM LOGO.png" alt="JDM Logo" class="w-12 h-12 rounded-full border border-white shadow" />
+    <h1 class="text-lg font-bold tracking-widest">JDM CREDIT & FINANCE</h1>
+  </div>
+
+  <!-- Main Form Box -->
   <div class="w-full max-w-md glass p-8">
-    <!-- Logo -->
     <div class="flex justify-center mb-4">
       <img src="JDM LOGO.png" alt="JDM Logo" class="w-20 h-20 rounded-full border-2 border-white shadow-lg"/>
     </div>
     
-    <!-- Company Name -->
     <h2 class="text-center text-2xl font-bold mb-6 text-white tracking-wide">
-      JDM CREDIT & FINANCE
+      Create Customer Profile
     </h2>
 
-    <!-- Form Inputs -->
     <input type="text" id="name" placeholder="Customer Name" class="w-full mb-4 px-4 py-3 rounded-md bg-transparent border border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400" />
     <input type="text" id="aadhaar" placeholder="Aadhaar Number (12 digits)" class="w-full mb-4 px-4 py-3 rounded-md bg-transparent border border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400" />
     <input type="text" id="pan" placeholder="PAN Number (ABCDE1234F)" class="w-full mb-4 px-4 py-3 rounded-md bg-transparent border border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400" />
@@ -46,7 +50,7 @@
     </button>
   </div>
 
-  <!-- Firebase -->
+  <!-- Firebase Scripts -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>

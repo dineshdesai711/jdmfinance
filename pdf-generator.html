@@ -1,68 +1,52 @@
+<!-- ✅ PDF Generator Page with Back Button and Individual Certificate Downloads -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>FD/RD PDF Generator - JDM Credit & Finance</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <meta charset="UTF-8">
+  <title>Print Certificates - JDM Credit & Finance</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f0f0f0;
+      background-color: #f4f6f8;
+      margin: 0;
       padding: 20px;
     }
-    .container {
-      background: white;
-      padding: 30px;
-      border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      max-width: 900px;
-      margin: auto;
-    }
-    .header {
+    header {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      padding: 10px 0;
     }
-    .header img {
-      height: 60px;
-    }
-    .header h2 {
-      margin: 0;
+    header h2 {
       color: #0a3d62;
     }
-    h3 {
-      margin-top: 40px;
-      color: #0a3d62;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-    }
-    th, td {
-      border: 1px solid #ccc;
-      padding: 10px;
-      text-align: center;
-    }
-    th {
-      background: #0a3d62;
+    .back-btn {
+      background-color: #c0392b;
       color: white;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
     }
-    .footer {
-      margin-top: 60px;
-      display: flex;
-      justify-content: space-between;
-      font-weight: bold;
+    .entry-list {
+      margin-top: 30px;
     }
-    button {
-      margin-top: 20px;
-      padding: 10px 20px;
-      background: #0a3d62;
+    .entry-card {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .entry-card h3 {
+      margin-top: 0;
+    }
+    .download-btn {
+      background-color: #0a3d62;
       color: white;
       border: none;
+      padding: 8px 12px;
       border-radius: 5px;
       cursor: pointer;
     }
@@ -70,55 +54,15 @@
 </head>
 <body>
 
-<div class="container" id="pdfContent">
-  <div class="header">
-    <div>
-      <img src="JDM LOGO.png" alt="Logo" />
-    </div>
-    <div>
-      <h2>JDM CREDIT & FINANCE</h2>
-      <p id="customerName" style="text-align:right; font-weight:bold;"></p>
-    </div>
-  </div>
+<header>
+  <h2>📄 Approved Certificates - JDM Credit & Finance</h2>
+  <button class="back-btn" onclick="location.href='customer-dashboard.html'">⬅️ Back to Dashboard</button>
+</header>
 
-  <h3>Approved FD Entries</h3>
-  <table id="fdTable">
-    <thead>
-      <tr>
-        <th>Principal</th>
-        <th>Maturity Amount</th>
-        <th>Start Date</th>
-        <th>Maturity Date</th>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+<div class="entry-list" id="entryList">Loading certificates...</div>
 
-  <h3>Approved RD Entries</h3>
-  <table id="rdTable">
-    <thead>
-      <tr>
-        <th>Principal</th>
-        <th>Maturity Amount</th>
-        <th>Start Date</th>
-        <th>Maturity Date</th>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-
-  <div class="footer">
-    <p>Director: Bhawana Sharma</p>
-    <p id="footerName"></p>
-  </div>
-</div>
-
-<div style="text-align:center;">
-  <button onclick="downloadPDF()">Download PDF</button>
-</div>
-
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 <script>
   const firebaseConfig = {
     apiKey: "AIzaSyDLvrY6y3SyvLrX-yk8UcdO8RmnC89XNG4",
@@ -128,86 +72,76 @@
     messagingSenderId: "449814553435",
     appId: "1:449814553435:web:008c7695473689f425307e"
   };
-
   firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
   const db = firebase.firestore();
 
   const customerId = localStorage.getItem("customerId");
   const customerName = localStorage.getItem("customerName");
+  const entryList = document.getElementById("entryList");
 
-  if (!customerId) {
-    alert("Not logged in as customer");
-    window.location.href = "login.html";
+  async function loadApprovedCertificates() {
+    let approvedFDs = await db.collection("fd").where("customerId", "==", customerId).where("status", "==", "approved").get();
+    let approvedRDs = await db.collection("rd").where("customerId", "==", customerId).where("status", "==", "approved").get();
+    let html = "";
+
+    approvedFDs.forEach(doc => {
+      const d = doc.data();
+      html += createCard("FD", d);
+    });
+
+    approvedRDs.forEach(doc => {
+      const d = doc.data();
+      html += createCard("RD", d);
+    });
+
+    entryList.innerHTML = html || '<p>No approved entries found.</p>';
   }
 
-  document.getElementById("customerName").innerText = `Customer: ${customerName}`;
-  document.getElementById("footerName").innerText = `Issued to: ${customerName}`;
-
-  function loadApprovedData() {
-    const fdBody = document.querySelector("#fdTable tbody");
-    const rdBody = document.querySelector("#rdTable tbody");
-    fdBody.innerHTML = "";
-    rdBody.innerHTML = "";
-
-    db.collection("fd")
-      .where("customerId", "==", customerId)
-      .where("status", "==", "approved")
-      .get()
-      .then(snapshot => {
-        snapshot.forEach(doc => {
-          const fd = doc.data();
-          fdBody.innerHTML += `
-            <tr>
-              <td>₹${parseFloat(fd.principal).toLocaleString()}</td>
-              <td>₹${parseFloat(fd.maturityAmount).toLocaleString()}</td>
-              <td>${fd.startDate}</td>
-              <td>${fd.maturityDate}</td>
-              <td>${fd.status}</td>
-            </tr>
-          `;
-        });
-      });
-
-    db.collection("rd")
-      .where("customerId", "==", customerId)
-      .where("status", "==", "approved")
-      .get()
-      .then(snapshot => {
-        snapshot.forEach(doc => {
-          const rd = doc.data();
-          rdBody.innerHTML += `
-            <tr>
-              <td>₹${parseFloat(rd.principal).toLocaleString()}</td>
-              <td>₹${parseFloat(rd.maturityAmount).toLocaleString()}</td>
-              <td>${rd.startDate}</td>
-              <td>${rd.maturityDate}</td>
-              <td>${rd.status}</td>
-            </tr>
-          `;
-        });
-      });
+  function createCard(type, data) {
+    const id = Math.random().toString(36).substring(2, 10);
+    return `
+      <div class="entry-card">
+        <h3>${type} - ₹${data.principal} to ₹${data.maturityAmount}</h3>
+        <p><strong>Start:</strong> ${data.startDate || '-'} | <strong>Years:</strong> ${data.duration} | <strong>Rate:</strong> ${data.interestRate}%</p>
+        <button class="download-btn" onclick="generatePDF('${type}', '${data.principal}', '${data.maturityAmount}', '${data.duration}', '${data.interestRate}', '${data.startDate || ''}', '${id}')">Download PDF</button>
+      </div>
+    `;
   }
 
-  function downloadPDF() {
-    const element = document.getElementById("pdfContent");
-    const opt = {
-      margin:       0.4,
-      filename:     `FD_RD_Report_${customerId}.pdf`,
-      image:        { type: 'jpeg', quality: 0.98 },
-      html2canvas:  { scale: 2 },
-      jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
-    };
-    html2pdf().from(element).set(opt).save();
+  async function generatePDF(type, principal, maturity, duration, rate, start, id) {
+    const {{ jsPDF }} = window.jspdf;
+    const doc = new jsPDF();
+
+    // Logo
+    const img = new Image();
+    img.src = 'JDM LOGO.png';
+    await new Promise(resolve => img.onload = resolve);
+    doc.addImage(img, 'PNG', 15, 10, 20, 20);
+
+    doc.setFontSize(16);
+    doc.text("JDM CREDIT & FINANCE", 40, 20);
+    doc.setFontSize(12);
+    doc.text(`Certificate of Investment (${type})`, 15, 40);
+
+    doc.text(`Customer Name: ${customerName}`, 15, 50);
+    doc.text(`Principal Amount: ₹${principal}`, 15, 60);
+    doc.text(`Maturity Amount: ₹${maturity}`, 15, 70);
+    doc.text(`Duration: ${duration} Year(s)`, 15, 80);
+    doc.text(`Interest Rate: ${rate}%`, 15, 90);
+    doc.text(`Start Date: ${start}`, 15, 100);
+
+    // Footer
+    doc.line(15, 150, 195, 150);
+    doc.text("Director: Bhawana Sharma", 15, 160);
+    const stamp = new Image();
+    stamp.src = 'https://i.ibb.co/qCPPGHx/stamp2.png'; // Replace with actual stamp if needed
+    await new Promise(resolve => stamp.onload = resolve);
+    doc.addImage(stamp, 'PNG', 160, 140, 30, 30);
+
+    doc.save(`${type}-Certificate-${id}.pdf`);
   }
 
-  auth.onAuthStateChanged(user => {
-    if (!user) {
-      window.location.href = "login.html";
-    } else {
-      loadApprovedData();
-    }
-  });
+  loadApprovedCertificates();
 </script>
 
 </body>

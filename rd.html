@@ -87,6 +87,12 @@
     <option value="Daily">Daily Pigmy</option>
   </select>
 
+  <label>Customer Type</label>
+  <select id="customerType" onchange="calculateMaturity()">
+    <option value="Individual">Individual</option>
+    <option value="Senior">Senior Citizen</option>
+  </select>
+
   <label>Installment Amount (₹)</label>
   <input type="number" id="installment" required />
 
@@ -97,7 +103,7 @@
   <input type="number" id="principal" readonly />
 
   <label>Interest Rate (%)</label>
-  <input type="number" id="interestRate" required step="0.01" />
+  <input type="number" id="interestRate" readonly />
 
   <label>Maturity Amount (₹)</label>
   <input type="text" id="maturityAmount" readonly />
@@ -129,6 +135,18 @@
   const customerId = localStorage.getItem("customerId");
   document.getElementById("customerId").value = customerId;
 
+  const startDateInput = document.getElementById("startDate");
+  const durationInput = document.getElementById("duration");
+  const installmentInput = document.getElementById("installment");
+  const rateInput = document.getElementById("interestRate");
+  const maturityDateInput = document.getElementById("maturityDate");
+  const maturityAmountInput = document.getElementById("maturityAmount");
+  const principalInput = document.getElementById("principal");
+  const typeInput = document.getElementById("rdType");
+  const durationLabel = document.getElementById("durationLabel");
+
+  startDateInput.value = new Date().toISOString().split('T')[0];
+
   auth.onAuthStateChanged(user => {
     if (!user) {
       localStorage.clear();
@@ -146,19 +164,30 @@
     }
   });
 
-  const startDateInput = document.getElementById("startDate");
-  const durationInput = document.getElementById("duration");
-  const installmentInput = document.getElementById("installment");
-  const rateInput = document.getElementById("interestRate");
-  const maturityDateInput = document.getElementById("maturityDate");
-  const maturityAmountInput = document.getElementById("maturityAmount");
-  const principalInput = document.getElementById("principal");
-  const typeInput = document.getElementById("rdType");
-  const durationLabel = document.getElementById("durationLabel");
-
   function toggleDurationLabel() {
     durationLabel.innerText = typeInput.value === "Daily" ? "Duration (in Days)" : "Duration (in Months)";
     calculateMaturity();
+  }
+
+  function calculateInterestRate(duration, type, category) {
+    let years = type === "Monthly" ? duration / 12 : duration / 365;
+    let rate = 0;
+
+    if (category === "Individual") {
+      if (years >= 5) rate = 12;
+      else if (years >= 4) rate = 11.5;
+      else if (years >= 3) rate = 11;
+      else if (years >= 2) rate = 10.5;
+      else rate = 10;
+    } else {
+      if (years >= 5) rate = 12.5;
+      else if (years >= 4) rate = 12;
+      else if (years >= 3) rate = 11.5;
+      else if (years >= 2) rate = 11;
+      else rate = 10.5;
+    }
+
+    return rate;
   }
 
   function calculateMaturity() {
@@ -166,9 +195,9 @@
     const startDate = new Date(startDateInput.value);
     const duration = parseInt(durationInput.value);
     const installment = parseFloat(installmentInput.value);
-    const rate = parseFloat(rateInput.value);
+    const category = document.getElementById("customerType").value;
 
-    if (!isNaN(startDate) && !isNaN(installment) && !isNaN(rate) && duration > 0) {
+    if (!isNaN(startDate) && !isNaN(installment) && duration > 0) {
       let years, maturityDate;
 
       if (type === "Monthly") {
@@ -182,7 +211,9 @@
       }
 
       const principal = installment * duration;
+      const rate = calculateInterestRate(duration, type, category);
       principalInput.value = principal;
+      rateInput.value = rate;
 
       const maturityAmount = principal * Math.pow(1 + rate / 100, years);
       maturityAmountInput.value = maturityAmount.toFixed(2);
@@ -194,7 +225,6 @@
   startDateInput.addEventListener("change", calculateMaturity);
   durationInput.addEventListener("input", calculateMaturity);
   installmentInput.addEventListener("input", calculateMaturity);
-  rateInput.addEventListener("input", calculateMaturity);
 
   function submitRD(event) {
     event.preventDefault();
@@ -213,7 +243,8 @@
       maturityDate: maturityDateInput.value,
       maturityAmount: maturityAmountInput.value,
       type: typeInput.value,
-      status: "pending",
+      customerType: document.getElementById("customerType").value,
+      status: "Pending",
       timestamp: firebase.firestore.FieldValue.serverTimestamp()
     };
 

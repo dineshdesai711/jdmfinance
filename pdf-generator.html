@@ -34,7 +34,7 @@
       color: #0a3d62;
     }
     h3 {
-      margin-top: 40px;
+      margin-top: 30px;
       color: #0a3d62;
     }
     table {
@@ -57,59 +57,56 @@
       justify-content: space-between;
       font-weight: bold;
     }
-    .controls {
-      text-align: center;
-      margin: 30px 0;
-    }
-    select {
-      padding: 10px;
-      margin: 0 10px;
-      border-radius: 5px;
-    }
     button {
+      margin-top: 20px;
       padding: 10px 20px;
-      margin: 10px;
       background: #0a3d62;
       color: white;
       border: none;
       border-radius: 5px;
       cursor: pointer;
     }
-
-    /* Certificate (hidden by default) */
-    #certificate {
-      display: none;
-      padding: 40px;
-      font-size: 16px;
-      background: white;
-      color: black;
-      width: 800px;
-      margin: auto;
+    select {
+      margin-top: 20px;
+      padding: 10px;
+      width: 100%;
+      max-width: 500px;
     }
-    .cert-header {
+    .center {
       text-align: center;
     }
-    .cert-header img {
-      height: 60px;
+    .certificate {
+      display: none;
+      background: white;
+      padding: 40px;
+      border: 2px solid #444;
+      border-radius: 10px;
+      max-width: 800px;
+      margin: 20px auto;
+      font-family: 'Georgia', serif;
+      color: #333;
+      position: relative;
     }
-    .cert-body {
-      margin-top: 30px;
-      line-height: 1.7;
+    .certificate h2 {
+      color: #0a3d62;
+      text-align: center;
     }
-    .cert-footer {
-      margin-top: 60px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .cert-footer img {
+    .certificate img.stamp {
+      position: absolute;
+      bottom: 40px;
+      right: 40px;
       height: 80px;
+    }
+    .certificate .director {
+      text-align: right;
+      margin-top: 50px;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
 
-<div class="container">
+<div class="container" id="pdfContent">
   <div class="header">
     <div><img src="JDM LOGO.png" alt="Logo" /></div>
     <div>
@@ -118,16 +115,10 @@
     </div>
   </div>
 
-  <div class="controls">
-    <select id="entryType">
-      <option value="fd">FD</option>
-      <option value="rd">RD</option>
+  <div class="center">
+    <select id="entrySelector" onchange="filterRows()">
+      <option value="">🔽 Select FD or RD Entry</option>
     </select>
-    <select id="entryList">
-      <option value="">Select Entry</option>
-    </select>
-    <button onclick="downloadCertificate()">Download Certificate</button>
-    <button onclick="window.location.href='customer-dashboard.html'">Back to Dashboard</button>
   </div>
 
   <h3>Approved FD Entries</h3>
@@ -164,48 +155,30 @@
   </div>
 </div>
 
-<!-- Hidden Certificate -->
-<div id="certificate">
-  <div class="cert-header">
-    <img src="JDM LOGO.png" alt="Logo" />
-    <h2>JDM CREDIT & FINANCE</h2>
-    <h3>Deposit Certificate</h3>
-  </div>
-  <div class="cert-body" id="certDetails">
-    <!-- filled by JS -->
-  </div>
-  <div class="cert-footer">
-    <div><strong>ASHUTOSH SHARMA<br>Director</strong></div>
-    <img src="https://i.ibb.co/X2CjBVK/stamp-placeholder.png" alt="Stamp">
-  </div>
+<div id="certificate" class="certificate"></div>
+
+<div class="center">
+  <button onclick="downloadCertificate()">📄 Download Certificate</button>
+  <button onclick="goBack()">⬅ Back to Dashboard</button>
 </div>
 
 <script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyDLvrY6y3SyvLrX-yk8UcdO8RmnC89XNG4",
-    authDomain: "jdms-207ba.firebaseapp.com",
-    projectId: "jdms-207ba",
-    storageBucket: "jdms-207ba.appspot.com",
-    messagingSenderId: "449814553435",
-    appId: "1:449814553435:web:008c7695473689f425307e"
-  };
-
+  const firebaseConfig = { /* your config */ };
   firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
   const db = firebase.firestore();
 
   const customerId = localStorage.getItem("customerId");
   const customerName = localStorage.getItem("customerName");
-
-  if (!customerId) {
-    alert("Not logged in.");
-    window.location.href = "index.html";
-  }
-
   document.getElementById("customerName").innerText = `Customer: ${customerName}`;
   document.getElementById("footerName").innerText = `Issued to: ${customerName}`;
 
-  function loadTables() {
+  const entrySelector = document.getElementById("entrySelector");
+  const certificate = document.getElementById("certificate");
+
+  let fdEntries = {}, rdEntries = {};
+
+  function loadApprovedData() {
     const fdBody = document.querySelector("#fdTable tbody");
     const rdBody = document.querySelector("#rdTable tbody");
     fdBody.innerHTML = "";
@@ -213,75 +186,71 @@
 
     db.collection("fd").where("customerId", "==", customerId).where("status", "==", "approved").get().then(snapshot => {
       snapshot.forEach(doc => {
-        const d = doc.data();
-        fdBody.innerHTML += `
-          <tr>
-            <td>₹${parseFloat(d.principal).toLocaleString()}</td>
-            <td>₹${parseFloat(d.maturityAmount).toLocaleString()}</td>
-            <td>${d.startDate}</td>
-            <td>${d.maturityDate}</td>
-            <td>${d.status}</td>
-          </tr>`;
+        const fd = doc.data();
+        fd.id = doc.id;
+        fdEntries[fd.id] = fd;
+        fdBody.innerHTML += `<tr data-type="fd" data-id="${fd.id}"><td>₹${fd.principal}</td><td>₹${fd.maturityAmount}</td><td>${fd.startDate}</td><td>${fd.maturityDate}</td><td>${fd.status}</td></tr>`;
+        const opt = document.createElement("option");
+        opt.value = `fd-${fd.id}`;
+        opt.text = `FD ₹${fd.principal} (${fd.startDate})`;
+        entrySelector.appendChild(opt);
       });
     });
 
     db.collection("rd").where("customerId", "==", customerId).where("status", "==", "approved").get().then(snapshot => {
       snapshot.forEach(doc => {
-        const d = doc.data();
-        rdBody.innerHTML += `
-          <tr>
-            <td>₹${parseFloat(d.principal).toLocaleString()}</td>
-            <td>₹${parseFloat(d.maturityAmount).toLocaleString()}</td>
-            <td>${d.startDate}</td>
-            <td>${d.maturityDate}</td>
-            <td>${d.status}</td>
-          </tr>`;
+        const rd = doc.data();
+        rd.id = doc.id;
+        rdEntries[rd.id] = rd;
+        rdBody.innerHTML += `<tr data-type="rd" data-id="${rd.id}"><td>₹${rd.principal}</td><td>₹${rd.maturityAmount}</td><td>${rd.startDate}</td><td>${rd.maturityDate}</td><td>${rd.status}</td></tr>`;
+        const opt = document.createElement("option");
+        opt.value = `rd-${rd.id}`;
+        opt.text = `RD ₹${rd.principal} (${rd.startDate})`;
+        entrySelector.appendChild(opt);
       });
     });
+  }
+
+  function filterRows() {
+    const selected = entrySelector.value;
+    const rows = document.querySelectorAll("tbody tr");
+    if (!selected) return rows.forEach(row => row.style.display = "");
+    const [type, id] = selected.split("-");
+    rows.forEach(row => row.style.display = row.dataset.type === type && row.dataset.id === id ? "" : "none");
+  }
+
+  function downloadCertificate() {
+    const selected = entrySelector.value;
+    if (!selected) return alert("Please select FD or RD entry.");
+    const [type, id] = selected.split("-");
+    const data = type === "fd" ? fdEntries[id] : rdEntries[id];
+    if (!data) return;
+
+    certificate.innerHTML = `
+      <h2>Certificate of Deposit</h2>
+      <p>This is to certify that <strong>${customerName}</strong> has successfully opened a <strong>${type.toUpperCase()}</strong> with the following details:</p>
+      <ul>
+        <li><strong>Principal Amount:</strong> ₹${data.principal}</li>
+        <li><strong>Maturity Amount:</strong> ₹${data.maturityAmount}</li>
+        <li><strong>Start Date:</strong> ${data.startDate}</li>
+        <li><strong>Maturity Date:</strong> ${data.maturityDate}</li>
+        <li><strong>Status:</strong> ${data.status}</li>
+      </ul>
+      <div class="director">Director: Bhawana Sharma</div>
+      <img class="stamp" src="https://i.imgur.com/Zy43vJL.png" alt="Stamp" />
+    `;
+
+    html2pdf().from(certificate).set({ filename: `Certificate_${type}_${id}.pdf` }).save();
+  }
+
+  function goBack() {
+    window.location.href = "customer-dashboard.html";
   }
 
   auth.onAuthStateChanged(user => {
-    if (!user) window.location.href = "index.html";
-    else {
-      loadTables();
-      loadEntryOptions();
-    }
+    if (user) loadApprovedData();
+    else window.location.href = "index.html";
   });
-
-  function loadEntryOptions() {
-    const type = document.getElementById("entryType").value;
-    const list = document.getElementById("entryList");
-    list.innerHTML = '<option value="">Select Entry</option>';
-
-    db.collection(type).where("customerId", "==", customerId).where("status", "==", "approved").get().then(snapshot => {
-      snapshot.forEach(doc => {
-        const data = doc.data();
-        const opt = document.createElement("option");
-        opt.value = JSON.stringify(data);
-        opt.textContent = `₹${data.principal} → ₹${data.maturityAmount} (${data.startDate})`;
-        list.appendChild(opt);
-      });
-    });
-  }
-
-  document.getElementById("entryType").addEventListener("change", loadEntryOptions);
-
-  function downloadCertificate() {
-    const selected = document.getElementById("entryList").value;
-    if (!selected) return alert("Please select an entry.");
-    const d = JSON.parse(selected);
-    document.getElementById("certDetails").innerHTML = `
-      <p><strong>Name:</strong> ${customerName}</p>
-      <p><strong>Customer ID:</strong> ${customerId}</p>
-      <p><strong>Principal:</strong> ₹${parseFloat(d.principal).toLocaleString()}</p>
-      <p><strong>Maturity Amount:</strong> ₹${parseFloat(d.maturityAmount).toLocaleString()}</p>
-      <p><strong>Start Date:</strong> ${d.startDate}</p>
-      <p><strong>Maturity Date:</strong> ${d.maturityDate}</p>
-      <p><strong>Interest Rate:</strong> ${d.interestRate}%</p>
-    `;
-    const element = document.getElementById("certificate");
-    html2pdf().from(element).save();
-  }
 </script>
 
 </body>

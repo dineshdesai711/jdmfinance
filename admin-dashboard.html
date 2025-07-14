@@ -94,191 +94,209 @@
 </head>
 <body>
 
-  <header>
-    <div class="logo-section">
-      <img src="https://i.ibb.co/5TpqK1H/banklogo.png" alt="Logo">
-      <h2>JDM CREDIT & FINANCE - Admin Panel</h2>
-    </div>
-    <button onclick="logout()" class="logout-btn">Logout</button>
-  </header>
-
-  <div class="stats">
-    <div class="stat-box">
-      <h3>Total FDs</h3>
-      <p id="fdCount">0</p>
-    </div>
-    <div class="stat-box">
-      <h3>Total FD Principal (₹)</h3>
-      <p id="totalPrincipal">0</p>
-    </div>
-    <div class="stat-box">
-      <h3>Total RDs</h3>
-      <p id="rdCount">0</p>
-    </div>
-    <div class="stat-box">
-      <h3>Total RD Principal (₹)</h3>
-      <p id="totalRDPrincipal">0</p>
-    </div>
-    <div class="stat-box" style="background:#f9c851;">
-      <h3>Pending FDs</h3>
-      <p id="pendingFDCount">0</p>
-    </div>
+<header>
+  <div class="logo-section">
+    <img src="https://i.ibb.co/5TpqK1H/banklogo.png" alt="Logo">
+    <h2>JDM CREDIT & FINANCE - Admin Panel</h2>
   </div>
+  <button onclick="logout()" class="logout-btn">Logout</button>
+</header>
 
-  <div class="filter-box">
-    <label><strong>From:</strong> <input type="date" id="fromDate"></label>
-    <label><strong>To:</strong> <input type="date" id="toDate"></label>
-    <button onclick="applyFilter()">Filter</button>
-    <button onclick="loadTodayData()">Reset</button>
+<div class="stats">
+  <div class="stat-box">
+    <h3>Total FDs</h3>
+    <p id="fdCount">0</p>
   </div>
+  <div class="stat-box">
+    <h3>Total FD Principal (₹)</h3>
+    <p id="totalPrincipal">0</p>
+  </div>
+  <div class="stat-box">
+    <h3>Total RDs</h3>
+    <p id="rdCount">0</p>
+  </div>
+  <div class="stat-box">
+    <h3>Total RD Principal (₹)</h3>
+    <p id="totalRDPrincipal">0</p>
+  </div>
+  <div class="stat-box" style="background:#f9c851;">
+    <h3>Pending FDs</h3>
+    <p id="pendingFDCount">0</p>
+  </div>
+</div>
 
-  <h3 class="section-title">Pending FD Entries</h3>
-  <table>
-    <thead>
-      <tr>
-        <th>Customer ID</th>
-        <th>Name</th>
-        <th>Principal</th>
-        <th>Start Date</th>
-        <th>Maturity</th>
-        <th>Action</th>
-      </tr>
-    </thead>
-    <tbody id="pendingFDTableBody"></tbody>
-  </table>
+<div class="filter-box">
+  <label><strong>From:</strong> <input type="date" id="fromDate"></label>
+  <label><strong>To:</strong> <input type="date" id="toDate"></label>
+  <button onclick="applyFilter()">Filter</button>
+  <button onclick="loadTodayData()">Reset</button>
+</div>
 
-  <h3 class="section-title">FD Entries</h3>
-  <table>
-    <thead>
-      <tr>
-        <th>Customer ID</th>
-        <th>Name</th>
-        <th>Aadhaar</th>
-        <th>PAN</th>
-        <th>Start Date</th>
-        <th>Maturity Date</th>
-        <th>Principal (₹)</th>
-        <th>Maturity Amount (₹)</th>
-      </tr>
-    </thead>
-    <tbody id="fdTableBody"></tbody>
-  </table>
+<h3 class="section-title">Pending FD Entries</h3>
+<table>
+  <thead>
+    <tr>
+      <th>Customer ID</th>
+      <th>Name</th>
+      <th>Principal</th>
+      <th>Start Date</th>
+      <th>Maturity</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody id="pendingFDTableBody"></tbody>
+</table>
 
-  <h3 class="section-title">RD Entries</h3>
-  <table>
-    <thead>
-      <tr>
-        <th>Customer ID</th>
-        <th>Name</th>
-        <th>Aadhaar</th>
-        <th>PAN</th>
-        <th>Start Date</th>
-        <th>Maturity Date</th>
-        <th>Principal (₹)</th>
-        <th>Maturity Amount (₹)</th>
-      </tr>
-    </thead>
-    <tbody id="rdTableBody"></tbody>
-  </table>
+<h3 class="section-title">Pending RD Entries</h3>
+<table>
+  <thead>
+    <tr>
+      <th>Customer ID</th>
+      <th>Name</th>
+      <th>Principal</th>
+      <th>Start Date</th>
+      <th>Maturity</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody id="pendingRDTableBody"></tbody>
+</table>
 
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<h3 class="section-title">FD Entries</h3>
+<table>
+  <thead>
+    <tr>
+      <th>Customer ID</th>
+      <th>Name</th>
+      <th>Aadhaar</th>
+      <th>PAN</th>
+      <th>Start Date</th>
+      <th>Maturity Date</th>
+      <th>Principal (₹)</th>
+      <th>Maturity Amount (₹)</th>
+    </tr>
+  </thead>
+  <tbody id="fdTableBody"></tbody>
+</table>
 
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyDLvrY6y3SyvLrX-yk8UcdO8RmnC89XNG4",
-      authDomain: "jdms-207ba.firebaseapp.com",
-      projectId: "jdms-207ba",
-      storageBucket: "jdms-207ba.appspot.com",
-      messagingSenderId: "449814553435",
-      appId: "1:449814553435:web:008c7695473689f425307e"
-    };
+<h3 class="section-title">RD Entries</h3>
+<table>
+  <thead>
+    <tr>
+      <th>Customer ID</th>
+      <th>Name</th>
+      <th>Aadhaar</th>
+      <th>PAN</th>
+      <th>Start Date</th>
+      <th>Maturity Date</th>
+      <th>Principal (₹)</th>
+      <th>Maturity Amount (₹)</th>
+    </tr>
+  </thead>
+  <tbody id="rdTableBody"></tbody>
+</table>
 
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
-    function logout() {
-      auth.signOut().then(() => {
-        localStorage.clear();
-        window.location.href = "login.html";
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyDLvrY6y3SyvLrX-yk8UcdO8RmnC89XNG4",
+    authDomain: "jdms-207ba.firebaseapp.com",
+    projectId: "jdms-207ba",
+    storageBucket: "jdms-207ba.appspot.com",
+    messagingSenderId: "449814553435",
+    appId: "1:449814553435:web:008c7695473689f425307e"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  function logout() {
+    auth.signOut().then(() => {
+      localStorage.clear();
+      window.location.href = "login.html";
+    });
+  }
+
+  function loadStats() {
+    db.collection("fd").get().then(snapshot => {
+      let totalFD = 0, totalFDPrincipal = 0, pending = 0;
+      snapshot.forEach(doc => {
+        const fd = doc.data();
+        if (!fd.status || fd.status === "approved") {
+          totalFD++;
+          totalFDPrincipal += parseFloat(fd.principal) || 0;
+        }
+        if (fd.status === "pending") pending++;
       });
-    }
+      document.getElementById("fdCount").innerText = totalFD;
+      document.getElementById("totalPrincipal").innerText = totalFDPrincipal.toLocaleString();
+      document.getElementById("pendingFDCount").innerText = pending;
+    });
 
-    function loadStats() {
-      db.collection("fd").get().then(snapshot => {
-        let totalFD = 0, totalFDPrincipal = 0, pending = 0;
+    db.collection("rd").get().then(snapshot => {
+      let totalRD = 0, totalRDPrincipal = 0;
+      snapshot.forEach(doc => {
+        const rd = doc.data();
+        if (!rd.status || rd.status === "approved") {
+          totalRD++;
+          totalRDPrincipal += parseFloat(rd.principal) || 0;
+        }
+      });
+      document.getElementById("rdCount").innerText = totalRD;
+      document.getElementById("totalRDPrincipal").innerText = totalRDPrincipal.toLocaleString();
+    });
+  }
+
+  function applyFilter() {
+    const fromDate = document.getElementById("fromDate").value;
+    const toDate = document.getElementById("toDate").value;
+    if (!fromDate || !toDate) return alert("Select both From and To date");
+    loadFDTable(fromDate, toDate);
+    loadRDTable(fromDate, toDate);
+  }
+
+  function loadTodayData() {
+    const today = new Date().toISOString().split('T')[0];
+    loadFDTable(today, today);
+    loadRDTable(today, today);
+  }
+
+  function loadFDTable(fromDate, toDate) {
+    db.collection("fd").where("startDate", ">=", fromDate).where("startDate", "<=", toDate)
+      .get().then(snapshot => {
+        const body = document.getElementById("fdTableBody");
+        body.innerHTML = "";
         snapshot.forEach(doc => {
           const fd = doc.data();
           if (!fd.status || fd.status === "approved") {
-            totalFD++;
-            totalFDPrincipal += parseFloat(fd.principal) || 0;
+            body.innerHTML += `
+              <tr>
+                <td>${fd.customerId || ""}</td>
+                <td>${fd.name || ""}</td>
+                <td>${fd.aadhaar || ""}</td>
+                <td>${fd.pan || ""}</td>
+                <td>${fd.startDate || ""}</td>
+                <td>${fd.maturityDate || ""}</td>
+                <td>${fd.principal || ""}</td>
+                <td>${fd.maturityAmount || ""}</td>
+              </tr>`;
           }
-          if (fd.status === "pending") pending++;
         });
-        document.getElementById("fdCount").innerText = totalFD;
-        document.getElementById("totalPrincipal").innerText = totalFDPrincipal.toLocaleString();
-        document.getElementById("pendingFDCount").innerText = pending;
       });
+  }
 
-      db.collection("rd").get().then(snapshot => {
-        let totalRD = 0, totalRDPrincipal = 0;
+  function loadRDTable(fromDate, toDate) {
+    db.collection("rd").where("startDate", ">=", fromDate).where("startDate", "<=", toDate)
+      .get().then(snapshot => {
+        const body = document.getElementById("rdTableBody");
+        body.innerHTML = "";
         snapshot.forEach(doc => {
           const rd = doc.data();
-          totalRD++;
-          totalRDPrincipal += parseFloat(rd.principal) || 0;
-        });
-        document.getElementById("rdCount").innerText = totalRD;
-        document.getElementById("totalRDPrincipal").innerText = totalRDPrincipal.toLocaleString();
-      });
-    }
-
-    function loadTodayData() {
-      const today = new Date().toISOString().split('T')[0];
-      loadFDTable(today, today);
-      loadRDTable(today, today);
-    }
-
-    function applyFilter() {
-      const fromDate = document.getElementById("fromDate").value;
-      const toDate = document.getElementById("toDate").value;
-      if (!fromDate || !toDate) return alert("Select both From and To date");
-      loadFDTable(fromDate, toDate);
-      loadRDTable(fromDate, toDate);
-    }
-
-    function loadFDTable(fromDate, toDate) {
-      db.collection("fd").where("startDate", ">=", fromDate).where("startDate", "<=", toDate)
-        .get().then(snapshot => {
-          const body = document.getElementById("fdTableBody");
-          body.innerHTML = "";
-          snapshot.forEach(doc => {
-            const fd = doc.data();
-            if (!fd.status || fd.status === "approved") {
-              body.innerHTML += `
-                <tr>
-                  <td>${fd.customerId || ""}</td>
-                  <td>${fd.name || ""}</td>
-                  <td>${fd.aadhaar || ""}</td>
-                  <td>${fd.pan || ""}</td>
-                  <td>${fd.startDate || ""}</td>
-                  <td>${fd.maturityDate || ""}</td>
-                  <td>${fd.principal || ""}</td>
-                  <td>${fd.maturityAmount || ""}</td>
-                </tr>`;
-            }
-          });
-        });
-    }
-
-    function loadRDTable(fromDate, toDate) {
-      db.collection("rd").where("startDate", ">=", fromDate).where("startDate", "<=", toDate)
-        .get().then(snapshot => {
-          const body = document.getElementById("rdTableBody");
-          body.innerHTML = "";
-          snapshot.forEach(doc => {
-            const rd = doc.data();
+          if (!rd.status || rd.status === "approved") {
             body.innerHTML += `
               <tr>
                 <td>${rd.customerId || ""}</td>
@@ -290,52 +308,81 @@
                 <td>${rd.principal || ""}</td>
                 <td>${rd.maturityAmount || ""}</td>
               </tr>`;
-          });
-        });
-    }
-
-    function loadPendingFDs() {
-      db.collection("fd").where("status", "==", "pending").onSnapshot(snapshot => {
-        const body = document.getElementById("pendingFDTableBody");
-        body.innerHTML = "";
-        snapshot.forEach(doc => {
-          const fd = doc.data();
-          body.innerHTML += `
-            <tr>
-              <td>${fd.customerId || ""}</td>
-              <td>${fd.name || ""}</td>
-              <td>${fd.principal || ""}</td>
-              <td>${fd.startDate || ""}</td>
-              <td>${fd.maturityDate || ""}</td>
-              <td>
-                <button class="action-btn approve-btn" onclick="updateFDStatus('${doc.id}', 'approved')">Approve</button>
-                <button class="action-btn reject-btn" onclick="updateFDStatus('${doc.id}', 'rejected')">Reject</button>
-              </td>
-            </tr>`;
+          }
         });
       });
-    }
+  }
 
-    function updateFDStatus(docId, status) {
-      db.collection("fd").doc(docId).update({ status }).then(() => {
-        loadStats();
-        loadTodayData();
+  function loadPendingFDs() {
+    db.collection("fd").where("status", "==", "pending").onSnapshot(snapshot => {
+      const body = document.getElementById("pendingFDTableBody");
+      body.innerHTML = "";
+      snapshot.forEach(doc => {
+        const fd = doc.data();
+        body.innerHTML += `
+          <tr>
+            <td>${fd.customerId || ""}</td>
+            <td>${fd.name || ""}</td>
+            <td>${fd.principal || ""}</td>
+            <td>${fd.startDate || ""}</td>
+            <td>${fd.maturityDate || ""}</td>
+            <td>
+              <button class="action-btn approve-btn" onclick="updateFDStatus('${doc.id}', 'approved')">Approve</button>
+              <button class="action-btn reject-btn" onclick="updateFDStatus('${doc.id}', 'rejected')">Reject</button>
+            </td>
+          </tr>`;
       });
-    }
-
-    auth.onAuthStateChanged(user => {
-      if (user) {
-        loadStats();
-        loadTodayData();
-        loadPendingFDs();
-      } else {
-        alert("Not logged in");
-        window.location.href = "login.html";
-      }
     });
-  </script>
+  }
+
+  function loadPendingRDs() {
+    db.collection("rd").where("status", "==", "pending").onSnapshot(snapshot => {
+      const body = document.getElementById("pendingRDTableBody");
+      body.innerHTML = "";
+      snapshot.forEach(doc => {
+        const rd = doc.data();
+        body.innerHTML += `
+          <tr>
+            <td>${rd.customerId || ""}</td>
+            <td>${rd.name || ""}</td>
+            <td>${rd.principal || ""}</td>
+            <td>${rd.startDate || ""}</td>
+            <td>${rd.maturityDate || ""}</td>
+            <td>
+              <button class="action-btn approve-btn" onclick="updateRDStatus('${doc.id}', 'approved')">Approve</button>
+              <button class="action-btn reject-btn" onclick="updateRDStatus('${doc.id}', 'rejected')">Reject</button>
+            </td>
+          </tr>`;
+      });
+    });
+  }
+
+  function updateFDStatus(docId, status) {
+    db.collection("fd").doc(docId).update({ status }).then(() => {
+      loadStats();
+      loadTodayData();
+    });
+  }
+
+  function updateRDStatus(docId, status) {
+    db.collection("rd").doc(docId).update({ status }).then(() => {
+      loadStats();
+      loadTodayData();
+    });
+  }
+
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      loadStats();
+      loadTodayData();
+      loadPendingFDs();
+      loadPendingRDs();
+    } else {
+      alert("Not logged in");
+      window.location.href = "login.html";
+    }
+  });
+</script>
 
 </body>
 </html>
-
-<!-- forced change to trigger Git commit -->

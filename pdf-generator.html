@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>FD/RD PDF Generator - JDM Credit & Finance</title>
+  <title>FD/RD Certificate - JDM Credit & Finance</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
@@ -10,301 +10,154 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f0f0f0;
-      padding: 20px;
-    }
-    .container {
-      background: white;
+      background: #f9f9f9;
       padding: 30px;
-      border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      max-width: 900px;
-      margin: auto;
+      text-align: center;
     }
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .header img {
-      height: 60px;
-    }
-    .header h2 {
-      margin: 0;
-      color: #0a3d62;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-    }
-    th, td {
-      border: 1px solid #ccc;
+    select, button {
       padding: 10px;
-      text-align: center;
-    }
-    th {
-      background: #0a3d62;
-      color: white;
-    }
-    .footer {
-      margin-top: 60px;
-      display: flex;
-      justify-content: space-between;
-      font-weight: bold;
-    }
-    .center {
-      text-align: center;
-    }
-    .certificate-only {
-      display: none;
-      margin-top: 30px;
-      text-align: center;
-      font-size: 18px;
-      padding: 20px;
-      border: 2px solid #0a3d62;
-      border-radius: 10px;
-    }
-    .certificate-only img {
-      margin-top: 30px;
-      width: 120px;
-    }
-    .btns {
-      text-align: center;
-      margin-top: 20px;
+      margin: 15px 10px;
+      width: 300px;
+      max-width: 90%;
     }
     button {
-      padding: 10px 20px;
-      background: #0a3d62;
+      background-color: #0a3d62;
       color: white;
       border: none;
       border-radius: 5px;
       cursor: pointer;
     }
-    select {
-      margin-top: 20px;
-      padding: 10px;
-      width: 100%;
-      max-width: 500px;
+    #back {
+      background-color: gray;
     }
   </style>
 </head>
 <body>
 
-<div class="container" id="pdfContent">
-  <div class="header">
-    <div><img src="JDM LOGO.png" alt="Logo" /></div>
-    <div>
-      <h2>JDM CREDIT & FINANCE</h2>
-      <p id="customerName" style="text-align:right; font-weight:bold;"></p>
-    </div>
-  </div>
+  <h2>📄 FD / RD Certificate Generator</h2>
+  <select id="entrySelector">
+    <option value="">🔽 Select FD or RD Entry</option>
+  </select>
+  <br>
+  <button onclick="downloadPDF()">Download Certificate</button>
+  <button id="back" onclick="goBack()">⬅ Back to Dashboard</button>
 
-  <div class="center">
-    <select id="entrySelector" onchange="filterRows()">
-      <option value="">🔽 Select FD or RD Entry</option>
-    </select>
-  </div>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDLvrY6y3SyvLrX-yk8UcdO8RmnC89XNG4",
+      authDomain: "jdms-207ba.firebaseapp.com",
+      projectId: "jdms-207ba",
+      storageBucket: "jdms-207ba.appspot.com",
+      messagingSenderId: "449814553435",
+      appId: "1:449814553435:web:008c7695473689f425307e"
+    };
 
-  <h3>Approved FD Entries</h3>
-  <table id="fdTable">
-    <thead>
-      <tr>
-        <th>Principal</th>
-        <th>Maturity Amount</th>
-        <th>Start Date</th>
-        <th>Maturity Date</th>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
 
-  <h3>Approved RD Entries</h3>
-  <table id="rdTable">
-    <thead>
-      <tr>
-        <th>Principal</th>
-        <th>Maturity Amount</th>
-        <th>Start Date</th>
-        <th>Maturity Date</th>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+    const customerId = localStorage.getItem("customerId");
+    const customerName = localStorage.getItem("customerName");
 
-  <div class="certificate-only" id="certificateSection"></div>
-
-  <div class="footer">
-    <p>Director: Bhawana Sharma</p>
-    <p id="footerName"></p>
-  </div>
-</div>
-
-<div class="btns">
-  <button onclick="downloadPDF()">📄 Download Selected PDF</button>
-  <button onclick="goBack()">⬅ Back to Dashboard</button>
-</div>
-
-<script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyDLvrY6y3SyvLrX-yk8UcdO8RmnC89XNG4",
-    authDomain: "jdms-207ba.firebaseapp.com",
-    projectId: "jdms-207ba",
-    storageBucket: "jdms-207ba.appspot.com",
-    messagingSenderId: "449814553435",
-    appId: "1:449814553435:web:008c7695473689f425307e"
-  };
-
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const db = firebase.firestore();
-
-  const customerId = localStorage.getItem("customerId");
-  const customerName = localStorage.getItem("customerName");
-
-  if (!customerId) {
-    alert("Not logged in as customer");
-    window.location.href = "index.html";
-  }
-
-  document.getElementById("customerName").innerText = `Customer: ${customerName}`;
-  document.getElementById("footerName").innerText = `Issued to: ${customerName}`;
-
-  const entrySelector = document.getElementById("entrySelector");
-
-  function loadApprovedData() {
-    const fdBody = document.querySelector("#fdTable tbody");
-    const rdBody = document.querySelector("#rdTable tbody");
-    fdBody.innerHTML = "";
-    rdBody.innerHTML = "";
-
-    db.collection("fd")
-      .where("customerId", "==", customerId)
-      .where("status", "==", "approved")
-      .get()
-      .then(snapshot => {
-        snapshot.forEach(doc => {
-          const fd = doc.data();
-          fd.id = doc.id;
-
-          fdBody.innerHTML += `
-            <tr data-type="fd" data-id="${fd.id}">
-              <td>₹${parseFloat(fd.principal).toLocaleString()}</td>
-              <td>₹${parseFloat(fd.maturityAmount).toLocaleString()}</td>
-              <td>${fd.startDate}</td>
-              <td>${fd.maturityDate}</td>
-              <td>${fd.status}</td>
-            </tr>
-          `;
-
-          const opt = document.createElement("option");
-          opt.value = `fd-${fd.id}`;
-          opt.text = `FD ₹${fd.principal} (${fd.startDate})`;
-          entrySelector.appendChild(opt);
-        });
-      });
-
-    db.collection("rd")
-      .where("customerId", "==", customerId)
-      .where("status", "==", "approved")
-      .get()
-      .then(snapshot => {
-        snapshot.forEach(doc => {
-          const rd = doc.data();
-          rd.id = doc.id;
-
-          rdBody.innerHTML += `
-            <tr data-type="rd" data-id="${rd.id}">
-              <td>₹${parseFloat(rd.principal).toLocaleString()}</td>
-              <td>₹${parseFloat(rd.maturityAmount).toLocaleString()}</td>
-              <td>${rd.startDate}</td>
-              <td>${rd.maturityDate}</td>
-              <td>${rd.status}</td>
-            </tr>
-          `;
-
-          const opt = document.createElement("option");
-          opt.value = `rd-${rd.id}`;
-          opt.text = `RD ₹${rd.principal} (${rd.startDate})`;
-          entrySelector.appendChild(opt);
-        });
-      });
-  }
-
-  function filterRows() {
-    const selected = entrySelector.value;
-    const rows = document.querySelectorAll("tbody tr");
-
-    if (selected === "") {
-      rows.forEach(row => row.style.display = "");
-      return;
+    if (!customerId) {
+      alert("Not logged in.");
+      window.location.href = "index.html";
     }
 
-    const [type, id] = selected.split("-");
-    rows.forEach(row => {
-      if (row.dataset.type === type && row.dataset.id === id) {
-        row.style.display = "";
+    const entrySelector = document.getElementById("entrySelector");
+
+    function loadEntries() {
+      db.collection("fd")
+        .where("customerId", "==", customerId)
+        .where("status", "==", "approved")
+        .get()
+        .then(snapshot => {
+          snapshot.forEach(doc => {
+            const fd = doc.data();
+            const opt = document.createElement("option");
+            opt.value = `fd-${doc.id}`;
+            opt.text = `FD ₹${fd.principal} (${fd.startDate})`;
+            entrySelector.appendChild(opt);
+          });
+        });
+
+      db.collection("rd")
+        .where("customerId", "==", customerId)
+        .where("status", "==", "approved")
+        .get()
+        .then(snapshot => {
+          snapshot.forEach(doc => {
+            const rd = doc.data();
+            const opt = document.createElement("option");
+            opt.value = `rd-${doc.id}`;
+            opt.text = `RD ₹${rd.principal} (${rd.startDate})`;
+            entrySelector.appendChild(opt);
+          });
+        });
+    }
+
+    function downloadPDF() {
+      if (entrySelector.value === "") {
+        alert("Please select an entry to download certificate.");
+        return;
+      }
+
+      const [type, id] = entrySelector.value.split("-");
+      const collection = type === "fd" ? "fd" : "rd";
+
+      db.collection(collection).doc(id).get().then(doc => {
+        const data = doc.data();
+
+        const htmlContent = `
+          <div style="font-family: Arial; padding: 40px; border: 1px solid #ccc; width: 100%; max-width: 800px;">
+            <div style="text-align: center;">
+              <img src="https://i.imgur.com/6C1K9Gp.png" style="height: 80px;" />
+              <h2 style="color: #0a3d62;">JDM CREDIT & FINANCE</h2>
+              <h3 style="text-decoration: underline; margin-top: 20px;">Certificate of ${type.toUpperCase()} Deposit</h3>
+            </div>
+            <p><strong>Customer Name:</strong> ${customerName}</p>
+            <p><strong>Customer ID:</strong> ${customerId}</p>
+            <p><strong>Deposit Type:</strong> ${type.toUpperCase()}</p>
+            <p><strong>Principal Amount:</strong> ₹${parseFloat(data.principal).toLocaleString()}</p>
+            <p><strong>Start Date:</strong> ${data.startDate}</p>
+            <p><strong>Maturity Date:</strong> ${data.maturityDate}</p>
+            <p><strong>Maturity Amount:</strong> ₹${parseFloat(data.maturityAmount).toLocaleString()}</p>
+
+            <p style="margin-top: 40px; font-style: italic;">Thank you for investing with JDM Credit & Finance.</p>
+
+            <div style="margin-top: 50px; display: flex; justify-content: flex-end;">
+              <div style="text-align: center;">
+                <img src="https://i.imgur.com/eP1n2K1.png" style="height: 80px; opacity: 0.9;" />
+                <p style="margin: 5px 0 0;">Bhawana Sharma</p>
+                <p style="margin: 0; font-size: 14px;">Director</p>
+              </div>
+            </div>
+          </div>
+        `;
+
+        const opt = {
+          margin: 0.5,
+          filename: `Certificate_${type}_${customerId}.pdf`,
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { scale: 2 },
+          jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+        };
+
+        html2pdf().from(htmlContent).set(opt).save();
+      });
+    }
+
+    function goBack() {
+      window.location.href = "customer-dashboard.html";
+    }
+
+    auth.onAuthStateChanged(user => {
+      if (!user) {
+        window.location.href = "index.html";
       } else {
-        row.style.display = "none";
+        loadEntries();
       }
     });
-  }
-
-  function downloadPDF() {
-    const selected = entrySelector.value;
-    if (!selected) {
-      alert("Please select an entry to download PDF.");
-      return;
-    }
-
-    const [type, id] = selected.split("-");
-
-    db.collection(type).doc(id).get().then(doc => {
-      const data = doc.data();
-      const certSection = document.getElementById("certificateSection");
-
-      certSection.innerHTML = `
-        <h2>Certificate of Investment</h2>
-        <p>This is to certify that <strong>${customerName}</strong> has successfully invested in a <strong>${type.toUpperCase()}</strong> on <strong>${data.startDate}</strong>.</p>
-        <p><strong>Principal Amount:</strong> ₹${data.principal}</p>
-        <p><strong>Maturity Date:</strong> ${data.maturityDate}</p>
-        <p><strong>Maturity Amount:</strong> ₹${data.maturityAmount}</p>
-        <p>Thank you for investing with <strong>JDM Credit & Finance</strong>.</p>
-        <br>
-        <p>Director: Bhawana Sharma</p>
-        <img src="stamp.png" alt="stamp" />
-        <p style="margin-top:5px;">Signature: Bhawana Sharma</p>
-      `;
-
-      certSection.style.display = "block";
-
-      const element = document.getElementById("pdfContent");
-      html2pdf().from(element).set({
-        margin: 0.4,
-        filename: `FD_RD_Certificate_${customerId}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
-      }).save().then(() => {
-        certSection.style.display = "none";
-      });
-    });
-  }
-
-  function goBack() {
-    window.location.href = "customer-dashboard.html";
-  }
-
-  auth.onAuthStateChanged(user => {
-    if (!user) {
-      window.location.href = "index.html";
-    } else {
-      loadApprovedData();
-    }
-  });
-</script>
-
+  </script>
 </body>
 </html>

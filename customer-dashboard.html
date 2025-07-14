@@ -29,17 +29,6 @@
     }
     .info {
       font-size: 14px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .logout-btn {
-      background: red;
-      color: white;
-      border: none;
-      padding: 6px 12px;
-      border-radius: 6px;
-      cursor: pointer;
     }
     .section {
       padding: 20px;
@@ -68,7 +57,8 @@
       display: flex;
       justify-content: center;
       gap: 15px;
-      margin-top: 15px;
+      margin-top: 10px;
+      flex-wrap: wrap;
     }
     button {
       padding: 10px 18px;
@@ -110,198 +100,201 @@
 </head>
 <body>
 
-  <header>
-    <div class="header-left">
-      <img src="JDM LOGO.PNG" alt="JDM Logo" />
-      <h2>JDM CREDIT & FINANCE</h2>
-    </div>
-    <div class="info">
-      <strong id="customerName">Customer Name</strong> | ID: <span id="customerId"></span>
-      <button onclick="logout()" class="logout-btn">Logout</button>
-    </div>
-  </header>
+<header>
+  <div class="header-left">
+    <img src="JDM LOGO.png" alt="Logo" />
+    <h2>JDM CREDIT & FINANCE</h2>
+  </div>
+  <div class="info">
+    <strong id="customerName">Customer Name</strong> | ID: <span id="customerId"></span>
+    <button onclick="logout()" style="margin-left: 20px; padding: 6px 10px; border-radius: 5px; background: red; color: white; border: none;">Logout</button>
+  </div>
+</header>
 
-  <div class="section">
+<div class="section">
 
-    <div class="card flex">
-      <div class="card-small">
-        <h3>Total FDs</h3>
-        <p id="fdCount">0</p>
-      </div>
-      <div class="card-small">
-        <h3>Total RDs</h3>
-        <p id="rdCount">0</p>
-      </div>
-      <div class="card-small">
-        <h3>Total Deposit (₹)</h3>
-        <p id="totalDeposit">0</p>
-      </div>
-      <div class="card-small">
-        <h3>Total Profit (₹)</h3>
-        <p id="totalProfit">0</p>
-      </div>
+  <div class="card flex">
+    <div class="card-small">
+      <h3>Total FDs</h3>
+      <p id="fdCount">0</p>
     </div>
-
-    <div class="card">
-      <h3>Investment Overview</h3>
-      <canvas id="investmentChart" height="100"></canvas>
+    <div class="card-small">
+      <h3>Total RDs</h3>
+      <p id="rdCount">0</p>
     </div>
-
-    <div class="button-row">
-      <button onclick="location.href='fd.html'">Create FD</button>
-      <button onclick="location.href='rd.html'">Create RD</button>
-      <button id="pdfBtn" disabled>Print PDF (Approved Only)</button>
-      <button onclick="logout()">Logout</button>
+    <div class="card-small">
+      <h3>Total Deposit (₹)</h3>
+      <p id="totalDeposit">0</p>
     </div>
-
-    <div class="card">
-      <h3>Your FD Entries</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Principal</th>
-            <th>Maturity</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody id="fdTable"></tbody>
-      </table>
+    <div class="card-small">
+      <h3>Total Profit (₹)</h3>
+      <p id="totalProfit">0</p>
     </div>
-
-    <div class="card">
-      <h3>Your RD Entries</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Principal</th>
-            <th>Maturity</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody id="rdTable"></tbody>
-      </table>
-    </div>
-
   </div>
 
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <div class="card">
+    <h3>Investment Overview</h3>
+    <canvas id="investmentChart" height="100"></canvas>
+  </div>
 
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyDLvrY6y3SyvLrX-yk8UcdO8RmnC89XNG4",
-      authDomain: "jdms-207ba.firebaseapp.com",
-      projectId: "jdms-207ba",
-      storageBucket: "jdms-207ba.appspot.com",
-      messagingSenderId: "449814553435",
-      appId: "1:449814553435:web:008c7695473689f425307e"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
+  <!-- ✅ Updated Button Section -->
+  <div class="card">
+    <h3 style="margin-bottom: 15px;">📂 Manage Your Investments</h3>
+    <div class="button-row">
+      <button onclick="location.href='fd.html'">➕ Create FD</button>
+      <button onclick="location.href='rd.html'">➕ Create RD</button>
+      <button id="pdfBtn" disabled>🖨️ Print PDF (Approved Only)</button>
+    </div>
+  </div>
 
-    const customerId = localStorage.getItem("customerId");
-    const customerName = localStorage.getItem("customerName");
-    document.getElementById("customerName").innerText = customerName;
-    document.getElementById("customerId").innerText = customerId;
+  <div class="card">
+    <h3>Your FD Entries</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Principal</th>
+          <th>Maturity</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="fdTable"></tbody>
+    </table>
+  </div>
 
-    if (!customerId) {
-      window.location.href = "create-customer.html";
-    }
+  <div class="card">
+    <h3>Your RD Entries</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Principal</th>
+          <th>Maturity</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="rdTable"></tbody>
+    </table>
+  </div>
 
-    function renderChart(fdAmt, rdAmt, profit) {
-      new Chart(document.getElementById("investmentChart"), {
-        type: "bar",
-        data: {
-          labels: ["FD", "RD", "Profit"],
-          datasets: [{
-            label: '₹ Amount',
-            backgroundColor: ["#3498db", "#9b59b6", "#2ecc71"],
-            data: [fdAmt, rdAmt, profit]
-          }]
-        }
-      });
-    }
+</div>
 
-    function loadData() {
-      let totalFD = 0, totalRD = 0, totalDeposit = 0, totalProfit = 0;
-      let hasApproved = false;
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
-      db.collection("fd").where("customerId", "==", customerId).onSnapshot(snapshot => {
-        document.getElementById("fdTable").innerHTML = "";
-        snapshot.forEach(doc => {
-          const d = doc.data();
-          const status = d.status?.toLowerCase() || "pending";
-          const principal = parseFloat(d.principal) || 0;
-          const maturity = parseFloat(d.maturityAmount) || 0;
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyDLvrY6y3SyvLrX-yk8UcdO8RmnC89XNG4",
+    authDomain: "jdms-207ba.firebaseapp.com",
+    projectId: "jdms-207ba",
+    storageBucket: "jdms-207ba.appspot.com",
+    messagingSenderId: "449814553435",
+    appId: "1:449814553435:web:008c7695473689f425307e"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
 
-          totalFD++;
-          totalDeposit += principal;
-          if (status === "approved") {
-            hasApproved = true;
-            totalProfit += maturity - principal;
-          }
+  const customerId = localStorage.getItem("customerId");
+  const customerName = localStorage.getItem("customerName");
+  document.getElementById("customerName").innerText = customerName;
+  document.getElementById("customerId").innerText = customerId;
 
-          document.getElementById("fdTable").innerHTML += `
-            <tr>
-              <td>₹${principal.toLocaleString()}</td>
-              <td>₹${maturity.toLocaleString()}</td>
-              <td><span class="${status === 'approved' ? 'approved' : 'pending'}">${status}</span></td>
-            </tr>
-          `;
-        });
-        updateSummary();
-      });
+  if (!customerId) {
+    window.location.href = "create-customer.html";
+  }
 
-      db.collection("rd").where("customerId", "==", customerId).onSnapshot(snapshot => {
-        document.getElementById("rdTable").innerHTML = "";
-        snapshot.forEach(doc => {
-          const d = doc.data();
-          const status = d.status?.toLowerCase() || "pending";
-          const principal = parseFloat(d.principal) || 0;
-          const maturity = parseFloat(d.maturityAmount) || 0;
-
-          totalRD++;
-          totalDeposit += principal;
-          if (status === "approved") {
-            hasApproved = true;
-            totalProfit += maturity - principal;
-          }
-
-          document.getElementById("rdTable").innerHTML += `
-            <tr>
-              <td>₹${principal.toLocaleString()}</td>
-              <td>₹${maturity.toLocaleString()}</td>
-              <td><span class="${status === 'approved' ? 'approved' : 'pending'}">${status}</span></td>
-            </tr>
-          `;
-        });
-
-        document.getElementById("fdCount").innerText = totalFD;
-        document.getElementById("rdCount").innerText = totalRD;
-        document.getElementById("totalDeposit").innerText = totalDeposit.toLocaleString();
-        document.getElementById("totalProfit").innerText = totalProfit.toLocaleString();
-        renderChart(totalDeposit, 0, totalProfit);
-        document.getElementById("pdfBtn").disabled = !hasApproved;
-      });
-    }
-
-    function logout() {
-      firebase.auth().signOut().then(() => {
-        localStorage.clear();
-        window.location.href = "index.html"; // ✅ Redirect to homepage
-      });
-    }
-
-    auth.onAuthStateChanged(user => {
-      if (!user) {
-        window.location.href = "index.html";
-      } else {
-        loadData();
+  function renderChart(fdAmt, rdAmt, profit) {
+    new Chart(document.getElementById("investmentChart"), {
+      type: "bar",
+      data: {
+        labels: ["FD", "RD", "Profit"],
+        datasets: [{
+          label: '₹ Amount',
+          backgroundColor: ["#3498db", "#9b59b6", "#2ecc71"],
+          data: [fdAmt, rdAmt, profit]
+        }]
       }
     });
-  </script>
+  }
+
+  function loadData() {
+    let totalFD = 0, totalRD = 0, totalDeposit = 0, totalProfit = 0;
+    let hasApproved = false;
+
+    db.collection("fd").where("customerId", "==", customerId).onSnapshot(snapshot => {
+      document.getElementById("fdTable").innerHTML = "";
+      snapshot.forEach(doc => {
+        const d = doc.data();
+        const status = d.status?.toLowerCase() || "pending";
+        const principal = parseFloat(d.principal) || 0;
+        const maturity = parseFloat(d.maturityAmount) || 0;
+
+        totalFD++;
+        totalDeposit += principal;
+        if (status === "approved") {
+          hasApproved = true;
+          totalProfit += maturity - principal;
+        }
+
+        document.getElementById("fdTable").innerHTML += `
+          <tr>
+            <td>₹${principal.toLocaleString()}</td>
+            <td>₹${maturity.toLocaleString()}</td>
+            <td><span class="${status === 'approved' ? 'approved' : 'pending'}">${status}</span></td>
+          </tr>
+        `;
+      });
+      updateUI();
+    });
+
+    db.collection("rd").where("customerId", "==", customerId).onSnapshot(snapshot => {
+      document.getElementById("rdTable").innerHTML = "";
+      snapshot.forEach(doc => {
+        const d = doc.data();
+        const status = d.status?.toLowerCase() || "pending";
+        const principal = parseFloat(d.principal) || 0;
+        const maturity = parseFloat(d.maturityAmount) || 0;
+
+        totalRD++;
+        totalDeposit += principal;
+        if (status === "approved") {
+          hasApproved = true;
+          totalProfit += maturity - principal;
+        }
+
+        document.getElementById("rdTable").innerHTML += `
+          <tr>
+            <td>₹${principal.toLocaleString()}</td>
+            <td>₹${maturity.toLocaleString()}</td>
+            <td><span class="${status === 'approved' ? 'approved' : 'pending'}">${status}</span></td>
+          </tr>
+        `;
+      });
+
+      document.getElementById("fdCount").innerText = totalFD;
+      document.getElementById("rdCount").innerText = totalRD;
+      document.getElementById("totalDeposit").innerText = totalDeposit.toLocaleString();
+      document.getElementById("totalProfit").innerText = totalProfit.toLocaleString();
+      renderChart(totalDeposit, 0, totalProfit);
+      document.getElementById("pdfBtn").disabled = !hasApproved;
+    });
+  }
+
+  function logout() {
+    firebase.auth().signOut().then(() => {
+      localStorage.clear();
+      window.location.href = "login.html";
+    });
+  }
+
+  auth.onAuthStateChanged(user => {
+    if (!user) {
+      window.location.href = "login.html";
+    } else {
+      loadData();
+    }
+  });
+</script>
 
 </body>
 </html>

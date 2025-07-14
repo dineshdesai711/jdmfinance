@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>FD/RD PDF Generator - JDM Credit & Finance</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f0f0;
+      padding: 20px;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      max-width: 900px;
+      margin: auto;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .header img {
+      height: 60px;
+    }
+    .header h2 {
+      margin: 0;
+      color: #0a3d62;
+    }
+    h3 {
+      margin-top: 40px;
+      color: #0a3d62;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: center;
+    }
+    th {
+      background: #0a3d62;
+      color: white;
+    }
+    .footer {
+      margin-top: 60px;
+      display: flex;
+      justify-content: space-between;
+      font-weight: bold;
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background: #0a3d62;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container" id="pdfContent">
+  <div class="header">
+    <div>
+      <img src="JDM LOGO.png" alt="Logo" />
+    </div>
+    <div>
+      <h2>JDM CREDIT & FINANCE</h2>
+      <p id="customerName" style="text-align:right; font-weight:bold;"></p>
+    </div>
+  </div>
+
+  <h3>Approved FD Entries</h3>
+  <table id="fdTable">
+    <thead>
+      <tr>
+        <th>Principal</th>
+        <th>Maturity Amount</th>
+        <th>Start Date</th>
+        <th>Maturity Date</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <h3>Approved RD Entries</h3>
+  <table id="rdTable">
+    <thead>
+      <tr>
+        <th>Principal</th>
+        <th>Maturity Amount</th>
+        <th>Start Date</th>
+        <th>Maturity Date</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <div class="footer">
+    <p>Director: Bhawana Sharma</p>
+    <p id="footerName"></p>
+  </div>
+</div>
+
+<div style="text-align:center;">
+  <button onclick="downloadPDF()">Download PDF</button>
+</div>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyDLvrY6y3SyvLrX-yk8UcdO8RmnC89XNG4",
+    authDomain: "jdms-207ba.firebaseapp.com",
+    projectId: "jdms-207ba",
+    storageBucket: "jdms-207ba.appspot.com",
+    messagingSenderId: "449814553435",
+    appId: "1:449814553435:web:008c7695473689f425307e"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  const customerId = localStorage.getItem("customerId");
+  const customerName = localStorage.getItem("customerName");
+
+  if (!customerId) {
+    alert("Not logged in as customer");
+    window.location.href = "login.html";
+  }
+
+  document.getElementById("customerName").innerText = `Customer: ${customerName}`;
+  document.getElementById("footerName").innerText = `Issued to: ${customerName}`;
+
+  function loadApprovedData() {
+    const fdBody = document.querySelector("#fdTable tbody");
+    const rdBody = document.querySelector("#rdTable tbody");
+    fdBody.innerHTML = "";
+    rdBody.innerHTML = "";
+
+    db.collection("fd")
+      .where("customerId", "==", customerId)
+      .where("status", "==", "approved")
+      .get()
+      .then(snapshot => {
+        snapshot.forEach(doc => {
+          const fd = doc.data();
+          fdBody.innerHTML += `
+            <tr>
+              <td>₹${parseFloat(fd.principal).toLocaleString()}</td>
+              <td>₹${parseFloat(fd.maturityAmount).toLocaleString()}</td>
+              <td>${fd.startDate}</td>
+              <td>${fd.maturityDate}</td>
+              <td>${fd.status}</td>
+            </tr>
+          `;
+        });
+      });
+
+    db.collection("rd")
+      .where("customerId", "==", customerId)
+      .where("status", "==", "approved")
+      .get()
+      .then(snapshot => {
+        snapshot.forEach(doc => {
+          const rd = doc.data();
+          rdBody.innerHTML += `
+            <tr>
+              <td>₹${parseFloat(rd.principal).toLocaleString()}</td>
+              <td>₹${parseFloat(rd.maturityAmount).toLocaleString()}</td>
+              <td>${rd.startDate}</td>
+              <td>${rd.maturityDate}</td>
+              <td>${rd.status}</td>
+            </tr>
+          `;
+        });
+      });
+  }
+
+  function downloadPDF() {
+    const element = document.getElementById("pdfContent");
+    const opt = {
+      margin:       0.4,
+      filename:     `FD_RD_Report_${customerId}.pdf`,
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2 },
+      jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+    };
+    html2pdf().from(element).set(opt).save();
+  }
+
+  auth.onAuthStateChanged(user => {
+    if (!user) {
+      window.location.href = "login.html";
+    } else {
+      loadApprovedData();
+    }
+  });
+</script>
+
+</body>
+</html>

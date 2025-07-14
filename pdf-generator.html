@@ -152,7 +152,7 @@
 
   if (!customerId) {
     alert("Not logged in as customer");
-    window.location.href = "index.html";
+    window.location.href = "index.html"; // ✅ use index.html
   }
 
   document.getElementById("customerName").innerText = `Customer: ${customerName}`;

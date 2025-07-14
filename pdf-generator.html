@@ -34,7 +34,7 @@
       color: #0a3d62;
     }
     h3 {
-      margin-top: 40px;
+      margin-top: 30px;
       color: #0a3d62;
     }
     table {
@@ -81,9 +81,7 @@
 
 <div class="container" id="pdfContent">
   <div class="header">
-    <div>
-      <img src="JDM LOGO.png" alt="Logo" />
-    </div>
+    <div><img src="JDM LOGO.png" alt="Logo" /></div>
     <div>
       <h2>JDM CREDIT & FINANCE</h2>
       <p id="customerName" style="text-align:right; font-weight:bold;"></p>
@@ -92,7 +90,7 @@
 
   <div class="center">
     <select id="entrySelector" onchange="filterRows()">
-      <option value="">🔽 Select FD or RD Entry to Download</option>
+      <option value="">🔽 Select FD or RD Entry</option>
     </select>
   </div>
 
@@ -131,7 +129,7 @@
 </div>
 
 <div class="center">
-  <button onclick="downloadPDF()">Download PDF</button>
+  <button onclick="downloadPDF()">📄 Download Selected PDF</button>
   <button onclick="goBack()">⬅ Back to Dashboard</button>
 </div>
 
@@ -154,7 +152,7 @@
 
   if (!customerId) {
     alert("Not logged in as customer");
-    window.location.href = "index.html";
+    window.location.href = "index.html"; // ✅ use index.html
   }
 
   document.getElementById("customerName").innerText = `Customer: ${customerName}`;
@@ -189,7 +187,7 @@
 
           const opt = document.createElement("option");
           opt.value = `fd-${fd.id}`;
-          opt.text = `FD: ₹${fd.principal} (${fd.startDate})`;
+          opt.text = `FD ₹${fd.principal} (${fd.startDate})`;
           entrySelector.appendChild(opt);
         });
       });
@@ -215,7 +213,7 @@
 
           const opt = document.createElement("option");
           opt.value = `rd-${rd.id}`;
-          opt.text = `RD: ₹${rd.principal} (${rd.startDate})`;
+          opt.text = `RD ₹${rd.principal} (${rd.startDate})`;
           entrySelector.appendChild(opt);
         });
       });
@@ -242,14 +240,14 @@
 
   function downloadPDF() {
     if (entrySelector.value === "") {
-      alert("Please select a specific FD or RD entry to print.");
+      alert("Please select an entry to download PDF.");
       return;
     }
 
     const element = document.getElementById("pdfContent");
     const opt = {
       margin: 0.4,
-      filename: `FD_RD_Report_${customerId}.pdf`,
+      filename: `FD_RD_Certificate_${customerId}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { scale: 2 },
       jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }

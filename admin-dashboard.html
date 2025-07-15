@@ -106,53 +106,31 @@
 </header>
 
 <div class="stats">
-  <div class="stat-box">
-    <h3>Total FDs</h3>
-    <p id="fdCount">0</p>
-  </div>
-  <div class="stat-box">
-    <h3>Total FD Principal (₹)</h3>
-    <p id="totalPrincipal">0</p>
-  </div>
-  <div class="stat-box">
-    <h3>Total RDs</h3>
-    <p id="rdCount">0</p>
-  </div>
-  <div class="stat-box">
-    <h3>Total RD Principal (₹)</h3>
-    <p id="totalRDPrincipal">0</p>
-  </div>
-  <div class="stat-box" style="background:#f9c851;">
-    <h3>Pending FDs</h3>
-    <p id="pendingFDCount">0</p>
-  </div>
+  <div class="stat-box"><h3>Total FDs</h3><p id="fdCount">0</p></div>
+  <div class="stat-box"><h3>Total FD Principal (₹)</h3><p id="totalPrincipal">0</p></div>
+  <div class="stat-box"><h3>Total RDs</h3><p id="rdCount">0</p></div>
+  <div class="stat-box"><h3>Total RD Principal (₹)</h3><p id="totalRDPrincipal">0</p></div>
+  <div class="stat-box" style="background:#f9c851;"><h3>Pending FDs</h3><p id="pendingFDCount">0</p></div>
 </div>
 
 <div class="button-group">
   <button onclick="showSection('daily')">📅 Daily Report</button>
   <button onclick="showSection('pending')">⏳ Pending Transactions</button>
   <button onclick="showSection('approved')">✅ Approved Entries</button>
+  <button onclick="showSection('renewal')">🔁 FD/RD Renewal Alert</button>
 </div>
 
 <!-- Daily Section -->
 <div id="dailySection" class="section">
   <h3 style="margin-left:20px;">Today's FD Entries</h3>
   <table>
-    <thead>
-      <tr>
-        <th>Customer ID</th><th>Name</th><th>Principal</th><th>Start Date</th><th>Maturity</th>
-      </tr>
-    </thead>
+    <thead><tr><th>Customer ID</th><th>Name</th><th>Principal</th><th>Start Date</th><th>Maturity</th></tr></thead>
     <tbody id="fdTodayBody"></tbody>
   </table>
 
   <h3 style="margin-left:20px;">Today's RD Entries</h3>
   <table>
-    <thead>
-      <tr>
-        <th>Customer ID</th><th>Name</th><th>Principal</th><th>Start Date</th><th>Maturity</th>
-      </tr>
-    </thead>
+    <thead><tr><th>Customer ID</th><th>Name</th><th>Principal</th><th>Start Date</th><th>Maturity</th></tr></thead>
     <tbody id="rdTodayBody"></tbody>
   </table>
 </div>
@@ -161,11 +139,7 @@
 <div id="pendingSection" class="section hidden">
   <h3 style="margin-left:20px;">Pending FD Approvals</h3>
   <table>
-    <thead>
-      <tr>
-        <th>Customer ID</th><th>Name</th><th>Principal</th><th>Start Date</th><th>Maturity</th><th>Action</th>
-      </tr>
-    </thead>
+    <thead><tr><th>Customer ID</th><th>Name</th><th>Principal</th><th>Start Date</th><th>Maturity</th><th>Action</th></tr></thead>
     <tbody id="pendingFDTableBody"></tbody>
   </table>
 </div>
@@ -174,22 +148,29 @@
 <div id="approvedSection" class="section hidden">
   <h3 style="margin-left:20px;">All Approved FD Entries</h3>
   <table>
-    <thead>
-      <tr>
-        <th>Customer ID</th><th>Name</th><th>Aadhaar</th><th>PAN</th><th>Start Date</th><th>Maturity Date</th><th>Principal</th><th>Maturity Amt</th>
-      </tr>
-    </thead>
+    <thead><tr><th>Customer ID</th><th>Name</th><th>Aadhaar</th><th>PAN</th><th>Start Date</th><th>Maturity Date</th><th>Principal</th><th>Maturity Amt</th></tr></thead>
     <tbody id="approvedFDTableBody"></tbody>
   </table>
 
   <h3 style="margin-left:20px;">All Approved RD Entries</h3>
   <table>
-    <thead>
-      <tr>
-        <th>Customer ID</th><th>Name</th><th>Aadhaar</th><th>PAN</th><th>Start Date</th><th>Maturity Date</th><th>Principal</th><th>Maturity Amt</th>
-      </tr>
-    </thead>
+    <thead><tr><th>Customer ID</th><th>Name</th><th>Aadhaar</th><th>PAN</th><th>Start Date</th><th>Maturity Date</th><th>Principal</th><th>Maturity Amt</th></tr></thead>
     <tbody id="approvedRDTableBody"></tbody>
+  </table>
+</div>
+
+<!-- Renewal Section -->
+<div id="renewalSection" class="section hidden">
+  <h3 style="margin-left:20px;">FDs Maturing in Next 7 Days</h3>
+  <table>
+    <thead><tr><th>Customer ID</th><th>Name</th><th>Principal</th><th>Maturity Date</th></tr></thead>
+    <tbody id="renewalFDTableBody"></tbody>
+  </table>
+
+  <h3 style="margin-left:20px;">RDs Maturing in Next 7 Days</h3>
+  <table>
+    <thead><tr><th>Customer ID</th><th>Name</th><th>Principal</th><th>Maturity Date</th></tr></thead>
+    <tbody id="renewalRDTableBody"></tbody>
   </table>
 </div>
 
@@ -219,10 +200,13 @@ function logout() {
 }
 
 function showSection(section) {
-  document.getElementById("dailySection").classList.add("hidden");
-  document.getElementById("pendingSection").classList.add("hidden");
-  document.getElementById("approvedSection").classList.add("hidden");
+  const sections = ["daily", "pending", "approved", "renewal"];
+  sections.forEach(id => document.getElementById(id + "Section").classList.add("hidden"));
   document.getElementById(section + "Section").classList.remove("hidden");
+
+  if (section === "renewal") {
+    loadRenewalAlerts();
+  }
 }
 
 function loadStats() {
@@ -319,6 +303,38 @@ function loadApprovedEntries() {
       body.innerHTML += `<tr><td>${d.customerId}</td><td>${d.name}</td><td>${d.aadhaar}</td><td>${d.pan}</td><td>${d.startDate}</td><td>${d.maturityDate}</td><td>${d.principal}</td><td>${d.maturityAmount}</td></tr>`;
     });
   });
+}
+
+function loadRenewalAlerts() {
+  const today = new Date();
+  const next7 = new Date();
+  next7.setDate(today.getDate() + 7);
+  const todayStr = today.toISOString().split("T")[0];
+  const next7Str = next7.toISOString().split("T")[0];
+
+  db.collection("fd")
+    .where("maturityDate", ">=", todayStr)
+    .where("maturityDate", "<=", next7Str)
+    .get().then(snapshot => {
+      const body = document.getElementById("renewalFDTableBody");
+      body.innerHTML = "";
+      snapshot.forEach(doc => {
+        const d = doc.data();
+        body.innerHTML += `<tr><td>${d.customerId}</td><td>${d.name}</td><td>${d.principal}</td><td>${d.maturityDate}</td></tr>`;
+      });
+    });
+
+  db.collection("rd")
+    .where("maturityDate", ">=", todayStr)
+    .where("maturityDate", "<=", next7Str)
+    .get().then(snapshot => {
+      const body = document.getElementById("renewalRDTableBody");
+      body.innerHTML = "";
+      snapshot.forEach(doc => {
+        const d = doc.data();
+        body.innerHTML += `<tr><td>${d.customerId}</td><td>${d.name}</td><td>${d.principal}</td><td>${d.maturityDate}</td></tr>`;
+      });
+    });
 }
 
 auth.onAuthStateChanged(user => {

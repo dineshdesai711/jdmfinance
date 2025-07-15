@@ -142,6 +142,8 @@
   <button onclick="showSection('pending')">⏳ Pending Transactions</button>
   <button onclick="showSection('approved')">✅ Approved Entries</button>
   <button onclick="loadRenewalAlert()">🔁 FD/RD Renewal Alert</button>
+  <button onclick="window.location.href='admin-message.html'">📨 Message Center</button>
+
 </div>
 <!-- Daily Section -->
 <div id="dailySection" class="section">
@@ -197,6 +199,8 @@
     <label>From: <input type="date" id="fromDateFD"></label>
     <label>To: <input type="date" id="toDateFD"></label>
     <button onclick="filterFD()">Filter</button>
+    <button onclick="clearDateFilter()">❌ Clear</button>
+
   </div>
 
   <table>
@@ -215,6 +219,7 @@
     <label>From: <input type="date" id="fromDateRD"></label>
     <label>To: <input type="date" id="toDateRD"></label>
     <button onclick="filterRD()">Filter</button>
+    <button onclick="clearDateFilter()">❌ Clear</button>
   </div>
 
   <table>

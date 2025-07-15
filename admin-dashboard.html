@@ -1,187 +1,309 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Admin Dashboard - JDM Credit & Finance</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 0; background: #f4f4f4; }
-    header { background: #0a3d62; color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center; }
-    .logo-section { display: flex; align-items: center; }
-    .logo-section img { height: 40px; margin-right: 10px; }
-    .stats { display: flex; gap: 20px; padding: 20px; flex-wrap: wrap; }
-    .stat-box { flex: 1; min-width: 200px; background: white; border-radius: 10px; padding: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); text-align: center; }
-    .section { margin: 20px; background: white; padding: 20px; border-radius: 10px; }
-    button { padding: 10px 15px; border: none; background: #0a3d62; color: white; border-radius: 5px; cursor: pointer; margin-right: 10px; }
-    input, select { padding: 8px; margin-right: 10px; border-radius: 5px; border: 1px solid #ccc; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th, td { padding: 10px; border: 1px solid #ccc; text-align: center; }
-    th { background-color: #0a3d62; color: white; }
-    .logout-btn { background: red; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background-color: #0a3d62;
+      color: white;
+      padding: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .logo-section {
+      display: flex;
+      align-items: center;
+    }
+    .logo-section img {
+      height: 40px;
+      margin-right: 10px;
+    }
+    .logout-btn {
+      background-color: crimson;
+      border: none;
+      padding: 10px 20px;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .stats {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-around;
+      margin: 20px;
+      gap: 20px;
+    }
+    .stat-box {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      flex: 1;
+      min-width: 200px;
+      text-align: center;
+      padding: 20px;
+    }
+    .button-group {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin: 10px 20px;
+      flex-wrap: wrap;
+    }
+    .button-group button {
+      padding: 10px 20px;
+      background: #0a3d62;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    table {
+      width: 95%;
+      margin: 20px auto;
+      border-collapse: collapse;
+      background: white;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    table th, table td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: center;
+    }
+    table th {
+      background-color: #0a3d62;
+      color: white;
+    }
+    .hidden { display: none; }
+    .action-btn {
+      padding: 5px 10px;
+      margin: 2px;
+      border: none;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    .approve-btn { background-color: green; color: white; }
+    .reject-btn { background-color: crimson; color: white; }
+    input[type="text"], input[type="date"] {
+      padding: 6px;
+      margin: 10px;
+    }
   </style>
 </head>
 <body>
 
 <header>
   <div class="logo-section">
-    <img src="https://i.ibb.co/5TpqK1H/banklogo.png" alt="Logo">
-    <h2>JDM CREDIT & FINANCE - Admin Dashboard</h2>
+    <img src="https://i.ibb.co/5TpqK1H/banklogo.png" alt="Logo" />
+    <h2>JDM CREDIT & FINANCE - Admin Panel</h2>
   </div>
-  <button onclick="logout()" class="logout-btn">Logout</button>
+  <button class="logout-btn" onclick="logout()">Logout</button>
 </header>
 
 <div class="stats">
   <div class="stat-box"><h3>Total FDs</h3><p id="fdCount">0</p></div>
-  <div class="stat-box"><h3>Total FD Principal (₹)</h3><p id="fdPrincipal">0</p></div>
+  <div class="stat-box"><h3>Total FD Principal (₹)</h3><p id="totalPrincipal">0</p></div>
   <div class="stat-box"><h3>Total RDs</h3><p id="rdCount">0</p></div>
-  <div class="stat-box"><h3>Total RD Principal (₹)</h3><p id="rdPrincipal">0</p></div>
+  <div class="stat-box"><h3>Total RD Principal (₹)</h3><p id="totalRDPrincipal">0</p></div>
+  <div class="stat-box" style="background:#f9c851;"><h3>Pending FDs</h3><p id="pendingFDCount">0</p></div>
 </div>
 
-<div class="section">
-  <h3>Daily Report</h3>
-  <button onclick="loadDailyReport()">Show Today's FD & RD</button>
-  <div id="dailyReport"></div>
+<div class="button-group">
+  <button onclick="showSection('daily')">📅 Daily Report</button>
+  <button onclick="showSection('pending')">⏳ Pending Transactions</button>
+  <button onclick="showSection('approved')">✅ Approved Entries</button>
+  <button onclick="showSection('search')">🔍 Search Customer</button>
+  <button onclick="showSection('reminder')">📢 Maturity Reminder</button>
+  <button onclick="window.location.href='fd.html'">➕ Add FD</button>
+  <button onclick="window.location.href='rd.html'">➕ Add RD</button>
 </div>
 
-<div class="section">
-  <h3>Customer Search</h3>
+<!-- Sections -->
+<div id="daily" class="section"><h3 style="margin-left:20px;">Today's FD Entries</h3><table><thead><tr><th>Customer ID</th><th>Name</th><th>Principal</th><th>Start</th><th>Maturity</th></tr></thead><tbody id="fdTodayBody"></tbody></table><h3 style="margin-left:20px;">Today's RD Entries</h3><table><thead><tr><th>Customer ID</th><th>Name</th><th>Principal</th><th>Start</th><th>Maturity</th></tr></thead><tbody id="rdTodayBody"></tbody></table></div>
+
+<div id="pending" class="section hidden"><h3 style="margin-left:20px;">Pending FD Approvals</h3><table><thead><tr><th>Customer ID</th><th>Name</th><th>Principal</th><th>Start</th><th>Maturity</th><th>Action</th></tr></thead><tbody id="pendingFDTableBody"></tbody></table></div>
+
+<div id="approved" class="section hidden">
+  <h3 style="margin-left:20px;">Filter by Date</h3>
+  <input type="date" id="fromDate"> to
+  <input type="date" id="toDate">
+  <button onclick="loadApprovedEntries()">Load</button>
+  <h3 style="margin-left:20px;">Approved FD Entries</h3>
+  <table><thead><tr><th>Customer ID</th><th>Name</th><th>Aadhaar</th><th>PAN</th><th>Start</th><th>Maturity</th><th>Principal</th><th>Amount</th></tr></thead><tbody id="approvedFDTableBody"></tbody></table>
+  <h3 style="margin-left:20px;">Approved RD Entries</h3>
+  <table><thead><tr><th>Customer ID</th><th>Name</th><th>Aadhaar</th><th>PAN</th><th>Start</th><th>Maturity</th><th>Principal</th><th>Amount</th></tr></thead><tbody id="approvedRDTableBody"></tbody></table>
+</div>
+
+<div id="search" class="section hidden">
+  <h3 style="margin-left:20px;">Search Customer</h3>
   <input type="text" id="searchInput" placeholder="Enter Name or Mobile">
   <button onclick="searchCustomer()">Search</button>
-  <div id="customerResult"></div>
+  <div id="searchResult"></div>
 </div>
 
-<div class="section">
-  <h3>Approved Entries Filter</h3>
-  <label>From: <input type="date" id="fromDate"></label>
-  <label>To: <input type="date" id="toDate"></label>
-  <button onclick="filterApproved()">Show Approved FDs & RDs</button>
-  <div id="approvedResult"></div>
+<div id="reminder" class="section hidden">
+  <h3 style="margin-left:20px;">FDs Maturing in 7 Days</h3>
+  <table><thead><tr><th>Customer ID</th><th>Name</th><th>Start</th><th>Maturity</th><th>Amount</th></tr></thead><tbody id="reminderTableBody"></tbody></table>
 </div>
 
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 <script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyDLvrY6y3SyvLrX-yk8UcdO8RmnC89XNG4",
-    authDomain: "jdms-207ba.firebaseapp.com",
-    projectId: "jdms-207ba",
-    storageBucket: "jdms-207ba.appspot.com",
-    messagingSenderId: "449814553435",
-    appId: "1:449814553435:web:008c7695473689f425307e"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
-  const auth = firebase.auth();
+const firebaseConfig = {
+  apiKey: "AIzaSyDLvrY6y3SyvLrX-yk8UcdO8RmnC89XNG4",
+  authDomain: "jdms-207ba.firebaseapp.com",
+  projectId: "jdms-207ba",
+  storageBucket: "jdms-207ba.appspot.com",
+  messagingSenderId: "449814553435",
+  appId: "1:449814553435:web:008c7695473689f425307e"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
 
-  function logout() {
-    auth.signOut().then(() => {
-      localStorage.clear();
-      window.location.href = "index.html";
-    });
-  }
-
-  function loadStats() {
-    db.collection("fd").where("status", "==", "approved").get().then(snapshot => {
-      let count = 0, total = 0;
-      snapshot.forEach(doc => {
-        count++;
-        total += parseFloat(doc.data().principal) || 0;
-      });
-      document.getElementById("fdCount").innerText = count;
-      document.getElementById("fdPrincipal").innerText = total.toLocaleString();
-    });
-
-    db.collection("rd").where("status", "==", "approved").get().then(snapshot => {
-      let count = 0, total = 0;
-      snapshot.forEach(doc => {
-        count++;
-        total += parseFloat(doc.data().principal) || 0;
-      });
-      document.getElementById("rdCount").innerText = count;
-      document.getElementById("rdPrincipal").innerText = total.toLocaleString();
-    });
-  }
-
-  function loadDailyReport() {
-    const today = new Date().toISOString().split('T')[0];
-    const container = document.getElementById("dailyReport");
-    container.innerHTML = "<h4>FDs Created Today</h4>";
-    db.collection("fd").where("startDate", "==", today).get().then(snapshot => {
-      snapshot.forEach(doc => {
-        const d = doc.data();
-        container.innerHTML += `<p>${d.name} - ₹${d.principal} - FD</p>`;
-      });
-    });
-
-    container.innerHTML += "<h4>RDs Created Today</h4>";
-    db.collection("rd").where("startDate", "==", today).get().then(snapshot => {
-      snapshot.forEach(doc => {
-        const d = doc.data();
-        container.innerHTML += `<p>${d.name} - ₹${d.principal} - RD</p>`;
-      });
-    });
-  }
-
-  function searchCustomer() {
-    const query = document.getElementById("searchInput").value.toLowerCase();
-    const container = document.getElementById("customerResult");
-    container.innerHTML = "<h4>FDs</h4>";
-    db.collection("fd").where("status", "==", "approved").get().then(snapshot => {
-      snapshot.forEach(doc => {
-        const d = doc.data();
-        if ((d.name && d.name.toLowerCase().includes(query)) || (d.mobile && d.mobile.includes(query))) {
-          container.innerHTML += `<p>${d.name} - ₹${d.principal} FD - ${d.startDate}</p>`;
-        }
-      });
-    });
-
-    container.innerHTML += "<h4>RDs</h4>";
-    db.collection("rd").where("status", "==", "approved").get().then(snapshot => {
-      snapshot.forEach(doc => {
-        const d = doc.data();
-        if ((d.name && d.name.toLowerCase().includes(query)) || (d.mobile && d.mobile.includes(query))) {
-          container.innerHTML += `<p>${d.name} - ₹${d.principal} RD - ${d.startDate}</p>`;
-        }
-      });
-    });
-  }
-
-  function filterApproved() {
-    const from = document.getElementById("fromDate").value;
-    const to = document.getElementById("toDate").value;
-    const container = document.getElementById("approvedResult");
-    if (!from || !to) return alert("Please select both dates");
-
-    container.innerHTML = "<h4>Approved FDs</h4>";
-    db.collection("fd").where("status", "==", "approved").get().then(snapshot => {
-      snapshot.forEach(doc => {
-        const d = doc.data();
-        if (d.startDate >= from && d.startDate <= to) {
-          container.innerHTML += `<p>${d.name} - ₹${d.principal} FD - ${d.startDate}</p>`;
-        }
-      });
-    });
-
-    container.innerHTML += "<h4>Approved RDs</h4>";
-    db.collection("rd").where("status", "==", "approved").get().then(snapshot => {
-      snapshot.forEach(doc => {
-        const d = doc.data();
-        if (d.startDate >= from && d.startDate <= to) {
-          container.innerHTML += `<p>${d.name} - ₹${d.principal} RD - ${d.startDate}</p>`;
-        }
-      });
-    });
-  }
-
-  auth.onAuthStateChanged(user => {
-    if (user) {
-      loadStats();
-    } else {
-      alert("Session expired. Please login again.");
-      window.location.href = "index.html";
-    }
+function logout() {
+  auth.signOut().then(() => {
+    localStorage.clear();
+    window.location.href = "index.html";
   });
-</script>
+}
 
+function showSection(id) {
+  document.querySelectorAll(".section").forEach(s => s.classList.add("hidden"));
+  document.getElementById(id).classList.remove("hidden");
+}
+
+function loadStats() {
+  db.collection("fd").get().then(snap => {
+    let count = 0, principal = 0, pending = 0;
+    snap.forEach(doc => {
+      const d = doc.data();
+      if (!d.status || d.status === "approved") { count++; principal += parseFloat(d.principal || 0); }
+      if (d.status === "pending") pending++;
+    });
+    document.getElementById("fdCount").innerText = count;
+    document.getElementById("totalPrincipal").innerText = principal.toLocaleString();
+    document.getElementById("pendingFDCount").innerText = pending;
+  });
+
+  db.collection("rd").get().then(snap => {
+    let count = 0, principal = 0;
+    snap.forEach(doc => {
+      const d = doc.data();
+      count++; principal += parseFloat(d.principal || 0);
+    });
+    document.getElementById("rdCount").innerText = count;
+    document.getElementById("totalRDPrincipal").innerText = principal.toLocaleString();
+  });
+}
+
+function loadFDsToday() {
+  const today = new Date().toISOString().split("T")[0];
+  db.collection("fd").where("startDate", "==", today).get().then(snap => {
+    const body = document.getElementById("fdTodayBody"); body.innerHTML = "";
+    snap.forEach(doc => {
+      const d = doc.data();
+      body.innerHTML += `<tr><td>${d.customerId}</td><td>${d.name}</td><td>${d.principal}</td><td>${d.startDate}</td><td>${d.maturityDate}</td></tr>`;
+    });
+  });
+  db.collection("rd").where("startDate", "==", today).get().then(snap => {
+    const body = document.getElementById("rdTodayBody"); body.innerHTML = "";
+    snap.forEach(doc => {
+      const d = doc.data();
+      body.innerHTML += `<tr><td>${d.customerId}</td><td>${d.name}</td><td>${d.principal}</td><td>${d.startDate}</td><td>${d.maturityDate}</td></tr>`;
+    });
+  });
+}
+
+function loadPendingFDs() {
+  db.collection("fd").where("status", "==", "pending").get().then(snap => {
+    const body = document.getElementById("pendingFDTableBody"); body.innerHTML = "";
+    snap.forEach(doc => {
+      const d = doc.data();
+      body.innerHTML += `<tr><td>${d.customerId}</td><td>${d.name}</td><td>${d.principal}</td><td>${d.startDate}</td><td>${d.maturityDate}</td><td><button class="action-btn approve-btn" onclick="updateFDStatus('${doc.id}', 'approved')">Approve</button><button class="action-btn reject-btn" onclick="updateFDStatus('${doc.id}', 'rejected')">Reject</button></td></tr>`;
+    });
+  });
+}
+
+function updateFDStatus(id, status) {
+  db.collection("fd").doc(id).update({ status }).then(() => {
+    loadStats(); loadPendingFDs();
+  });
+}
+
+function loadApprovedEntries() {
+  const from = document.getElementById("fromDate").value;
+  const to = document.getElementById("toDate").value;
+  if (!from || !to) return alert("Please select both dates.");
+  db.collection("fd").where("startDate", ">=", from).where("startDate", "<=", to).where("status", "==", "approved").get().then(snap => {
+    const body = document.getElementById("approvedFDTableBody"); body.innerHTML = "";
+    snap.forEach(doc => {
+      const d = doc.data();
+      body.innerHTML += `<tr><td>${d.customerId}</td><td>${d.name}</td><td>${d.aadhaar}</td><td>${d.pan}</td><td>${d.startDate}</td><td>${d.maturityDate}</td><td>${d.principal}</td><td>${d.maturityAmount}</td></tr>`;
+    });
+  });
+  db.collection("rd").where("startDate", ">=", from).where("startDate", "<=", to).get().then(snap => {
+    const body = document.getElementById("approvedRDTableBody"); body.innerHTML = "";
+    snap.forEach(doc => {
+      const d = doc.data();
+      body.innerHTML += `<tr><td>${d.customerId}</td><td>${d.name}</td><td>${d.aadhaar}</td><td>${d.pan}</td><td>${d.startDate}</td><td>${d.maturityDate}</td><td>${d.principal}</td><td>${d.maturityAmount}</td></tr>`;
+    });
+  });
+}
+
+function searchCustomer() {
+  const input = document.getElementById("searchInput").value.trim();
+  if (!input) return;
+  const resultDiv = document.getElementById("searchResult");
+  resultDiv.innerHTML = "<h4>Search Results:</h4>";
+
+  db.collection("fd").where("name", "==", input).get().then(snap => {
+    snap.forEach(doc => {
+      const d = doc.data();
+      resultDiv.innerHTML += `<p><strong>FD:</strong> ${d.name}, ₹${d.principal}, Start: ${d.startDate}</p>`;
+    });
+  });
+
+  db.collection("rd").where("name", "==", input).get().then(snap => {
+    snap.forEach(doc => {
+      const d = doc.data();
+      resultDiv.innerHTML += `<p><strong>RD:</strong> ${d.name}, ₹${d.principal}, Start: ${d.startDate}</p>`;
+    });
+  });
+}
+
+function loadReminder() {
+  const today = new Date();
+  const next7 = new Date();
+  next7.setDate(today.getDate() + 7);
+  const from = today.toISOString().split('T')[0];
+  const to = next7.toISOString().split('T')[0];
+
+  db.collection("fd").where("maturityDate", ">=", from).where("maturityDate", "<=", to).get().then(snap => {
+    const body = document.getElementById("reminderTableBody"); body.innerHTML = "";
+    snap.forEach(doc => {
+      const d = doc.data();
+      body.innerHTML += `<tr><td>${d.customerId}</td><td>${d.name}</td><td>${d.startDate}</td><td>${d.maturityDate}</td><td>${d.maturityAmount}</td></tr>`;
+    });
+  });
+}
+
+auth.onAuthStateChanged(user => {
+  if (user) {
+    loadStats(); loadFDsToday(); loadPendingFDs(); loadReminder(); showSection("daily");
+  } else {
+    alert("Not logged in"); window.location.href = "index.html";
+  }
+});
+</script>
 </body>
 </html>

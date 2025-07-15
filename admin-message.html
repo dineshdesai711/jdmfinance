@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Message Panel - JDM Credit & Finance</title>
+  <style>
+    body { font-family: Arial; background: #f4f4f4; margin: 0; padding: 0; }
+    header {
+      background-color: #0a3d62; color: white;
+      padding: 15px; text-align: center;
+    }
+    .container {
+      padding: 20px; max-width: 800px; margin: auto;
+    }
+    select, input, textarea, button {
+      display: block; width: 100%; padding: 10px;
+      margin: 10px 0; border-radius: 5px; border: 1px solid #ccc;
+    }
+    textarea { resize: vertical; }
+    .action-btns button {
+      width: 48%; display: inline-block;
+      background: #0a3d62; color: white; border: none; cursor: pointer;
+    }
+    .action-btns button.whatsapp { background: #25d366; }
+  </style>
+</head>
+<body>
+  <header>
+    <h2>📨 Admin Message Panel - JDM Credit & Finance</h2>
+  </header>
+  <div class="container">
+    <label>📋 Select Message Type:</label>
+    <select id="msgType" onchange="generateMessage()">
+      <option value="">-- Select Type --</option>
+      <option value="thanks">✅ FD Thanks Message</option>
+      <option value="maturity">⏳ Maturity Alert</option>
+      <option value="festival">🎉 Festival Wishes</option>
+      <option value="scheme">📢 New Scheme Info</option>
+    </select>
+
+    <label>🔍 Search Customer by Mobile or ID:</label>
+    <input type="text" id="searchKey" placeholder="Enter Mobile No. or Customer ID">
+    <button onclick="fetchCustomer()">Search</button>
+
+    <div id="customerDetails"></div>
+
+    <label>✍️ Message Preview (editable):</label>
+    <textarea id="customMessage" rows="6"></textarea>
+
+    <div class="action-btns">
+      <button class="whatsapp" onclick="sendWhatsApp()">📱 Send on WhatsApp</button>
+      <button onclick="alert('Email feature coming soon!')">📧 Send Email</button>
+    </div>
+  </div>
+
+  <script>
+    let selectedCustomer = null;
+
+    function fetchCustomer() {
+      const key = document.getElementById('searchKey').value.trim();
+      if (!key) return alert("Enter Customer ID or Mobile");
+
+      firebase.firestore().collection("customers")
+        .where("customerId", "==", key)
+        .get()
+        .then(snapshot => {
+          if (snapshot.empty) {
+            return firebase.firestore().collection("customers")
+              .where("mobile", "==", key).get();
+          }
+          return snapshot;
+        })
+        .then(snapshot => {
+          if (snapshot.empty) return alert("Customer not found");
+          selectedCustomer = snapshot.docs[0].data();
+          document.getElementById('customerDetails').innerHTML = `
+            <b>Name:</b> ${selectedCustomer.name}<br>
+            <b>Mobile:</b> ${selectedCustomer.mobile}<br>
+            <b>Customer ID:</b> ${selectedCustomer.customerId}
+          `;
+          generateMessage();
+        });
+    }
+
+    function generateMessage() {
+      const type = document.getElementById('msgType').value;
+      if (!type || !selectedCustomer) return;
+      const { name, customerId } = selectedCustomer;
+      const today = new Date().toISOString().split('T')[0];
+
+      let msg = "";
+      if (type === "thanks") {
+        msg = `Namaste ${name},\nThank you for opening an FD with JDM Credit & Finance. Your trust matters!\nCustomer ID: ${customerId}`;
+      } else if (type === "maturity") {
+        msg = `Dear ${name},\nYour FD is due to mature soon. Please contact Ashutosh Sharma at 98765XXXXX to renew.\n-JDM Credit & Finance.`;
+      } else if (type === "festival") {
+        msg = `🎉 Happy Festival from JDM Credit & Finance! May this season bring you joy and prosperity.`;
+      } else if (type === "scheme") {
+        msg = `📢 New FD Plans from JDM Credit & Finance. Earn up to 11.5% interest. Valid till July 31. Contact us now!`;
+      }
+
+      document.getElementById('customMessage').value = msg;
+    }
+
+    function sendWhatsApp() {
+      if (!selectedCustomer || !selectedCustomer.mobile) return alert("No mobile number available");
+      const msg = encodeURIComponent(document.getElementById('customMessage').value);
+      const phone = selectedCustomer.mobile;
+      window.open(`https://wa.me/91${phone}?text=${msg}`, '_blank');
+    }
+  </script>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDLvrY6y3SyvLrX-yk8UcdO8RmnC89XNG4",
+      authDomain: "jdms-207ba.firebaseapp.com",
+      projectId: "jdms-207ba",
+      storageBucket: "jdms-207ba.appspot.com",
+      messagingSenderId: "449814553435",
+      appId: "1:449814553435:web:008c7695473689f425307e"
+    };
+    firebase.initializeApp(firebaseConfig);
+  </script>
+</body>
+</html>

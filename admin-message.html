@@ -2,87 +2,85 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin Message Center - JDM Credit & Finance</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      margin: 0; padding: 0;
-      background-color: #f4f4f4;
-    }
-    header {
-      background-color: #0a3d62;
-      color: white;
+      background-color: #f9f9f9;
+      margin: 0;
       padding: 20px;
+    }
+    h2 {
       text-align: center;
+      color: #0a3d62;
     }
-    .container {
-      padding: 20px;
+    .search-box {
+      text-align: center;
+      margin: 20px 0;
     }
-    input, button {
+    input[type="text"] {
       padding: 10px;
-      margin-right: 10px;
-      border-radius: 5px;
+      width: 300px;
       border: 1px solid #ccc;
+      border-radius: 5px;
     }
     button {
+      padding: 10px 15px;
+      margin-left: 10px;
       background-color: #0a3d62;
       color: white;
+      border: none;
+      border-radius: 5px;
       cursor: pointer;
     }
     table {
-      width: 100%;
-      margin-top: 20px;
+      width: 90%;
+      margin: 20px auto;
       border-collapse: collapse;
-      background-color: white;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      background: white;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
     }
-    table th, table td {
-      border: 1px solid #ccc;
-      padding: 12px;
+    th, td {
+      border: 1px solid #ddd;
+      padding: 10px;
       text-align: center;
     }
-    table th {
+    th {
       background-color: #0a3d62;
       color: white;
     }
-    .wa-link {
-      background-color: green;
-      color: white;
-      padding: 6px 12px;
+    a.wa-link {
+      color: green;
+      font-weight: bold;
       text-decoration: none;
-      border-radius: 4px;
     }
   </style>
 </head>
 <body>
-  <header>
-    <h2>📩 Admin Message Center - JDM Credit & Finance</h2>
-  </header>
+  <h2>📨 Admin Message Center</h2>
 
-  <div class="container">
-    <h3>Search Customer by ID</h3>
+  <div class="search-box">
     <input type="text" id="searchCustomerId" placeholder="Enter Customer ID" />
-    <button onclick="searchCustomer()">Search</button>
-
-    <table>
-      <thead>
-        <tr>
-          <th>Customer ID</th>
-          <th>Name</th>
-          <th>Mobile</th>
-          <th>FD Count</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody id="searchResultsBody"></tbody>
-    </table>
+    <button onclick="searchCustomer()">🔍 Search</button>
   </div>
 
-  <!-- Firebase Scripts -->
+  <table>
+    <thead>
+      <tr>
+        <th>Customer ID</th>
+        <th>Name</th>
+        <th>Mobile</th>
+        <th>Total FDs</th>
+        <th>WhatsApp</th>
+      </tr>
+    </thead>
+    <tbody id="searchResultsBody"></tbody>
+  </table>
+
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-  
+
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyDLvrY6y3SyvLrX-yk8UcdO8RmnC89XNG4",
@@ -102,37 +100,45 @@
         return;
       }
 
-      db.collection("customers").doc(customerId).get().then(doc => {
-        if (!doc.exists) {
-          alert("Customer not found!");
-          return;
-        }
+      db.collection("customers").where("customerId", "==", customerId).get()
+        .then(snapshot => {
+          if (snapshot.empty) {
+            alert("Customer not found!");
+            return;
+          }
 
-        const data = doc.data();
-        const name = data.name || "Customer";
-        const mobile = data.mobile || "";
+          const doc = snapshot.docs[0];
+          const data = doc.data();
+          const name = data.name || "Customer";
+          const mobile = data.mobile || "";
 
-        db.collection("fd").where("customerId", "==", customerId).get().then(fdSnap => {
-          const fdCount = fdSnap.size;
-          const tbody = document.getElementById("searchResultsBody");
-          tbody.innerHTML = `
-            <tr>
-              <td>${customerId}</td>
-              <td>${name}</td>
-              <td>${mobile}</td>
-              <td>${fdCount}</td>
-              <td>
-                <a class="wa-link" target="_blank" href="https://wa.me/91${mobile}?text=Dear ${name},%0AYour FD with JDM Credit & Finance is due soon or has been created.%0AThank you for choosing us!%0A- Ashutosh Sharma%0A📞 98282XXXXX">
-                  Send WhatsApp
-                </a>
-              </td>
-            </tr>
-          `;
+          if (!mobile || mobile.length !== 10) {
+            alert("Invalid or missing mobile number for this customer.");
+            return;
+          }
+
+          db.collection("fd").where("customerId", "==", customerId).get().then(fdSnap => {
+            const fdCount = fdSnap.size;
+            const msg = encodeURIComponent(
+              `Dear ${name},\nYour FD with JDM Credit & Finance is due soon or has been created.\nThank you for choosing us!\n- Ashutosh Sharma\n\uD83D\uDCDE 98282XXXXX`
+            );
+            const waLink = `https://wa.me/91${mobile}?text=${msg}`;
+
+            document.getElementById("searchResultsBody").innerHTML = `
+              <tr>
+                <td>${customerId}</td>
+                <td>${name}</td>
+                <td>${mobile}</td>
+                <td>${fdCount}</td>
+                <td><a href="${waLink}" target="_blank" class="wa-link">Send WhatsApp</a></td>
+              </tr>
+            `;
+          });
+        })
+        .catch(error => {
+          console.error("Error searching customer:", error);
+          alert("Something went wrong while searching.");
         });
-      }).catch(error => {
-        console.error("Error fetching customer:", error);
-        alert("Something went wrong while searching.");
-      });
     }
   </script>
 </body>

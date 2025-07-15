@@ -2,86 +2,73 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin Message Center - JDM Credit & Finance</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background-color: #f9f9f9;
-      margin: 0;
+      background: #f1f1f1;
       padding: 20px;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
     h2 {
       text-align: center;
       color: #0a3d62;
     }
-    .search-box {
-      text-align: center;
-      margin: 20px 0;
-    }
-    input[type="text"] {
+    input, textarea, button {
+      width: 100%;
       padding: 10px;
-      width: 300px;
+      margin-top: 10px;
       border: 1px solid #ccc;
       border-radius: 5px;
     }
     button {
-      padding: 10px 15px;
-      margin-left: 10px;
-      background-color: #0a3d62;
+      background: #0a3d62;
       color: white;
-      border: none;
-      border-radius: 5px;
       cursor: pointer;
     }
-    table {
-      width: 90%;
-      margin: 20px auto;
-      border-collapse: collapse;
-      background: white;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    button:hover {
+      background: #074074;
     }
-    th, td {
-      border: 1px solid #ddd;
-      padding: 10px;
-      text-align: center;
+    .flex-row {
+      display: flex;
+      gap: 10px;
     }
-    th {
-      background-color: #0a3d62;
-      color: white;
-    }
-    a.wa-link {
-      color: green;
-      font-weight: bold;
-      text-decoration: none;
+    .flex-row input {
+      flex: 1;
     }
   </style>
 </head>
 <body>
-  <h2>📨 Admin Message Center</h2>
+  <div class="container">
+    <h2>📨 Admin Message Center</h2>
 
-  <div class="search-box">
-    <input type="text" id="searchCustomerId" placeholder="Enter Customer ID" />
-    <button onclick="searchCustomer()">🔍 Search</button>
+    <div class="flex-row">
+      <input type="text" id="searchId" placeholder="Enter Customer ID (e.g., JDM-PRI-XXXX-YYYY)" />
+      <button onclick="searchCustomer()">🔍 Search</button>
+    </div>
+
+    <input type="text" id="name" placeholder="Customer Name" readonly />
+    <input type="text" id="mobile" placeholder="Mobile Number" readonly />
+    <input type="text" id="aadhaar" placeholder="Aadhaar" readonly />
+    <input type="text" id="pan" placeholder="PAN" readonly />
+
+    <textarea id="message" rows="5" placeholder="Write your WhatsApp message here..."></textarea>
+    <button onclick="sendWhatsApp()">📲 Send WhatsApp Message</button>
   </div>
 
-  <table>
-    <thead>
-      <tr>
-        <th>Customer ID</th>
-        <th>Name</th>
-        <th>Mobile</th>
-        <th>Total FDs</th>
-        <th>WhatsApp</th>
-      </tr>
-    </thead>
-    <tbody id="searchResultsBody"></tbody>
-  </table>
-
+  <!-- Firebase scripts -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
   <script>
+    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyDLvrY6y3SyvLrX-yk8UcdO8RmnC89XNG4",
       authDomain: "jdms-207ba.firebaseapp.com",
@@ -90,55 +77,52 @@
       messagingSenderId: "449814553435",
       appId: "1:449814553435:web:008c7695473689f425307e"
     };
+
+    // Init Firebase
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
+    // Search by customerId
     function searchCustomer() {
-      const customerId = document.getElementById("searchCustomerId").value.trim();
-      if (!customerId) {
-        alert("Please enter a Customer ID");
+      const input = document.getElementById("searchId").value.trim();
+      if (!input) return alert("❗ Enter Customer ID");
+
+      db.collection("customers")
+        .where("customerId", "==", input)
+        .get()
+        .then(snapshot => {
+          if (snapshot.empty) {
+            alert("❌ Customer not found!");
+            return;
+          }
+
+          snapshot.forEach(doc => {
+            const data = doc.data();
+            document.getElementById("name").value = data.name || "";
+            document.getElementById("mobile").value = data.mobile || "";
+            document.getElementById("aadhaar").value = data.aadhaar || "";
+            document.getElementById("pan").value = data.pan || "";
+          });
+        })
+        .catch(err => {
+          console.error("Search Error:", err.message);
+          alert("❌ Something went wrong while searching.");
+        });
+    }
+
+    // WhatsApp Message
+    function sendWhatsApp() {
+      const number = document.getElementById("mobile").value.trim();
+      const msg = document.getElementById("message").value.trim();
+
+      if (!number || !msg) {
+        alert("❗ Please provide mobile number and message.");
         return;
       }
 
-      db.collection("customers").where("customerId", "==", customerId).get()
-        .then(snapshot => {
-          if (snapshot.empty) {
-            alert("Customer not found!");
-            return;
-          }
-
-          const doc = snapshot.docs[0];
-          const data = doc.data();
-          const name = data.name || "Customer";
-          const mobile = data.mobile || "";
-
-          if (!mobile || mobile.length !== 10) {
-            alert("Invalid or missing mobile number for this customer.");
-            return;
-          }
-
-          db.collection("fd").where("customerId", "==", customerId).get().then(fdSnap => {
-            const fdCount = fdSnap.size;
-            const msg = encodeURIComponent(
-              `Dear ${name},\nYour FD with JDM Credit & Finance is due soon or has been created.\nThank you for choosing us!\n- Ashutosh Sharma\n\uD83D\uDCDE 98282XXXXX`
-            );
-            const waLink = `https://wa.me/91${mobile}?text=${msg}`;
-
-            document.getElementById("searchResultsBody").innerHTML = `
-              <tr>
-                <td>${customerId}</td>
-                <td>${name}</td>
-                <td>${mobile}</td>
-                <td>${fdCount}</td>
-                <td><a href="${waLink}" target="_blank" class="wa-link">Send WhatsApp</a></td>
-              </tr>
-            `;
-          });
-        })
-        .catch(error => {
-          console.error("Error searching customer:", error);
-          alert("Something went wrong while searching.");
-        });
+      const encodedMessage = encodeURIComponent(msg);
+      const whatsappURL = `https://wa.me/91${number}?text=${encodedMessage}`;
+      window.open(whatsappURL, "_blank");
     }
   </script>
 </body>

@@ -4,58 +4,163 @@
   <meta charset="UTF-8" />
   <title>Admin Dashboard - JDM Credit & Finance</title>
   <style>
-    body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 0; }
-    header { background-color: #0a3d62; color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center; }
-    .logo-section { display: flex; align-items: center; }
-    .logo-section img { height: 40px; margin-right: 10px; }
-    .logout-btn { background-color: crimson; border: none; padding: 10px 20px; color: white; border-radius: 5px; cursor: pointer; }
-    .stats { display: flex; flex-wrap: wrap; justify-content: space-around; margin: 20px; gap: 20px; }
-    .stat-box { background: white; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); flex: 1; min-width: 200px; text-align: center; padding: 20px; }
-    .button-group { display: flex; justify-content: center; gap: 10px; margin: 10px 20px; flex-wrap: wrap; }
-    .button-group button { padding: 10px 20px; background: #0a3d62; color: white; border: none; border-radius: 5px; cursor: pointer; }
-    table { width: 95%; margin: 20px auto; border-collapse: collapse; background: white; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
-    table th, table td { border: 1px solid #ccc; padding: 10px; text-align: center; }
-    table th { background-color: #0a3d62; color: white; }
-    .hidden { display: none; }
-    .action-btn { padding: 5px 10px; margin: 2px; border: none; cursor: pointer; border-radius: 4px; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background-color: #0a3d62;
+      color: white;
+      padding: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .logo-section {
+      display: flex;
+      align-items: center;
+    }
+    .logo-section img {
+      height: 40px;
+      margin-right: 10px;
+    }
+    .logout-btn {
+      background-color: crimson;
+      border: none;
+      padding: 10px 20px;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .stats {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-around;
+      margin: 20px;
+      gap: 20px;
+    }
+    .stat-box {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      flex: 1;
+      min-width: 200px;
+      text-align: center;
+      padding: 20px;
+    }
+    .button-group {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin: 10px 20px;
+      flex-wrap: wrap;
+    }
+    .button-group button {
+      padding: 10px 20px;
+      background: #0a3d62;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    table {
+      width: 95%;
+      margin: 20px auto;
+      border-collapse: collapse;
+      background: white;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    table th, table td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: center;
+    }
+    table th {
+      background-color: #0a3d62;
+      color: white;
+    }
+    .hidden {
+      display: none;
+    }
+    .action-btn {
+      padding: 5px 10px;
+      margin: 2px;
+      border: none;
+      cursor: pointer;
+      border-radius: 4px;
+    }
     .approve-btn { background-color: green; color: white; }
     .reject-btn { background-color: crimson; color: white; }
-    .filter-box { display: flex; justify-content: center; gap: 10px; margin: 10px; }
-    .filter-box input { padding: 8px; }
+    .filter-box {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin: 10px;
+    }
+    .filter-box input[type="date"] {
+      padding: 8px;
+    }
   </style>
 </head>
 <body>
-<header>
-  <div class="logo-section">
-    <img src="https://i.ibb.co/5TpqK1H/banklogo.png" alt="Logo" />
-    <h2>JDM CREDIT & FINANCE - Admin Panel</h2>
+<!-- CONTINUED FROM PART 1 -->
+
+<!-- Approved Section -->
+<div id="approvedSection" class="section hidden">
+  <h3 style="margin-left:20px;">Approved FD Entries</h3>
+  <div class="filter-box">
+    <label>From: <input type="date" id="fromDateFD"></label>
+    <label>To: <input type="date" id="toDateFD"></label>
+    <button onclick="filterFD()">🔍 Filter</button>
+    <button onclick="loadFDApproved()">❌ Clear</button>
   </div>
-  <button class="logout-btn" onclick="logout()">Logout</button>
-</header>
-<div class="stats">
-  <div class="stat-box"><h3>Total FDs</h3><p id="fdCount">0</p></div>
-  <div class="stat-box"><h3>Total FD Principal (₹)</h3><p id="totalPrincipal">0</p></div>
-  <div class="stat-box"><h3>Total RDs</h3><p id="rdCount">0</p></div>
-  <div class="stat-box"><h3>Total RD Principal (₹)</h3><p id="totalRDPrincipal">0</p></div>
-  <div class="stat-box" style="background:#f9c851;"><h3>Pending FDs</h3><p id="pendingFDCount">0</p></div>
-  <div class="stat-box" style="background:#f9c851;"><h3>Pending RDs</h3><p id="pendingRDCount">0</p></div>
+  <table>
+    <thead>
+      <tr>
+        <th>Customer ID</th><th>Name</th><th>Aadhaar</th><th>PAN</th>
+        <th>Start Date</th><th>Maturity Date</th>
+        <th>Principal</th><th>Maturity Amt</th>
+      </tr>
+    </thead>
+    <tbody id="approvedFDTableBody"></tbody>
+  </table>
+
+  <h3 style="margin-left:20px;">Approved RD Entries</h3>
+  <div class="filter-box">
+    <label>From: <input type="date" id="fromDateRD"></label>
+    <label>To: <input type="date" id="toDateRD"></label>
+    <button onclick="filterRD()">🔍 Filter</button>
+    <button onclick="loadRDApproved()">❌ Clear</button>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Customer ID</th><th>Name</th><th>Aadhaar</th><th>PAN</th>
+        <th>Start Date</th><th>Maturity Date</th>
+        <th>Principal</th><th>Maturity Amt</th>
+      </tr>
+    </thead>
+    <tbody id="approvedRDTableBody"></tbody>
+  </table>
 </div>
-<div class="button-group">
-  <button onclick="showSection('daily')">📅 Daily Report</button>
-  <button onclick="showSection('pending')">⏳ Pending Transactions</button>
-  <button onclick="showSection('approved')">✅ Approved Entries</button>
-  <button onclick="loadRenewalAlert()">🔁 FD/RD Renewal Alert</button>
+
+<!-- Renewal Alert Section -->
+<div id="renewalSection" class="section hidden">
+  <h3 style="margin-left:20px;">FD/RD Maturing in 7 Days</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th><th>Customer ID</th><th>Name</th><th>Principal</th>
+        <th>Start Date</th><th>Maturity Date</th>
+      </tr>
+    </thead>
+    <tbody id="renewalBody"></tbody>
+  </table>
 </div>
-<div id="filterSection" class="filter-box hidden">
-  <input type="date" id="fromDate">
-  <input type="date" id="toDate">
-  <button onclick="applyDateFilter()">🔍 Apply Filter</button>
-  <button onclick="clearDateFilter()">❌ Clear</button>
-</div>
-<!-- Daily Section -->
-<div id="dailySection" class="section"></div>
-<div id="pendingSection" class="section hidden"></div>
-<div id="approvedSection" class="section hidden"></div>
+
+<!-- Firebase and Script Logic -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
@@ -80,12 +185,9 @@ function logout() {
 }
 
 function showSection(section) {
-  document.querySelectorAll(".section").forEach(div => div.classList.add("hidden"));
-  document.getElementById("filterSection").classList.add("hidden");
+  const sections = ["daily", "pending", "approved", "renewal"];
+  sections.forEach(s => document.getElementById(s + "Section").classList.add("hidden"));
   document.getElementById(section + "Section").classList.remove("hidden");
-  if (section === "approved") {
-    document.getElementById("filterSection").classList.remove("hidden");
-  }
 }
 
 function loadStats() {
@@ -105,175 +207,67 @@ function loadStats() {
   });
 
   db.collection("rd").get().then(snapshot => {
-    let totalRD = 0, totalRDPrincipal = 0, pendingRD = 0;
+    let totalRD = 0, totalRDPrincipal = 0;
     snapshot.forEach(doc => {
       const d = doc.data();
       if (!d.status || d.status === "approved") {
         totalRD++;
         totalRDPrincipal += parseFloat(d.principal || 0);
       }
-      if (d.status === "pending") pendingRD++;
     });
     document.getElementById("rdCount").innerText = totalRD;
     document.getElementById("totalRDPrincipal").innerText = totalRDPrincipal.toLocaleString();
-    document.getElementById("pendingFDCount").innerText = parseInt(document.getElementById("pendingFDCount").innerText) + pendingRD;
   });
 }
 
-function loadFDsToday() {
-  const today = new Date().toISOString().split("T")[0];
-  db.collection("fd").where("startDate", "==", today).get().then(snapshot => {
-    const body = document.getElementById("fdTodayBody");
+function filterFD() {
+  const from = document.getElementById("fromDateFD").value;
+  const to = document.getElementById("toDateFD").value;
+  db.collection("fd").where("status", "==", "approved").get().then(snapshot => {
+    const body = document.getElementById("approvedFDTableBody");
     body.innerHTML = "";
     snapshot.forEach(doc => {
       const d = doc.data();
-      body.innerHTML += `<tr><td>${d.customerId}</td><td>${d.name}</td><td>${d.principal}</td><td>${d.startDate}</td><td>${d.maturityDate}</td></tr>`;
+      if (d.maturityDate >= from && d.maturityDate <= to) {
+        body.innerHTML += `<tr><td>${d.customerId}</td><td>${d.name}</td><td>${d.aadhaar}</td><td>${d.pan}</td><td>${d.startDate}</td><td>${d.maturityDate}</td><td>${d.principal}</td><td>${d.maturityAmount}</td></tr>`;
+      }
     });
   });
+}
 
-  db.collection("rd").where("startDate", "==", today).get().then(snapshot => {
-    const body = document.getElementById("rdTodayBody");
+function filterRD() {
+  const from = document.getElementById("fromDateRD").value;
+  const to = document.getElementById("toDateRD").value;
+  db.collection("rd").where("status", "==", "approved").get().then(snapshot => {
+    const body = document.getElementById("approvedRDTableBody");
     body.innerHTML = "";
     snapshot.forEach(doc => {
       const d = doc.data();
-      body.innerHTML += `<tr><td>${d.customerId}</td><td>${d.name}</td><td>${d.principal}</td><td>${d.startDate}</td><td>${d.maturityDate}</td></tr>`;
+      if (d.maturityDate >= from && d.maturityDate <= to) {
+        body.innerHTML += `<tr><td>${d.customerId}</td><td>${d.name}</td><td>${d.aadhaar}</td><td>${d.pan}</td><td>${d.startDate}</td><td>${d.maturityDate}</td><td>${d.principal}</td><td>${d.maturityAmount}</td></tr>`;
+      }
     });
   });
 }
 
-function loadPendingFDs() {
-  const bodyFD = document.getElementById("pendingFDTableBody");
-  const bodyRD = document.getElementById("pendingRDTableBody");
-  bodyFD.innerHTML = "";
-  bodyRD.innerHTML = "";
-
-  db.collection("fd").where("status", "==", "pending").get().then(fdSnap => {
-    fdSnap.forEach(doc => {
-      const d = doc.data();
-      bodyFD.innerHTML += `<tr>
-        <td>${d.customerId}</td><td>${d.name}</td><td>${d.principal}</td>
-        <td>${d.startDate}</td><td>${d.maturityDate}</td>
-        <td>
-          <button class="action-btn approve-btn" onclick="updateFDStatus('${doc.id}', 'approved')">Approve</button>
-          <button class="action-btn reject-btn" onclick="updateFDStatus('${doc.id}', 'rejected')">Reject</button>
-        </td></tr>`;
-    });
-  });
-
-  db.collection("rd").where("status", "==", "pending").get().then(rdSnap => {
-    rdSnap.forEach(doc => {
-      const d = doc.data();
-      bodyRD.innerHTML += `<tr>
-        <td>${d.customerId}</td><td>${d.name}</td><td>${d.principal}</td>
-        <td>${d.startDate}</td><td>${d.maturityDate}</td>
-        <td>
-          <button class="action-btn approve-btn" onclick="updateRDStatus('${doc.id}', 'approved')">Approve</button>
-          <button class="action-btn reject-btn" onclick="updateRDStatus('${doc.id}', 'rejected')">Reject</button>
-        </td></tr>`;
-    });
-  });
-}
-
-function updateFDStatus(docId, status) {
-  db.collection("fd").doc(docId).update({ status }).then(() => {
-    loadPendingFDs();
-    loadStats();
-  });
-}
-
-function updateRDStatus(docId, status) {
-  db.collection("rd").doc(docId).update({ status }).then(() => {
-    loadPendingFDs();
-    loadStats();
-  });
-}
-
-function loadApprovedEntries() {
-  const fdBody = document.getElementById("approvedFDTableBody");
-  const rdBody = document.getElementById("approvedRDTableBody");
-  fdBody.innerHTML = "";
-  rdBody.innerHTML = "";
-
+function loadFDApproved() {
   db.collection("fd").where("status", "==", "approved").get().then(snapshot => {
+    const body = document.getElementById("approvedFDTableBody");
+    body.innerHTML = "";
     snapshot.forEach(doc => {
       const d = doc.data();
-      fdBody.innerHTML += `<tr><td>${d.customerId}</td><td>${d.name}</td><td>${d.aadhaar}</td><td>${d.pan}</td><td>${d.startDate}</td><td>${d.maturityDate}</td><td>${d.principal}</td><td>${d.maturityAmount}</td></tr>`;
-    });
-  });
-
-  db.collection("rd").where("status", "==", "approved").get().then(snapshot => {
-    snapshot.forEach(doc => {
-      const d = doc.data();
-      rdBody.innerHTML += `<tr><td>${d.customerId}</td><td>${d.name}</td><td>${d.aadhaar}</td><td>${d.pan}</td><td>${d.startDate}</td><td>${d.maturityDate}</td><td>${d.principal}</td><td>${d.maturityAmount}</td></tr>`;
+      body.innerHTML += `<tr><td>${d.customerId}</td><td>${d.name}</td><td>${d.aadhaar}</td><td>${d.pan}</td><td>${d.startDate}</td><td>${d.maturityDate}</td><td>${d.principal}</td><td>${d.maturityAmount}</td></tr>`;
     });
   });
 }
 
-function applyDateFilter() {
-  const from = document.getElementById("fromDate").value;
-  const to = document.getElementById("toDate").value;
-  if (!from || !to) return;
-
-  const fdBody = document.getElementById("approvedFDTableBody");
-  const rdBody = document.getElementById("approvedRDTableBody");
-  fdBody.innerHTML = "";
-  rdBody.innerHTML = "";
-
-  db.collection("fd").where("status", "==", "approved").get().then(snapshot => {
-    snapshot.forEach(doc => {
-      const d = doc.data();
-      const maturity = d.maturityDate;
-      if (maturity >= from && maturity <= to) {
-        fdBody.innerHTML += `<tr><td>${d.customerId}</td><td>${d.name}</td><td>${d.aadhaar}</td><td>${d.pan}</td><td>${d.startDate}</td><td>${d.maturityDate}</td><td>${d.principal}</td><td>${d.maturityAmount}</td></tr>`;
-      }
-    });
-  });
-
+function loadRDApproved() {
   db.collection("rd").where("status", "==", "approved").get().then(snapshot => {
+    const body = document.getElementById("approvedRDTableBody");
+    body.innerHTML = "";
     snapshot.forEach(doc => {
       const d = doc.data();
-      const maturity = d.maturityDate;
-      if (maturity >= from && maturity <= to) {
-        rdBody.innerHTML += `<tr><td>${d.customerId}</td><td>${d.name}</td><td>${d.aadhaar}</td><td>${d.pan}</td><td>${d.startDate}</td><td>${d.maturityDate}</td><td>${d.principal}</td><td>${d.maturityAmount}</td></tr>`;
-      }
-    });
-  });
-}
-
-function clearDateFilter() {
-  document.getElementById("fromDate").value = '';
-  document.getElementById("toDate").value = '';
-  loadApprovedEntries();
-}
-
-function loadRenewalAlert() {
-  showSection("approved");
-  const fdBody = document.getElementById("approvedFDTableBody");
-  const rdBody = document.getElementById("approvedRDTableBody");
-  fdBody.innerHTML = "";
-  rdBody.innerHTML = "";
-
-  const today = new Date();
-  const next7 = new Date();
-  next7.setDate(today.getDate() + 7);
-
-  db.collection("fd").where("status", "==", "approved").get().then(snapshot => {
-    snapshot.forEach(doc => {
-      const d = doc.data();
-      const maturity = new Date(d.maturityDate);
-      if (maturity >= today && maturity <= next7) {
-        fdBody.innerHTML += `<tr><td>${d.customerId}</td><td>${d.name}</td><td>${d.aadhaar}</td><td>${d.pan}</td><td>${d.startDate}</td><td>${d.maturityDate}</td><td>${d.principal}</td><td>${d.maturityAmount}</td></tr>`;
-      }
-    });
-  });
-
-  db.collection("rd").where("status", "==", "approved").get().then(snapshot => {
-    snapshot.forEach(doc => {
-      const d = doc.data();
-      const maturity = new Date(d.maturityDate);
-      if (maturity >= today && maturity <= next7) {
-        rdBody.innerHTML += `<tr><td>${d.customerId}</td><td>${d.name}</td><td>${d.aadhaar}</td><td>${d.pan}</td><td>${d.startDate}</td><td>${d.maturityDate}</td><td>${d.principal}</td><td>${d.maturityAmount}</td></tr>`;
-      }
+      body.innerHTML += `<tr><td>${d.customerId}</td><td>${d.name}</td><td>${d.aadhaar}</td><td>${d.pan}</td><td>${d.startDate}</td><td>${d.maturityDate}</td><td>${d.principal}</td><td>${d.maturityAmount}</td></tr>`;
     });
   });
 }
@@ -281,10 +275,8 @@ function loadRenewalAlert() {
 auth.onAuthStateChanged(user => {
   if (user) {
     loadStats();
-    loadFDsToday();
-    loadPendingFDs();
-    loadApprovedEntries();
-    showSection("daily");
+    loadFDApproved();
+    loadRDApproved();
   } else {
     alert("Not logged in");
     window.location.href = "index.html";

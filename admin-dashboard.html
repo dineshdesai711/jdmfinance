@@ -195,7 +195,13 @@ function showSection(section) {
     document.getElementById(s + "Section").classList.add("hidden");
   });
   document.getElementById(section + "Section").classList.remove("hidden");
+
+  if (section === "renewal") loadRenewals();
+  if (section === "approved") loadApprovedEntries();
+  if (section === "pending") loadPendingFDs();
+  if (section === "daily") loadFDsToday();
 }
+
 
 function loadStats() {
   db.collection("fd").get().then(snapshot => {

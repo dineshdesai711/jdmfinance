@@ -99,18 +99,106 @@
       gap: 10px;
       margin: 10px;
     }
-    .filter-box input[type="date"] {
+    .filter-box input {
       padding: 8px;
     }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo-section">
+    <img src="https://i.ibb.co/5TpqK1H/banklogo.png" alt="Logo" />
+    <h2>JDM CREDIT & FINANCE - Admin Panel</h2>
+  </div>
+  <button class="logout-btn" onclick="logout()">Logout</button>
+</header>
+
+<div class="stats">
+  <div class="stat-box">
+    <h3>Total FDs</h3>
+    <p id="fdCount">0</p>
+  </div>
+  <div class="stat-box">
+    <h3>Total FD Principal (₹)</h3>
+    <p id="totalPrincipal">0</p>
+  </div>
+  <div class="stat-box">
+    <h3>Total RDs</h3>
+    <p id="rdCount">0</p>
+  </div>
+  <div class="stat-box">
+    <h3>Total RD Principal (₹)</h3>
+    <p id="totalRDPrincipal">0</p>
+  </div>
+  <div class="stat-box" style="background:#f9c851;">
+    <h3>Pending FDs</h3>
+    <p id="pendingFDCount">0</p>
+  </div>
+</div>
+
+<div class="button-group">
+  <button onclick="showSection('daily')">📅 Daily Report</button>
+  <button onclick="showSection('pending')">⏳ Pending Transactions</button>
+  <button onclick="showSection('approved')">✅ Approved Entries</button>
+  <button onclick="loadRenewalAlert()">🔁 FD/RD Renewal Alert</button>
+</div>
+<!-- Daily Section -->
+<div id="dailySection" class="section">
+  <h3 style="margin-left:20px;">Today's FD Entries</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Customer ID</th><th>Name</th><th>Principal</th><th>Start Date</th><th>Maturity</th>
+      </tr>
+    </thead>
+    <tbody id="fdTodayBody"></tbody>
+  </table>
+
+  <h3 style="margin-left:20px;">Today's RD Entries</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Customer ID</th><th>Name</th><th>Principal</th><th>Start Date</th><th>Maturity</th>
+      </tr>
+    </thead>
+    <tbody id="rdTodayBody"></tbody>
+  </table>
+</div>
+
+<!-- Pending Section -->
+<div id="pendingSection" class="section hidden">
+  <h3 style="margin-left:20px;">Pending FD Approvals</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Customer ID</th><th>Name</th><th>Principal</th><th>Start Date</th><th>Maturity</th><th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="pendingFDTableBody"></tbody>
+  </table>
+
+  <h3 style="margin-left:20px;">Pending RD Approvals</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Customer ID</th><th>Name</th><th>Principal</th><th>Start Date</th><th>Maturity</th><th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="pendingRDTableBody"></tbody>
+  </table>
+</div>
+
 <!-- Approved Section -->
 <div id="approvedSection" class="section hidden">
   <h3 style="margin-left:20px;">Approved FD Entries</h3>
+
   <div class="filter-box">
     <label>From: <input type="date" id="fromDateFD"></label>
     <label>To: <input type="date" id="toDateFD"></label>
-    <button onclick="filterFD()">🔍 Filter</button>
-    <button onclick="loadFDApproved()">❌ Clear</button>
+    <button onclick="filterFD()">Filter</button>
   </div>
+
   <table>
     <thead>
       <tr>
@@ -126,9 +214,9 @@
   <div class="filter-box">
     <label>From: <input type="date" id="fromDateRD"></label>
     <label>To: <input type="date" id="toDateRD"></label>
-    <button onclick="filterRD()">🔍 Filter</button>
-    <button onclick="loadRDApproved()">❌ Clear</button>
+    <button onclick="filterRD()">Filter</button>
   </div>
+
   <table>
     <thead>
       <tr>
@@ -154,8 +242,6 @@
     <tbody id="renewalBody"></tbody>
   </table>
 </div>
-
-<!-- Firebase and Script Logic -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
@@ -168,6 +254,7 @@ const firebaseConfig = {
   messagingSenderId: "449814553435",
   appId: "1:449814553435:web:008c7695473689f425307e"
 };
+
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
@@ -181,7 +268,9 @@ function logout() {
 
 function showSection(section) {
   const sections = ["daily", "pending", "approved", "renewal"];
-  sections.forEach(s => document.getElementById(s + "Section").classList.add("hidden"));
+  sections.forEach(s => {
+    document.getElementById(s + "Section").classList.add("hidden");
+  });
   document.getElementById(section + "Section").classList.remove("hidden");
 }
 
@@ -215,34 +304,73 @@ function loadStats() {
   });
 }
 
-function filterFD() {
-  const from = document.getElementById("fromDateFD").value;
-  const to = document.getElementById("toDateFD").value;
-  db.collection("fd").where("status", "==", "approved").get().then(snapshot => {
-    const body = document.getElementById("approvedFDTableBody");
+function loadFDsToday() {
+  const today = new Date().toISOString().split("T")[0];
+
+  db.collection("fd").where("startDate", "==", today).get().then(snapshot => {
+    const body = document.getElementById("fdTodayBody");
     body.innerHTML = "";
     snapshot.forEach(doc => {
       const d = doc.data();
-      if (d.maturityDate >= from && d.maturityDate <= to) {
-        body.innerHTML += `<tr><td>${d.customerId}</td><td>${d.name}</td><td>${d.aadhaar}</td><td>${d.pan}</td><td>${d.startDate}</td><td>${d.maturityDate}</td><td>${d.principal}</td><td>${d.maturityAmount}</td></tr>`;
-      }
+      body.innerHTML += `<tr><td>${d.customerId}</td><td>${d.name}</td><td>${d.principal}</td><td>${d.startDate}</td><td>${d.maturityDate}</td></tr>`;
+    });
+  });
+
+  db.collection("rd").where("startDate", "==", today).get().then(snapshot => {
+    const body = document.getElementById("rdTodayBody");
+    body.innerHTML = "";
+    snapshot.forEach(doc => {
+      const d = doc.data();
+      body.innerHTML += `<tr><td>${d.customerId}</td><td>${d.name}</td><td>${d.principal}</td><td>${d.startDate}</td><td>${d.maturityDate}</td></tr>`;
     });
   });
 }
 
-function filterRD() {
-  const from = document.getElementById("fromDateRD").value;
-  const to = document.getElementById("toDateRD").value;
-  db.collection("rd").where("status", "==", "approved").get().then(snapshot => {
-    const body = document.getElementById("approvedRDTableBody");
+function loadPendingFDs() {
+  db.collection("fd").where("status", "==", "pending").get().then(snapshot => {
+    const body = document.getElementById("pendingFDTableBody");
     body.innerHTML = "";
     snapshot.forEach(doc => {
       const d = doc.data();
-      if (d.maturityDate >= from && d.maturityDate <= to) {
-        body.innerHTML += `<tr><td>${d.customerId}</td><td>${d.name}</td><td>${d.aadhaar}</td><td>${d.pan}</td><td>${d.startDate}</td><td>${d.maturityDate}</td><td>${d.principal}</td><td>${d.maturityAmount}</td></tr>`;
-      }
+      body.innerHTML += `
+        <tr>
+          <td>${d.customerId}</td><td>${d.name}</td><td>${d.principal}</td>
+          <td>${d.startDate}</td><td>${d.maturityDate}</td>
+          <td>
+            <button class="action-btn approve-btn" onclick="updateStatus('fd', '${doc.id}', 'approved')">Approve</button>
+            <button class="action-btn reject-btn" onclick="updateStatus('fd', '${doc.id}', 'rejected')">Reject</button>
+          </td>
+        </tr>`;
     });
   });
+
+  db.collection("rd").where("status", "==", "pending").get().then(snapshot => {
+    const body = document.getElementById("pendingRDTableBody");
+    body.innerHTML = "";
+    snapshot.forEach(doc => {
+      const d = doc.data();
+      body.innerHTML += `
+        <tr>
+          <td>${d.customerId}</td><td>${d.name}</td><td>${d.principal}</td>
+          <td>${d.startDate}</td><td>${d.maturityDate}</td>
+          <td>
+            <button class="action-btn approve-btn" onclick="updateStatus('rd', '${doc.id}', 'approved')">Approve</button>
+            <button class="action-btn reject-btn" onclick="updateStatus('rd', '${doc.id}', 'rejected')">Reject</button>
+          </td>
+        </tr>`;
+    });
+  });
+}
+
+function updateStatus(type, docId, status) {
+  db.collection(type).doc(docId).update({ status }).then(() => {
+    loadPendingFDs();
+    loadStats();
+  });
+}
+function loadApprovedEntries() {
+  loadFDApproved();
+  loadRDApproved();
 }
 
 function loadFDApproved() {
@@ -267,16 +395,78 @@ function loadRDApproved() {
   });
 }
 
+function filterFD() {
+  const from = document.getElementById("fromDateFD").value;
+  const to = document.getElementById("toDateFD").value;
+  if (!from || !to) return alert("Select both From and To dates");
+  db.collection("fd").where("status", "==", "approved").get().then(snapshot => {
+    const body = document.getElementById("approvedFDTableBody");
+    body.innerHTML = "";
+    snapshot.forEach(doc => {
+      const d = doc.data();
+      if (d.maturityDate >= from && d.maturityDate <= to) {
+        body.innerHTML += `<tr><td>${d.customerId}</td><td>${d.name}</td><td>${d.aadhaar}</td><td>${d.pan}</td><td>${d.startDate}</td><td>${d.maturityDate}</td><td>${d.principal}</td><td>${d.maturityAmount}</td></tr>`;
+      }
+    });
+  });
+}
+
+function applyDateFilter() {
+  const from = document.getElementById("fromDate").value;
+  const to = document.getElementById("toDate").value;
+  if (!from || !to) return alert("Select both From and To dates");
+  db.collection("rd").where("status", "==", "approved").get().then(snapshot => {
+    const body = document.getElementById("approvedRDTableBody");
+    body.innerHTML = "";
+    snapshot.forEach(doc => {
+      const d = doc.data();
+      if (d.maturityDate >= from && d.maturityDate <= to) {
+        body.innerHTML += `<tr><td>${d.customerId}</td><td>${d.name}</td><td>${d.aadhaar}</td><td>${d.pan}</td><td>${d.startDate}</td><td>${d.maturityDate}</td><td>${d.principal}</td><td>${d.maturityAmount}</td></tr>`;
+      }
+    });
+  });
+}
+
+function clearDateFilter() {
+  document.getElementById("fromDate").value = "";
+  document.getElementById("toDate").value = "";
+  loadRDApproved();
+}
+
+function loadRenewalAlert() {
+  showSection("renewal");
+  const body = document.getElementById("renewalBody");
+  body.innerHTML = "";
+  const today = new Date();
+  const future = new Date();
+  future.setDate(today.getDate() + 7);
+
+  const todayStr = today.toISOString().split("T")[0];
+  const futureStr = future.toISOString().split("T")[0];
+
+  ["fd", "rd"].forEach(type => {
+    db.collection(type).where("status", "==", "approved").get().then(snapshot => {
+      snapshot.forEach(doc => {
+        const d = doc.data();
+        if (d.maturityDate >= todayStr && d.maturityDate <= futureStr) {
+          body.innerHTML += `<tr><td>${type.toUpperCase()}</td><td>${d.customerId}</td><td>${d.name}</td><td>${d.principal}</td><td>${d.startDate}</td><td>${d.maturityDate}</td></tr>`;
+        }
+      });
+    });
+  });
+}
+
+// Firebase Authentication Check
 auth.onAuthStateChanged(user => {
   if (user) {
     loadStats();
-    loadFDApproved();
-    loadRDApproved();
+    loadFDsToday();
+    loadPendingFDs();
+    loadApprovedEntries();
+    showSection("daily");
   } else {
     alert("Not logged in");
     window.location.href = "index.html";
   }
 });
 </script>
-</body>
-</html>

@@ -1,121 +1,139 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Admin Message Center - JDM Credit & Finance</title>
   <style>
-    body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 0; }
-    header {
-      background-color: #0a3d62; color: white; padding: 20px;
-      display: flex; justify-content: space-between; align-items: center;
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0; padding: 0;
+      background-color: #f4f4f4;
     }
-    .container { padding: 20px; }
-    table { width: 100%; border-collapse: collapse; background: white; margin-top: 20px; }
-    th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
-    th { background-color: #0a3d62; color: white; }
-    button.whatsapp-btn {
-      background-color: #25D366; color: white; border: none;
-      padding: 6px 12px; border-radius: 5px; cursor: pointer;
+    header {
+      background-color: #0a3d62;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+    .container {
+      padding: 20px;
+    }
+    input, button {
+      padding: 10px;
+      margin-right: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background-color: #0a3d62;
+      color: white;
+      cursor: pointer;
+    }
+    table {
+      width: 100%;
+      margin-top: 20px;
+      border-collapse: collapse;
+      background-color: white;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    table th, table td {
+      border: 1px solid #ccc;
+      padding: 12px;
+      text-align: center;
+    }
+    table th {
+      background-color: #0a3d62;
+      color: white;
+    }
+    .wa-link {
+      background-color: green;
+      color: white;
+      padding: 6px 12px;
+      text-decoration: none;
+      border-radius: 4px;
     }
   </style>
 </head>
 <body>
+  <header>
+    <h2>📩 Admin Message Center - JDM Credit & Finance</h2>
+  </header>
 
-<header>
-  <h2>JDM Credit & Finance - Admin Message Center</h2>
-  <button onclick="location.href='admin-dashboard.html'" style="padding:10px 15px; background:crimson; color:white; border:none; border-radius:5px; cursor:pointer;">Back to Dashboard</button>
-</header>
+  <div class="container">
+    <h3>Search Customer by ID</h3>
+    <input type="text" id="searchCustomerId" placeholder="Enter Customer ID" />
+    <button onclick="searchCustomer()">Search</button>
 
-<div class="container">
-  <h3>All Approved FD & RD Customers</h3>
-  <table>
-    <thead>
-      <tr>
-        <th>Type</th>
-        <th>Customer Name</th>
-        <th>Customer ID</th>
-        <th>Mobile</th>
-        <th>Start Date</th>
-        <th>Maturity Date</th>
-        <th>WhatsApp</th>
-      </tr>
-    </thead>
-    <tbody id="customerTableBody"></tbody>
-  </table>
-</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Customer ID</th>
+          <th>Name</th>
+          <th>Mobile</th>
+          <th>FD Count</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="searchResultsBody"></tbody>
+    </table>
+  </div>
 
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-<script>
-const firebaseConfig = {
-  apiKey: "AIzaSyDLvrY6y3SyvLrX-yk8UcdO8RmnC89XNG4",
-  authDomain: "jdms-207ba.firebaseapp.com",
-  projectId: "jdms-207ba",
-  storageBucket: "jdms-207ba.appspot.com",
-  messagingSenderId: "449814553435",
-  appId: "1:449814553435:web:008c7695473689f425307e"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+  <!-- Firebase Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDLvrY6y3SyvLrX-yk8UcdO8RmnC89XNG4",
+      authDomain: "jdms-207ba.firebaseapp.com",
+      projectId: "jdms-207ba",
+      storageBucket: "jdms-207ba.appspot.com",
+      messagingSenderId: "449814553435",
+      appId: "1:449814553435:web:008c7695473689f425307e"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-async function loadCustomersForMessaging() {
-  const customerMap = {};
+    function searchCustomer() {
+      const customerId = document.getElementById("searchCustomerId").value.trim();
+      if (!customerId) {
+        alert("Please enter a Customer ID");
+        return;
+      }
 
-  const customerSnapshot = await db.collection("customers").get();
-  customerSnapshot.forEach(doc => {
-    customerMap[doc.id] = doc.data();
-  });
+      db.collection("customers").doc(customerId).get().then(doc => {
+        if (!doc.exists) {
+          alert("Customer not found!");
+          return;
+        }
 
-  const fdSnapshot = await db.collection("fd").where("status", "==", "approved").get();
-  const rdSnapshot = await db.collection("rd").where("status", "==", "approved").get();
+        const data = doc.data();
+        const name = data.name || "Customer";
+        const mobile = data.mobile || "";
 
-  const allEntries = [];
-
-  fdSnapshot.forEach(doc => {
-    const d = doc.data();
-    const c = customerMap[d.customerId];
-    if (c && c.mobile) {
-      allEntries.push({ type: "FD", name: c.name, customerId: d.customerId, mobile: c.mobile, startDate: d.startDate, maturityDate: d.maturityDate });
+        db.collection("fd").where("customerId", "==", customerId).get().then(fdSnap => {
+          const fdCount = fdSnap.size;
+          const tbody = document.getElementById("searchResultsBody");
+          tbody.innerHTML = `
+            <tr>
+              <td>${customerId}</td>
+              <td>${name}</td>
+              <td>${mobile}</td>
+              <td>${fdCount}</td>
+              <td>
+                <a class="wa-link" target="_blank" href="https://wa.me/91${mobile}?text=Dear ${name},%0AYour FD with JDM Credit & Finance is due soon or has been created.%0AThank you for choosing us!%0A- Ashutosh Sharma%0A📞 98282XXXXX">
+                  Send WhatsApp
+                </a>
+              </td>
+            </tr>
+          `;
+        });
+      }).catch(error => {
+        console.error("Error fetching customer:", error);
+        alert("Something went wrong while searching.");
+      });
     }
-  });
-
-  rdSnapshot.forEach(doc => {
-    const d = doc.data();
-    const c = customerMap[d.customerId];
-    if (c && c.mobile) {
-      allEntries.push({ type: "RD", name: c.name, customerId: d.customerId, mobile: c.mobile, startDate: d.startDate, maturityDate: d.maturityDate });
-    }
-  });
-
-  displayForWhatsApp(allEntries);
-}
-
-function displayForWhatsApp(entries) {
-  const tbody = document.getElementById("customerTableBody");
-  tbody.innerHTML = "";
-  entries.forEach(e => {
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td>${e.type}</td>
-      <td>${e.name}</td>
-      <td>${e.customerId}</td>
-      <td>${e.mobile}</td>
-      <td>${e.startDate}</td>
-      <td>${e.maturityDate}</td>
-      <td><button class="whatsapp-btn" onclick="sendWhatsAppMessage('${e.mobile}', '${e.name}', '${e.maturityDate}')">Send</button></td>
-    `;
-    tbody.appendChild(row);
-  });
-}
-
-function sendWhatsAppMessage(mobile, name, maturityDate) {
-  const message = `Dear ${name}, your FD/RD is maturing on ${maturityDate}. Please contact Ashutosh Sharma at 9876543210 for renewal assistance. - JDM Credit & Finance`;
-  const url = `https://wa.me/91${mobile}?text=${encodeURIComponent(message)}`;
-  window.open(url, '_blank');
-}
-
-loadCustomersForMessaging();
-</script>
-
+  </script>
 </body>
 </html>

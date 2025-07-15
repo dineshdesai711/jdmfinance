@@ -1,69 +1,64 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Admin Dashboard - JDM Credit & Finance</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f4f4f4;
+      background: #f4f6f9;
       margin: 0;
-      padding: 0;
     }
     header {
       background-color: #0a3d62;
       color: white;
-      padding: 20px;
+      padding: 15px 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
-    .logo-section {
+    .logo {
       display: flex;
       align-items: center;
     }
-    .logo-section img {
+    .logo img {
       height: 40px;
       margin-right: 10px;
     }
     .logout-btn {
-      background-color: crimson;
-      border: none;
-      padding: 10px 20px;
+      background-color: red;
       color: white;
+      padding: 8px 14px;
+      border: none;
       border-radius: 5px;
       cursor: pointer;
     }
-    .stats {
+    .stats, .buttons {
       display: flex;
       flex-wrap: wrap;
-      justify-content: space-around;
+      gap: 15px;
       margin: 20px;
-      gap: 20px;
     }
     .stat-box {
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
       flex: 1;
       min-width: 200px;
-      text-align: center;
+      background: white;
+      border-radius: 10px;
       padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      text-align: center;
     }
-    .button-group {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      margin: 10px 20px;
-      flex-wrap: wrap;
-    }
-    .button-group button {
-      padding: 10px 20px;
-      background: #0a3d62;
-      color: white;
+    .buttons button {
+      padding: 10px 18px;
       border: none;
       border-radius: 5px;
+      background-color: #0984e3;
+      color: white;
       cursor: pointer;
+    }
+    .buttons input {
+      padding: 6px;
     }
     table {
       width: 95%;
@@ -72,35 +67,30 @@
       background: white;
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
-    table th, table td {
-      border: 1px solid #ccc;
+    th, td {
       padding: 10px;
+      border: 1px solid #ccc;
       text-align: center;
     }
-    table th {
+    th {
       background-color: #0a3d62;
       color: white;
     }
-    .hidden {
-      display: none;
+    .chart-container {
+      width: 90%;
+      margin: 30px auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
     }
-    .action-btn {
-      padding: 5px 10px;
-      margin: 2px;
-      border: none;
-      cursor: pointer;
-      border-radius: 4px;
-    }
-    .approve-btn { background-color: green; color: white; }
-    .reject-btn { background-color: crimson; color: white; }
   </style>
 </head>
 <body>
 
 <header>
-  <div class="logo-section">
+  <div class="logo">
     <img src="https://i.ibb.co/5TpqK1H/banklogo.png" alt="Logo" />
-    <h2>JDM CREDIT & FINANCE - Admin Panel</h2>
+    <h2>Admin Dashboard - JDM Credit & Finance</h2>
   </div>
   <button class="logout-btn" onclick="logout()">Logout</button>
 </header>
@@ -111,228 +101,185 @@
     <p id="fdCount">0</p>
   </div>
   <div class="stat-box">
-    <h3>Total FD Principal (₹)</h3>
-    <p id="totalPrincipal">0</p>
+    <h3>Total FD Amount (₹)</h3>
+    <p id="fdAmount">0</p>
   </div>
   <div class="stat-box">
     <h3>Total RDs</h3>
     <p id="rdCount">0</p>
   </div>
   <div class="stat-box">
-    <h3>Total RD Principal (₹)</h3>
-    <p id="totalRDPrincipal">0</p>
-  </div>
-  <div class="stat-box" style="background:#f9c851;">
-    <h3>Pending FDs</h3>
-    <p id="pendingFDCount">0</p>
+    <h3>Total RD Amount (₹)</h3>
+    <p id="rdAmount">0</p>
   </div>
 </div>
 
-<div class="button-group">
-  <button onclick="showSection('daily')">📅 Daily Report</button>
-  <button onclick="showSection('pending')">⏳ Pending Transactions</button>
-  <button onclick="showSection('approved')">✅ Approved Entries</button>
+<div class="buttons">
+  <button onclick="loadToday()">📅 Daily Report</button>
+  <button onclick="loadPending()">🕒 Pending Transactions</button>
+  <button onclick="showApprovedPrompt()">✅ Approved FDs</button>
+  <button onclick="showSearchPrompt()">🔍 Search Customer</button>
+  <button onclick="loadMaturityReminder()">📢 Maturity Reminder</button>
 </div>
 
-<!-- Daily Section -->
-<div id="dailySection" class="section">
-  <h3 style="margin-left:20px;">Today's FD Entries</h3>
-  <table>
-    <thead>
-      <tr>
-        <th>Customer ID</th><th>Name</th><th>Principal</th><th>Start Date</th><th>Maturity</th>
-      </tr>
-    </thead>
-    <tbody id="fdTodayBody"></tbody>
-  </table>
-
-  <h3 style="margin-left:20px;">Today's RD Entries</h3>
-  <table>
-    <thead>
-      <tr>
-        <th>Customer ID</th><th>Name</th><th>Principal</th><th>Start Date</th><th>Maturity</th>
-      </tr>
-    </thead>
-    <tbody id="rdTodayBody"></tbody>
-  </table>
+<div class="chart-container">
+  <canvas id="overviewChart"></canvas>
 </div>
 
-<!-- Pending Section -->
-<div id="pendingSection" class="section hidden">
-  <h3 style="margin-left:20px;">Pending FD Approvals</h3>
-  <table>
-    <thead>
-      <tr>
-        <th>Customer ID</th><th>Name</th><th>Principal</th><th>Start Date</th><th>Maturity</th><th>Action</th>
-      </tr>
-    </thead>
-    <tbody id="pendingFDTableBody"></tbody>
-  </table>
-</div>
+<table id="entryTable">
+  <thead>
+    <tr>
+      <th>Customer ID</th>
+      <th>Name</th>
+      <th>Start Date</th>
+      <th>Maturity Date</th>
+      <th>Principal</th>
+      <th>Maturity Amt</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
 
-<!-- Approved Section -->
-<div id="approvedSection" class="section hidden">
-  <h3 style="margin-left:20px;">All Approved FD Entries</h3>
-  <table>
-    <thead>
-      <tr>
-        <th>Customer ID</th><th>Name</th><th>Aadhaar</th><th>PAN</th><th>Start Date</th><th>Maturity Date</th><th>Principal</th><th>Maturity Amt</th>
-      </tr>
-    </thead>
-    <tbody id="approvedFDTableBody"></tbody>
-  </table>
-
-  <h3 style="margin-left:20px;">All Approved RD Entries</h3>
-  <table>
-    <thead>
-      <tr>
-        <th>Customer ID</th><th>Name</th><th>Aadhaar</th><th>PAN</th><th>Start Date</th><th>Maturity Date</th><th>Principal</th><th>Maturity Amt</th>
-      </tr>
-    </thead>
-    <tbody id="approvedRDTableBody"></tbody>
-  </table>
-</div>
-
-<!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyDLvrY6y3SyvLrX-yk8UcdO8RmnC89XNG4",
-  authDomain: "jdms-207ba.firebaseapp.com",
-  projectId: "jdms-207ba",
-  storageBucket: "jdms-207ba.appspot.com",
-  messagingSenderId: "449814553435",
-  appId: "1:449814553435:web:008c7695473689f425307e"
-};
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
+  const firebaseConfig = {
+    apiKey: "AIzaSyDLvrY6y3SyvLrX-yk8UcdO8RmnC89XNG4",
+    authDomain: "jdms-207ba.firebaseapp.com",
+    projectId: "jdms-207ba",
+    storageBucket: "jdms-207ba.appspot.com",
+    messagingSenderId: "449814553435",
+    appId: "1:449814553435:web:008c7695473689f425307e"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
 
-function logout() {
-  auth.signOut().then(() => {
-    localStorage.clear();
-    window.location.href = "index.html";
-  });
-}
-
-function showSection(section) {
-  document.getElementById("dailySection").classList.add("hidden");
-  document.getElementById("pendingSection").classList.add("hidden");
-  document.getElementById("approvedSection").classList.add("hidden");
-  document.getElementById(section + "Section").classList.remove("hidden");
-}
-
-function loadStats() {
-  db.collection("fd").get().then(snapshot => {
-    let totalFD = 0, totalPrincipal = 0, pending = 0;
-    snapshot.forEach(doc => {
-      const d = doc.data();
-      if (!d.status || d.status === "approved") {
-        totalFD++; totalPrincipal += parseFloat(d.principal || 0);
-      }
-      if (d.status === "pending") pending++;
+  function logout() {
+    auth.signOut().then(() => {
+      localStorage.clear();
+      window.location.href = "index.html";
     });
-    document.getElementById("fdCount").innerText = totalFD;
-    document.getElementById("totalPrincipal").innerText = totalPrincipal.toLocaleString();
-    document.getElementById("pendingFDCount").innerText = pending;
-  });
-
-  db.collection("rd").get().then(snapshot => {
-    let totalRD = 0, totalRDPrincipal = 0;
-    snapshot.forEach(doc => {
-      const d = doc.data();
-      totalRD++; totalRDPrincipal += parseFloat(d.principal || 0);
-    });
-    document.getElementById("rdCount").innerText = totalRD;
-    document.getElementById("totalRDPrincipal").innerText = totalRDPrincipal.toLocaleString();
-  });
-}
-
-function loadFDsToday() {
-  const today = new Date().toISOString().split("T")[0];
-  db.collection("fd").where("startDate", "==", today).get().then(snapshot => {
-    const body = document.getElementById("fdTodayBody");
-    body.innerHTML = "";
-    snapshot.forEach(doc => {
-      const d = doc.data();
-      body.innerHTML += `<tr><td>${d.customerId}</td><td>${d.name}</td><td>${d.principal}</td><td>${d.startDate}</td><td>${d.maturityDate}</td></tr>`;
-    });
-  });
-
-  db.collection("rd").where("startDate", "==", today).get().then(snapshot => {
-    const body = document.getElementById("rdTodayBody");
-    body.innerHTML = "";
-    snapshot.forEach(doc => {
-      const d = doc.data();
-      body.innerHTML += `<tr><td>${d.customerId}</td><td>${d.name}</td><td>${d.principal}</td><td>${d.startDate}</td><td>${d.maturityDate}</td></tr>`;
-    });
-  });
-}
-
-function loadPendingFDs() {
-  db.collection("fd").where("status", "==", "pending").get().then(snapshot => {
-    const body = document.getElementById("pendingFDTableBody");
-    body.innerHTML = "";
-    snapshot.forEach(doc => {
-      const d = doc.data();
-      body.innerHTML += `
-      <tr>
-        <td>${d.customerId}</td>
-        <td>${d.name}</td>
-        <td>${d.principal}</td>
-        <td>${d.startDate}</td>
-        <td>${d.maturityDate}</td>
-        <td>
-          <button class="action-btn approve-btn" onclick="updateFDStatus('${doc.id}', 'approved')">Approve</button>
-          <button class="action-btn reject-btn" onclick="updateFDStatus('${doc.id}', 'rejected')">Reject</button>
-        </td>
-      </tr>`;
-    });
-  });
-}
-
-function updateFDStatus(docId, status) {
-  db.collection("fd").doc(docId).update({ status }).then(() => {
-    loadPendingFDs();
-    loadStats();
-  });
-}
-
-function loadApprovedEntries() {
-  db.collection("fd").where("status", "==", "approved").get().then(snapshot => {
-    const body = document.getElementById("approvedFDTableBody");
-    body.innerHTML = "";
-    snapshot.forEach(doc => {
-      const d = doc.data();
-      body.innerHTML += `<tr><td>${d.customerId}</td><td>${d.name}</td><td>${d.aadhaar}</td><td>${d.pan}</td><td>${d.startDate}</td><td>${d.maturityDate}</td><td>${d.principal}</td><td>${d.maturityAmount}</td></tr>`;
-    });
-  });
-
-  db.collection("rd").get().then(snapshot => {
-    const body = document.getElementById("approvedRDTableBody");
-    body.innerHTML = "";
-    snapshot.forEach(doc => {
-      const d = doc.data();
-      body.innerHTML += `<tr><td>${d.customerId}</td><td>${d.name}</td><td>${d.aadhaar}</td><td>${d.pan}</td><td>${d.startDate}</td><td>${d.maturityDate}</td><td>${d.principal}</td><td>${d.maturityAmount}</td></tr>`;
-    });
-  });
-}
-
-auth.onAuthStateChanged(user => {
-  if (user) {
-    loadStats();
-    loadFDsToday();
-    loadPendingFDs();
-    loadApprovedEntries();
-    showSection("daily");
-  } else {
-    alert("Not logged in");
-    window.location.href = "index.html";
   }
-});
+
+  function updateStats() {
+    db.collection("fd").get().then(snapshot => {
+      let count = 0, amount = 0;
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        if (data.status === "approved") {
+          count++;
+          amount += parseFloat(data.principal || 0);
+        }
+      });
+      document.getElementById("fdCount").innerText = count;
+      document.getElementById("fdAmount").innerText = amount.toLocaleString();
+    });
+    db.collection("rd").get().then(snapshot => {
+      let count = 0, amount = 0;
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        if (data.status === "approved") {
+          count++;
+          amount += parseFloat(data.principal || 0);
+        }
+      });
+      document.getElementById("rdCount").innerText = count;
+      document.getElementById("rdAmount").innerText = amount.toLocaleString();
+    });
+  }
+
+  function loadTable(query) {
+    const body = document.querySelector("#entryTable tbody");
+    body.innerHTML = "";
+    query.get().then(snapshot => {
+      snapshot.forEach(doc => {
+        const d = doc.data();
+        body.innerHTML += `
+          <tr>
+            <td>${d.customerId || ""}</td>
+            <td>${d.name || ""}</td>
+            <td>${d.startDate || ""}</td>
+            <td>${d.maturityDate || ""}</td>
+            <td>${d.principal || ""}</td>
+            <td>${d.maturityAmount || ""}</td>
+            <td>${d.status || "N/A"}</td>
+          </tr>`;
+      });
+    });
+  }
+
+  function loadToday() {
+    const today = new Date().toISOString().split('T')[0];
+    const fdQuery = db.collection("fd").where("startDate", "==", today);
+    loadTable(fdQuery);
+  }
+
+  function loadPending() {
+    const fdQuery = db.collection("fd").where("status", "==", "pending");
+    loadTable(fdQuery);
+  }
+
+  function showApprovedPrompt() {
+    const from = prompt("Enter FROM Date (YYYY-MM-DD)");
+    const to = prompt("Enter TO Date (YYYY-MM-DD)");
+    if (from && to) {
+      const q = db.collection("fd").where("startDate", ">=", from).where("startDate", "<=", to).where("status", "==", "approved");
+      loadTable(q);
+    }
+  }
+
+  function showSearchPrompt() {
+    const input = prompt("Enter Customer Name or Mobile Number:");
+    if (!input) return;
+    db.collection("fd").where("name", "==", input).get().then(snapshot => {
+      if (snapshot.empty) {
+        return db.collection("fd").where("mobile", "==", input).get().then(s2 => loadTable(s2));
+      }
+      loadTable(snapshot);
+    });
+  }
+
+  function loadMaturityReminder() {
+    const today = new Date();
+    const upcoming = new Date(today);
+    upcoming.setDate(upcoming.getDate() + 7);
+    const todayStr = today.toISOString().split('T')[0];
+    const upStr = upcoming.toISOString().split('T')[0];
+    const q = db.collection("fd").where("maturityDate", ">=", todayStr).where("maturityDate", "<=", upStr);
+    loadTable(q);
+  }
+
+  function drawChart() {
+    Promise.all([
+      db.collection("fd").get(),
+      db.collection("rd").get()
+    ]).then(([fdSnap, rdSnap]) => {
+      const fdTotal = fdSnap.docs.reduce((sum, doc) => sum + Number(doc.data().principal || 0), 0);
+      const rdTotal = rdSnap.docs.reduce((sum, doc) => sum + Number(doc.data().principal || 0), 0);
+      const ctx = document.getElementById("overviewChart").getContext("2d");
+      new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: ["FD", "RD"],
+          datasets: [{
+            label: "Total Principal (₹)",
+            data: [fdTotal, rdTotal],
+            backgroundColor: ["#00b894", "#0984e3"]
+          }]
+        }
+      });
+    });
+  }
+
+  auth.onAuthStateChanged(user => {
+    if (!user) return location.href = "index.html";
+    updateStats();
+    drawChart();
+    loadToday();
+  });
 </script>
 
 </body>

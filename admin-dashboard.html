@@ -45,7 +45,7 @@
   <button onclick="showSection('approved')">✅ Approved Entries</button>
   <button onclick="loadRenewalAlert()">🔁 FD/RD Renewal Alert</button>
 </div>
-<div id="filterSection" class="filter-box">
+<div id="filterSection" class="filter-box hidden">
   <input type="date" id="fromDate">
   <input type="date" id="toDate">
   <button onclick="applyDateFilter()">🔍 Apply Filter</button>
@@ -265,36 +265,35 @@ function loadApprovedEntries() {
 }
 
 function applyDateFilter() {
-  const from = document.getElementById("fromDate").value;
-  const to = document.getElementById("toDate").value;
+  const from = document.getElementById("fromDate").value.trim();
+  const to = document.getElementById("toDate").value.trim();
   if (!from || !to) return;
 
-  // FD Filter
   db.collection("fd").where("status", "==", "approved").get().then(snapshot => {
     const body = document.getElementById("approvedFDTableBody");
     body.innerHTML = "";
     snapshot.forEach(doc => {
       const d = doc.data();
-      const maturity = d.maturityDate; // already string format "YYYY-MM-DD"
+      const maturity = (d.maturityDate || "").trim();
       if (maturity >= from && maturity <= to) {
         body.innerHTML += `<tr><td>${d.customerId}</td><td>${d.name}</td><td>${d.aadhaar}</td><td>${d.pan}</td><td>${d.startDate}</td><td>${d.maturityDate}</td><td>${d.principal}</td><td>${d.maturityAmount}</td></tr>`;
       }
     });
   });
 
-  // RD Filter
   db.collection("rd").where("status", "==", "approved").get().then(snapshot => {
     const body = document.getElementById("approvedRDTableBody");
     body.innerHTML = "";
     snapshot.forEach(doc => {
       const d = doc.data();
-      const maturity = d.maturityDate;
+      const maturity = (d.maturityDate || "").trim();
       if (maturity >= from && maturity <= to) {
         body.innerHTML += `<tr><td>${d.customerId}</td><td>${d.name}</td><td>${d.aadhaar}</td><td>${d.pan}</td><td>${d.startDate}</td><td>${d.maturityDate}</td><td>${d.principal}</td><td>${d.maturityAmount}</td></tr>`;
       }
     });
   });
 }
+
 
 function clearDateFilter() {
   document.getElementById("fromDate").value = '';

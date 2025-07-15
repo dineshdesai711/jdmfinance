@@ -65,13 +65,6 @@
       border-radius: 5px;
       cursor: pointer;
     }
-    .filter-row {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      margin: 20px;
-      flex-wrap: wrap;
-    }
     table {
       width: 95%;
       margin: 20px auto;
@@ -100,9 +93,19 @@
     }
     .approve-btn { background-color: green; color: white; }
     .reject-btn { background-color: crimson; color: white; }
+    .filter-box {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin: 10px;
+    }
+    .filter-box input {
+      padding: 8px;
+    }
   </style>
 </head>
 <body>
+
 <header>
   <div class="logo-section">
     <img src="https://i.ibb.co/5TpqK1H/banklogo.png" alt="Logo" />
@@ -112,63 +115,137 @@
 </header>
 
 <div class="stats">
-  <div class="stat-box"><h3>Total FDs</h3><p id="fdCount">0</p></div>
-  <div class="stat-box"><h3>Total FD Principal (₹)</h3><p id="totalPrincipal">0</p></div>
-  <div class="stat-box"><h3>Total RDs</h3><p id="rdCount">0</p></div>
-  <div class="stat-box"><h3>Total RD Principal (₹)</h3><p id="totalRDPrincipal">0</p></div>
-  <div class="stat-box" style="background:#f9c851;"><h3>Pending FDs</h3><p id="pendingFDCount">0</p></div>
+  <div class="stat-box">
+    <h3>Total FDs</h3>
+    <p id="fdCount">0</p>
+  </div>
+  <div class="stat-box">
+    <h3>Total FD Principal (₹)</h3>
+    <p id="totalPrincipal">0</p>
+  </div>
+  <div class="stat-box">
+    <h3>Total RDs</h3>
+    <p id="rdCount">0</p>
+  </div>
+  <div class="stat-box">
+    <h3>Total RD Principal (₹)</h3>
+    <p id="totalRDPrincipal">0</p>
+  </div>
+  <div class="stat-box" style="background:#f9c851;">
+    <h3>Pending FDs</h3>
+    <p id="pendingFDCount">0</p>
+  </div>
 </div>
 
 <div class="button-group">
   <button onclick="showSection('daily')">📅 Daily Report</button>
   <button onclick="showSection('pending')">⏳ Pending Transactions</button>
   <button onclick="showSection('approved')">✅ Approved Entries</button>
-  <button onclick="showSection('renewal')">🔁 FD/RD Renewal Alert</button>
+  <button onclick="loadRenewalAlert()">🔁 FD/RD Renewal Alert</button>
 </div>
-
 <!-- Daily Section -->
 <div id="dailySection" class="section">
   <h3 style="margin-left:20px;">Today's FD Entries</h3>
-  <table><thead><tr><th>Customer ID</th><th>Name</th><th>Principal</th><th>Start Date</th><th>Maturity</th></tr></thead><tbody id="fdTodayBody"></tbody></table>
+  <table>
+    <thead>
+      <tr>
+        <th>Customer ID</th><th>Name</th><th>Principal</th><th>Start Date</th><th>Maturity</th>
+      </tr>
+    </thead>
+    <tbody id="fdTodayBody"></tbody>
+  </table>
+
   <h3 style="margin-left:20px;">Today's RD Entries</h3>
-  <table><thead><tr><th>Customer ID</th><th>Name</th><th>Principal</th><th>Start Date</th><th>Maturity</th></tr></thead><tbody id="rdTodayBody"></tbody></table>
+  <table>
+    <thead>
+      <tr>
+        <th>Customer ID</th><th>Name</th><th>Principal</th><th>Start Date</th><th>Maturity</th>
+      </tr>
+    </thead>
+    <tbody id="rdTodayBody"></tbody>
+  </table>
 </div>
 
 <!-- Pending Section -->
 <div id="pendingSection" class="section hidden">
   <h3 style="margin-left:20px;">Pending FD Approvals</h3>
-  <table><thead><tr><th>Customer ID</th><th>Name</th><th>Principal</th><th>Start Date</th><th>Maturity</th><th>Action</th></tr></thead><tbody id="pendingFDTableBody"></tbody></table>
+  <table>
+    <thead>
+      <tr>
+        <th>Customer ID</th><th>Name</th><th>Principal</th><th>Start Date</th><th>Maturity</th><th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="pendingFDTableBody"></tbody>
+  </table>
 
   <h3 style="margin-left:20px;">Pending RD Approvals</h3>
-  <table><thead><tr><th>Customer ID</th><th>Name</th><th>Principal</th><th>Start Date</th><th>Maturity</th><th>Action</th></tr></thead><tbody id="pendingRDTableBody"></tbody></table>
+  <table>
+    <thead>
+      <tr>
+        <th>Customer ID</th><th>Name</th><th>Principal</th><th>Start Date</th><th>Maturity</th><th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="pendingRDTableBody"></tbody>
+  </table>
 </div>
+
 <!-- Approved Section -->
 <div id="approvedSection" class="section hidden">
-  <div class="filter-row">
-    <label>From: <input type="date" id="fromDate" /></label>
-    <label>To: <input type="date" id="toDate" /></label>
-    <button onclick="filterApproved()">🔍 Filter</button>
-    <button onclick="loadApprovedEntries()">🔄 Reset</button>
+  <h3 style="margin-left:20px;">Approved FD Entries</h3>
+
+  <div class="filter-box">
+    <label>From: <input type="date" id="fromDateFD"></label>
+    <label>To: <input type="date" id="toDateFD"></label>
+    <button onclick="filterFD()">Filter</button>
   </div>
 
-  <h3 style="margin-left:20px;">All Approved FD Entries</h3>
-  <table><thead><tr><th>Customer ID</th><th>Name</th><th>Aadhaar</th><th>PAN</th><th>Start Date</th><th>Maturity Date</th><th>Principal</th><th>Maturity Amt</th></tr></thead><tbody id="approvedFDTableBody"></tbody></table>
+  <table>
+    <thead>
+      <tr>
+        <th>Customer ID</th><th>Name</th><th>Aadhaar</th><th>PAN</th>
+        <th>Start Date</th><th>Maturity Date</th>
+        <th>Principal</th><th>Maturity Amt</th>
+      </tr>
+    </thead>
+    <tbody id="approvedFDTableBody"></tbody>
+  </table>
 
-  <h3 style="margin-left:20px;">All Approved RD Entries</h3>
-  <table><thead><tr><th>Customer ID</th><th>Name</th><th>Aadhaar</th><th>PAN</th><th>Start Date</th><th>Maturity Date</th><th>Principal</th><th>Maturity Amt</th></tr></thead><tbody id="approvedRDTableBody"></tbody></table>
+  <h3 style="margin-left:20px;">Approved RD Entries</h3>
+
+  <div class="filter-box">
+    <label>From: <input type="date" id="fromDateRD"></label>
+    <label>To: <input type="date" id="toDateRD"></label>
+    <button onclick="filterRD()">Filter</button>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Customer ID</th><th>Name</th><th>Aadhaar</th><th>PAN</th>
+        <th>Start Date</th><th>Maturity Date</th>
+        <th>Principal</th><th>Maturity Amt</th>
+      </tr>
+    </thead>
+    <tbody id="approvedRDTableBody"></tbody>
+  </table>
 </div>
 
-<!-- Renewal Section -->
+<!-- Renewal Alert Section -->
 <div id="renewalSection" class="section hidden">
-  <h3 style="margin-left:20px;">FD/RD Maturing in Next 7 Days</h3>
-  <table><thead><tr><th>Type</th><th>Customer ID</th><th>Name</th><th>Principal</th><th>Maturity Date</th></tr></thead><tbody id="renewalTableBody"></tbody></table>
+  <h3 style="margin-left:20px;">FD/RD Maturing in 7 Days</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th><th>Customer ID</th><th>Name</th><th>Principal</th>
+        <th>Start Date</th><th>Maturity Date</th>
+      </tr>
+    </thead>
+    <tbody id="renewalBody"></tbody>
+  </table>
 </div>
-
-<!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyDLvrY6y3SyvLrX-yk8UcdO8RmnC89XNG4",
@@ -195,13 +272,7 @@ function showSection(section) {
     document.getElementById(s + "Section").classList.add("hidden");
   });
   document.getElementById(section + "Section").classList.remove("hidden");
-
-  if (section === "renewal") loadRenewals();
-  if (section === "approved") loadApprovedEntries();
-  if (section === "pending") loadPendingFDs();
-  if (section === "daily") loadFDsToday();
 }
-
 
 function loadStats() {
   db.collection("fd").get().then(snapshot => {
@@ -222,7 +293,9 @@ function loadStats() {
     let totalRD = 0, totalRDPrincipal = 0;
     snapshot.forEach(doc => {
       const d = doc.data();
-      totalRD++; totalRDPrincipal += parseFloat(d.principal || 0);
+      if (!d.status || d.status === "approved") {
+        totalRD++; totalRDPrincipal += parseFloat(d.principal || 0);
+      }
     });
     document.getElementById("rdCount").innerText = totalRD;
     document.getElementById("totalRDPrincipal").innerText = totalRDPrincipal.toLocaleString();
@@ -231,6 +304,7 @@ function loadStats() {
 
 function loadFDsToday() {
   const today = new Date().toISOString().split("T")[0];
+
   db.collection("fd").where("startDate", "==", today).get().then(snapshot => {
     const body = document.getElementById("fdTodayBody");
     body.innerHTML = "";
@@ -257,17 +331,14 @@ function loadPendingFDs() {
     snapshot.forEach(doc => {
       const d = doc.data();
       body.innerHTML += `
-      <tr>
-        <td>${d.customerId}</td>
-        <td>${d.name}</td>
-        <td>${d.principal}</td>
-        <td>${d.startDate}</td>
-        <td>${d.maturityDate}</td>
-        <td>
-          <button class="action-btn approve-btn" onclick="updateFDStatus('${doc.id}', 'approved')">Approve</button>
-          <button class="action-btn reject-btn" onclick="updateFDStatus('${doc.id}', 'rejected')">Reject</button>
-        </td>
-      </tr>`;
+        <tr>
+          <td>${d.customerId}</td><td>${d.name}</td><td>${d.principal}</td>
+          <td>${d.startDate}</td><td>${d.maturityDate}</td>
+          <td>
+            <button class="action-btn approve-btn" onclick="updateStatus('fd', '${doc.id}', 'approved')">Approve</button>
+            <button class="action-btn reject-btn" onclick="updateStatus('fd', '${doc.id}', 'rejected')">Reject</button>
+          </td>
+        </tr>`;
     });
   });
 
@@ -277,33 +348,31 @@ function loadPendingFDs() {
     snapshot.forEach(doc => {
       const d = doc.data();
       body.innerHTML += `
-      <tr>
-        <td>${d.customerId}</td>
-        <td>${d.name}</td>
-        <td>${d.principal}</td>
-        <td>${d.startDate}</td>
-        <td>${d.maturityDate}</td>
-        <td>
-          <button class="action-btn approve-btn" onclick="updateRDStatus('${doc.id}', 'approved')">Approve</button>
-          <button class="action-btn reject-btn" onclick="updateRDStatus('${doc.id}', 'rejected')">Reject</button>
-        </td>
-      </tr>`;
+        <tr>
+          <td>${d.customerId}</td><td>${d.name}</td><td>${d.principal}</td>
+          <td>${d.startDate}</td><td>${d.maturityDate}</td>
+          <td>
+            <button class="action-btn approve-btn" onclick="updateStatus('rd', '${doc.id}', 'approved')">Approve</button>
+            <button class="action-btn reject-btn" onclick="updateStatus('rd', '${doc.id}', 'rejected')">Reject</button>
+          </td>
+        </tr>`;
     });
   });
 }
 
-function updateFDStatus(docId, status) {
-  db.collection("fd").doc(docId).update({ status }).then(() => {
-    loadPendingFDs(); loadStats();
-  });
-}
-function updateRDStatus(docId, status) {
-  db.collection("rd").doc(docId).update({ status }).then(() => {
-    loadPendingFDs(); loadStats();
+function updateStatus(type, docId, status) {
+  db.collection(type).doc(docId).update({ status }).then(() => {
+    loadPendingFDs();
+    loadStats();
   });
 }
 
 function loadApprovedEntries() {
+  loadFDApproved();
+  loadRDApproved();
+}
+
+function loadFDApproved() {
   db.collection("fd").where("status", "==", "approved").get().then(snapshot => {
     const body = document.getElementById("approvedFDTableBody");
     body.innerHTML = "";
@@ -312,7 +381,9 @@ function loadApprovedEntries() {
       body.innerHTML += `<tr><td>${d.customerId}</td><td>${d.name}</td><td>${d.aadhaar}</td><td>${d.pan}</td><td>${d.startDate}</td><td>${d.maturityDate}</td><td>${d.principal}</td><td>${d.maturityAmount}</td></tr>`;
     });
   });
+}
 
+function loadRDApproved() {
   db.collection("rd").where("status", "==", "approved").get().then(snapshot => {
     const body = document.getElementById("approvedRDTableBody");
     body.innerHTML = "";
@@ -323,61 +394,54 @@ function loadApprovedEntries() {
   });
 }
 
-function filterApproved() {
-  const from = new Date(document.getElementById("fromDate").value);
-  const to = new Date(document.getElementById("toDate").value);
-  to.setHours(23,59,59,999);
-
+function filterFD() {
+  const from = document.getElementById("fromDateFD").value;
+  const to = document.getElementById("toDateFD").value;
   db.collection("fd").where("status", "==", "approved").get().then(snapshot => {
     const body = document.getElementById("approvedFDTableBody");
     body.innerHTML = "";
     snapshot.forEach(doc => {
       const d = doc.data();
-      const maturity = new Date(d.maturityDate);
-      if (maturity >= from && maturity <= to) {
-        body.innerHTML += `<tr><td>${d.customerId}</td><td>${d.name}</td><td>${d.aadhaar}</td><td>${d.pan}</td><td>${d.startDate}</td><td>${d.maturityDate}</td><td>${d.principal}</td><td>${d.maturityAmount}</td></tr>`;
-      }
-    });
-  });
-
-  db.collection("rd").where("status", "==", "approved").get().then(snapshot => {
-    const body = document.getElementById("approvedRDTableBody");
-    body.innerHTML = "";
-    snapshot.forEach(doc => {
-      const d = doc.data();
-      const maturity = new Date(d.maturityDate);
-      if (maturity >= from && maturity <= to) {
+      if (d.maturityDate >= from && d.maturityDate <= to) {
         body.innerHTML += `<tr><td>${d.customerId}</td><td>${d.name}</td><td>${d.aadhaar}</td><td>${d.pan}</td><td>${d.startDate}</td><td>${d.maturityDate}</td><td>${d.principal}</td><td>${d.maturityAmount}</td></tr>`;
       }
     });
   });
 }
 
-function loadRenewals() {
-  const today = new Date();
-  const next7 = new Date();
-  next7.setDate(today.getDate() + 7);
+function filterRD() {
+  const from = document.getElementById("fromDateRD").value;
+  const to = document.getElementById("toDateRD").value;
+  db.collection("rd").where("status", "==", "approved").get().then(snapshot => {
+    const body = document.getElementById("approvedRDTableBody");
+    body.innerHTML = "";
+    snapshot.forEach(doc => {
+      const d = doc.data();
+      if (d.maturityDate >= from && d.maturityDate <= to) {
+        body.innerHTML += `<tr><td>${d.customerId}</td><td>${d.name}</td><td>${d.aadhaar}</td><td>${d.pan}</td><td>${d.startDate}</td><td>${d.maturityDate}</td><td>${d.principal}</td><td>${d.maturityAmount}</td></tr>`;
+      }
+    });
+  });
+}
 
-  const body = document.getElementById("renewalTableBody");
+function loadRenewalAlert() {
+  showSection("renewal");
+  const body = document.getElementById("renewalBody");
   body.innerHTML = "";
+  const today = new Date();
+  const futureDate = new Date();
+  futureDate.setDate(today.getDate() + 7);
+  const todayStr = today.toISOString().split("T")[0];
+  const futureStr = futureDate.toISOString().split("T")[0];
 
-  db.collection("fd").where("status", "==", "approved").get().then(snapshot => {
-    snapshot.forEach(doc => {
-      const d = doc.data();
-      const maturity = new Date(d.maturityDate);
-      if (maturity >= today && maturity <= next7) {
-        body.innerHTML += `<tr><td>FD</td><td>${d.customerId}</td><td>${d.name}</td><td>${d.principal}</td><td>${d.maturityDate}</td></tr>`;
-      }
-    });
-  });
-
-  db.collection("rd").where("status", "==", "approved").get().then(snapshot => {
-    snapshot.forEach(doc => {
-      const d = doc.data();
-      const maturity = new Date(d.maturityDate);
-      if (maturity >= today && maturity <= next7) {
-        body.innerHTML += `<tr><td>RD</td><td>${d.customerId}</td><td>${d.name}</td><td>${d.principal}</td><td>${d.maturityDate}</td></tr>`;
-      }
+  ["fd", "rd"].forEach(type => {
+    db.collection(type).where("status", "==", "approved").get().then(snapshot => {
+      snapshot.forEach(doc => {
+        const d = doc.data();
+        if (d.maturityDate >= todayStr && d.maturityDate <= futureStr) {
+          body.innerHTML += `<tr><td>${type.toUpperCase()}</td><td>${d.customerId}</td><td>${d.name}</td><td>${d.principal}</td><td>${d.startDate}</td><td>${d.maturityDate}</td></tr>`;
+        }
+      });
     });
   });
 }
@@ -388,13 +452,10 @@ auth.onAuthStateChanged(user => {
     loadFDsToday();
     loadPendingFDs();
     loadApprovedEntries();
-    loadRenewals();
-    showSection('daily');
+    showSection("daily");
   } else {
-    alert(\"Not logged in\");
-    window.location.href = \"index.html\";
+    alert("Not logged in");
+    window.location.href = "index.html";
   }
 });
 </script>
-</body>
-</html>

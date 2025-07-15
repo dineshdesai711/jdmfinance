@@ -3,62 +3,65 @@
 <head>
   <meta charset="UTF-8">
   <title>Admin Dashboard - JDM Credit & Finance</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f4f6f9;
+      background: #f0f2f5;
       margin: 0;
+      padding: 0;
     }
     header {
       background-color: #0a3d62;
       color: white;
-      padding: 15px 20px;
+      padding: 20px;
       display: flex;
+      align-items: center;
       justify-content: space-between;
-      align-items: center;
     }
-    .logo {
+    .logo-section {
       display: flex;
       align-items: center;
     }
-    .logo img {
+    .logo-section img {
       height: 40px;
       margin-right: 10px;
     }
     .logout-btn {
-      background-color: red;
+      background: crimson;
       color: white;
-      padding: 8px 14px;
       border: none;
+      padding: 10px 16px;
+      cursor: pointer;
       border-radius: 5px;
+    }
+    .button-panel {
+      display: flex;
+      gap: 10px;
+      padding: 15px;
+      flex-wrap: wrap;
+    }
+    .button-panel button {
+      padding: 10px 16px;
+      border-radius: 5px;
+      border: none;
+      background-color: #0a3d62;
+      color: white;
       cursor: pointer;
     }
-    .stats, .buttons {
+    .stats {
       display: flex;
-      flex-wrap: wrap;
-      gap: 15px;
+      gap: 20px;
       margin: 20px;
+      flex-wrap: wrap;
     }
     .stat-box {
-      flex: 1;
-      min-width: 200px;
       background: white;
-      border-radius: 10px;
       padding: 20px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      flex: 1;
       text-align: center;
-    }
-    .buttons button {
-      padding: 10px 18px;
-      border: none;
-      border-radius: 5px;
-      background-color: #0984e3;
-      color: white;
-      cursor: pointer;
-    }
-    .buttons input {
-      padding: 6px;
+      min-width: 200px;
     }
     table {
       width: 95%;
@@ -67,30 +70,23 @@
       background: white;
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
-    th, td {
-      padding: 10px;
+    table th, table td {
       border: 1px solid #ccc;
+      padding: 10px;
       text-align: center;
     }
-    th {
+    table th {
       background-color: #0a3d62;
       color: white;
-    }
-    .chart-container {
-      width: 90%;
-      margin: 30px auto;
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
     }
   </style>
 </head>
 <body>
 
 <header>
-  <div class="logo">
-    <img src="https://i.ibb.co/5TpqK1H/banklogo.png" alt="Logo" />
-    <h2>Admin Dashboard - JDM Credit & Finance</h2>
+  <div class="logo-section">
+    <img src="https://i.ibb.co/5TpqK1H/banklogo.png" alt="Logo">
+    <h2>JDM CREDIT & FINANCE - Admin Panel</h2>
   </div>
   <button class="logout-btn" onclick="logout()">Logout</button>
 </header>
@@ -101,44 +97,41 @@
     <p id="fdCount">0</p>
   </div>
   <div class="stat-box">
-    <h3>Total FD Amount (₹)</h3>
-    <p id="fdAmount">0</p>
+    <h3>Total FD Principal (₹)</h3>
+    <p id="totalPrincipal">0</p>
   </div>
   <div class="stat-box">
     <h3>Total RDs</h3>
     <p id="rdCount">0</p>
   </div>
   <div class="stat-box">
-    <h3>Total RD Amount (₹)</h3>
-    <p id="rdAmount">0</p>
+    <h3>Total RD Principal (₹)</h3>
+    <p id="totalRDPrincipal">0</p>
   </div>
 </div>
 
-<div class="buttons">
-  <button onclick="loadToday()">📅 Daily Report</button>
+<div class="button-panel">
+  <button onclick="loadTodayData()">📅 Daily Report</button>
   <button onclick="loadPending()">🕒 Pending Transactions</button>
-  <button onclick="showApprovedPrompt()">✅ Approved FDs</button>
-  <button onclick="showSearchPrompt()">🔍 Search Customer</button>
-  <button onclick="loadMaturityReminder()">📢 Maturity Reminder</button>
+  <button onclick="loadApproved()">✅ Approved Entries</button>
+  <button onclick="customerSearch()">🔍 Customer Search</button>
+  <button onclick="loadMaturityReminder()">⏰ Maturity Reminder</button>
 </div>
 
-<div class="chart-container">
-  <canvas id="overviewChart"></canvas>
-</div>
-
-<table id="entryTable">
+<table>
   <thead>
     <tr>
       <th>Customer ID</th>
       <th>Name</th>
+      <th>Aadhaar</th>
+      <th>PAN</th>
       <th>Start Date</th>
       <th>Maturity Date</th>
-      <th>Principal</th>
-      <th>Maturity Amt</th>
-      <th>Status</th>
+      <th>Principal (₹)</th>
+      <th>Maturity Amount (₹)</th>
     </tr>
   </thead>
-  <tbody></tbody>
+  <tbody id="tableBody"></tbody>
 </table>
 
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -154,8 +147,8 @@
     appId: "1:449814553435:web:008c7695473689f425307e"
   };
   firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
   const db = firebase.firestore();
+  const auth = firebase.auth();
 
   function logout() {
     auth.signOut().then(() => {
@@ -164,121 +157,110 @@
     });
   }
 
-  function updateStats() {
+  function loadStats() {
     db.collection("fd").get().then(snapshot => {
-      let count = 0, amount = 0;
+      let totalFD = 0, totalFDPrincipal = 0;
       snapshot.forEach(doc => {
         const data = doc.data();
-        if (data.status === "approved") {
-          count++;
-          amount += parseFloat(data.principal || 0);
+        if (data.status === 'approved') {
+          totalFD++;
+          totalFDPrincipal += parseFloat(data.principal) || 0;
         }
       });
-      document.getElementById("fdCount").innerText = count;
-      document.getElementById("fdAmount").innerText = amount.toLocaleString();
+      document.getElementById("fdCount").innerText = totalFD;
+      document.getElementById("totalPrincipal").innerText = totalFDPrincipal.toLocaleString();
     });
     db.collection("rd").get().then(snapshot => {
-      let count = 0, amount = 0;
+      let totalRD = 0, totalRDPrincipal = 0;
       snapshot.forEach(doc => {
         const data = doc.data();
-        if (data.status === "approved") {
-          count++;
-          amount += parseFloat(data.principal || 0);
+        if (data.status === 'approved') {
+          totalRD++;
+          totalRDPrincipal += parseFloat(data.principal) || 0;
         }
       });
-      document.getElementById("rdCount").innerText = count;
-      document.getElementById("rdAmount").innerText = amount.toLocaleString();
+      document.getElementById("rdCount").innerText = totalRD;
+      document.getElementById("totalRDPrincipal").innerText = totalRDPrincipal.toLocaleString();
     });
   }
 
-  function loadTable(query) {
-    const body = document.querySelector("#entryTable tbody");
+  function renderTable(snapshot) {
+    const body = document.getElementById("tableBody");
     body.innerHTML = "";
-    query.get().then(snapshot => {
-      snapshot.forEach(doc => {
-        const d = doc.data();
-        body.innerHTML += `
-          <tr>
-            <td>${d.customerId || ""}</td>
-            <td>${d.name || ""}</td>
-            <td>${d.startDate || ""}</td>
-            <td>${d.maturityDate || ""}</td>
-            <td>${d.principal || ""}</td>
-            <td>${d.maturityAmount || ""}</td>
-            <td>${d.status || "N/A"}</td>
-          </tr>`;
-      });
+    snapshot.forEach(doc => {
+      const d = doc.data();
+      body.innerHTML += `
+        <tr>
+          <td>${d.customerId || ""}</td>
+          <td>${d.name || ""}</td>
+          <td>${d.aadhaar || ""}</td>
+          <td>${d.pan || ""}</td>
+          <td>${d.startDate || ""}</td>
+          <td>${d.maturityDate || ""}</td>
+          <td>${d.principal || ""}</td>
+          <td>${d.maturityAmount || ""}</td>
+        </tr>`;
     });
   }
 
-  function loadToday() {
-    const today = new Date().toISOString().split('T')[0];
-    const fdQuery = db.collection("fd").where("startDate", "==", today);
-    loadTable(fdQuery);
+  function loadTodayData() {
+    const today = new Date().toISOString().split("T")[0];
+    db.collection("fd").where("startDate", "==", today).get().then(renderTable);
+    db.collection("rd").where("startDate", "==", today).get().then(renderTable);
   }
 
   function loadPending() {
-    const fdQuery = db.collection("fd").where("status", "==", "pending");
-    loadTable(fdQuery);
+    db.collection("fd").where("status", "==", "pending").get().then(renderTable);
+    db.collection("rd").where("status", "==", "pending").get().then(renderTable);
   }
 
-  function showApprovedPrompt() {
-    const from = prompt("Enter FROM Date (YYYY-MM-DD)");
-    const to = prompt("Enter TO Date (YYYY-MM-DD)");
-    if (from && to) {
-      const q = db.collection("fd").where("startDate", ">=", from).where("startDate", "<=", to).where("status", "==", "approved");
-      loadTable(q);
-    }
+  function loadApproved() {
+    const from = prompt("Enter From Date (YYYY-MM-DD)");
+    const to = prompt("Enter To Date (YYYY-MM-DD)");
+    if (!from || !to) return;
+    db.collection("fd").where("startDate", ">=", from).where("startDate", "<=", to)
+      .where("status", "==", "approved").get().then(renderTable);
+    db.collection("rd").where("startDate", ">=", from).where("startDate", "<=", to)
+      .where("status", "==", "approved").get().then(renderTable);
   }
 
-  function showSearchPrompt() {
-    const input = prompt("Enter Customer Name or Mobile Number:");
-    if (!input) return;
-    db.collection("fd").where("name", "==", input).get().then(snapshot => {
-      if (snapshot.empty) {
-        return db.collection("fd").where("mobile", "==", input).get().then(s2 => loadTable(s2));
-      }
-      loadTable(snapshot);
+  function customerSearch() {
+    const keyword = prompt("Enter Customer Name or Mobile Number").toLowerCase();
+    if (!keyword) return;
+    db.collection("fd").get().then(snapshot => {
+      const filtered = snapshot.docs.filter(doc => {
+        const d = doc.data();
+        return (d.name && d.name.toLowerCase().includes(keyword)) ||
+               (d.mobile && d.mobile.includes(keyword));
+      });
+      renderTable({ forEach: cb => filtered.forEach(cb) });
+    });
+    db.collection("rd").get().then(snapshot => {
+      const filtered = snapshot.docs.filter(doc => {
+        const d = doc.data();
+        return (d.name && d.name.toLowerCase().includes(keyword)) ||
+               (d.mobile && d.mobile.includes(keyword));
+      });
+      renderTable({ forEach: cb => filtered.forEach(cb) });
     });
   }
 
   function loadMaturityReminder() {
     const today = new Date();
-    const upcoming = new Date(today);
-    upcoming.setDate(upcoming.getDate() + 7);
-    const todayStr = today.toISOString().split('T')[0];
-    const upStr = upcoming.toISOString().split('T')[0];
-    const q = db.collection("fd").where("maturityDate", ">=", todayStr).where("maturityDate", "<=", upStr);
-    loadTable(q);
-  }
+    const next7 = new Date();
+    next7.setDate(today.getDate() + 7);
+    const from = today.toISOString().split("T")[0];
+    const to = next7.toISOString().split("T")[0];
 
-  function drawChart() {
-    Promise.all([
-      db.collection("fd").get(),
-      db.collection("rd").get()
-    ]).then(([fdSnap, rdSnap]) => {
-      const fdTotal = fdSnap.docs.reduce((sum, doc) => sum + Number(doc.data().principal || 0), 0);
-      const rdTotal = rdSnap.docs.reduce((sum, doc) => sum + Number(doc.data().principal || 0), 0);
-      const ctx = document.getElementById("overviewChart").getContext("2d");
-      new Chart(ctx, {
-        type: "bar",
-        data: {
-          labels: ["FD", "RD"],
-          datasets: [{
-            label: "Total Principal (₹)",
-            data: [fdTotal, rdTotal],
-            backgroundColor: ["#00b894", "#0984e3"]
-          }]
-        }
-      });
-    });
+    db.collection("fd").where("maturityDate", ">=", from).where("maturityDate", "<=", to)
+      .get().then(renderTable);
+    db.collection("rd").where("maturityDate", ">=", from).where("maturityDate", "<=", to)
+      .get().then(renderTable);
   }
 
   auth.onAuthStateChanged(user => {
-    if (!user) return location.href = "index.html";
-    updateStats();
-    drawChart();
-    loadToday();
+    if (user) loadStats();
+    else window.location.href = "index.html";
   });
 </script>
 

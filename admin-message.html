@@ -26,8 +26,6 @@
     <tr>
       <th><input type="checkbox" onclick="toggleSelectAll(this)"></th>
       <th>Customer ID</th>
-      <th>Name</th>
-      <th>Mobile</th>
     </tr>
   </thead>
   <tbody id="customerBody"></tbody>
@@ -79,7 +77,6 @@
   const db = firebase.firestore();
 
   let selectedCustomers = [];
-  let selectedFDs = [];
 
   async function loadCustomers() {
     const body = document.getElementById("customerBody");
@@ -89,27 +86,21 @@
     try {
       const snapshot = await db.collection("customers").get();
       if (snapshot.empty) {
-        body.innerHTML = `<tr><td colspan="4">No customers found.</td></tr>`;
+        body.innerHTML = `<tr><td colspan="2">No customers found.</td></tr>`;
         return;
       }
 
       snapshot.forEach(doc => {
-        const d = doc.data();
-        const name = d.name || "N/A";
-        const mobile = d.mobile || "";
         const customerId = doc.id;
-
         body.innerHTML += `
           <tr>
-            <td><input type='checkbox' value='${customerId}|${name}|${mobile}' onchange='toggleSelect(this)'></td>
-            <td>${customerId}</td>
-            <td>${name}</td>
-            <td>${mobile || 'N/A'}</td>
+            <td><input type='checkbox' value='${customerId}' onchange='toggleSelect(this)'></td>
+            <td onclick="loadHistory('${customerId}')">${customerId}</td>
           </tr>`;
       });
     } catch (error) {
       console.error("❌ Error loading customers:", error);
-      body.innerHTML = `<tr><td colspan="4">Failed to load customers.</td></tr>`;
+      body.innerHTML = `<tr><td colspan="2">Failed to load customers.</td></tr>`;
     }
   }
 
@@ -138,31 +129,20 @@
   async function loadHistory(customerId) {
     const historyBody = document.getElementById("historyBody");
     historyBody.innerHTML = "";
-    selectedFDs = [];
 
     for (const type of ["fd", "rd"]) {
       const snapshot = await db.collection(type).where("customerId", "==", customerId).get();
       snapshot.forEach(doc => {
         const d = doc.data();
-        const recordId = `${doc.id}|${type}|${d.customerId}|${d.maturityDate}`;
         historyBody.innerHTML += `
           <tr>
-            <td><input type="checkbox" onchange="toggleFDSelect(this)" value="${recordId}"></td>
+            <td><input type="checkbox"></td>
             <td>${type.toUpperCase()}</td>
-            <td>${d.principal}</td>
-            <td>${d.startDate}</td>
-            <td>${d.maturityDate}</td>
+            <td>${d.principal || '-'}</td>
+            <td>${d.startDate || '-'}</td>
+            <td>${d.maturityDate || '-'}</td>
           </tr>`;
       });
-    }
-  }
-
-  function toggleFDSelect(checkbox) {
-    const val = checkbox.value;
-    if (checkbox.checked) {
-      if (!selectedFDs.includes(val)) selectedFDs.push(val);
-    } else {
-      selectedFDs = selectedFDs.filter(f => f !== val);
     }
   }
 
@@ -187,14 +167,9 @@
     if (!message.trim()) return alert("Please write a message.");
     if (selectedCustomers.length === 0) return alert("Please select at least one customer.");
 
-    selectedCustomers.forEach(cust => {
-      const [id, name, mobile] = cust.split("|");
-      if (mobile) {
-        const url = `https://wa.me/91${mobile}?text=${encodeURIComponent(message)}`;
-        window.open(url, '_blank');
-      } else {
-        console.log(`No mobile number found for ${name}`);
-      }
+    selectedCustomers.forEach(id => {
+      const url = `https://wa.me/?text=${encodeURIComponent("Customer ID: " + id + "\n\n" + message)}`;
+      window.open(url, '_blank');
     });
   }
 

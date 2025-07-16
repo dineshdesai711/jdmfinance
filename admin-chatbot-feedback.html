@@ -1,37 +1,20 @@
+<!-- admin-chatbot-feedback.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Admin Support Manager - JDM Credit & Finance</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin - Customer Tickets</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #f1f5f9;
-    }
-    .glass {
-      background: white;
-      border-radius: 1rem;
-      padding: 1.5rem;
-      box-shadow: 0 0 10px rgba(0,0,0,0.05);
-    }
-    .ticket-box {
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      padding: 1rem;
-      margin-bottom: 1rem;
-      background: #fff;
-    }
-  </style>
 </head>
-<body class="p-6">
-  <h1 class="text-3xl font-bold mb-6">🎫 Customer Tickets - Admin Panel</h1>
-
-  <div id="ticketContainer" class="space-y-4"></div>
+<body class="bg-gray-100 min-h-screen p-4">
+  <h1 class="text-2xl font-bold mb-4">📋 Customer Tickets - Admin Panel</h1>
+  <div id="ticketsContainer" class="space-y-4"></div>
 
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
+
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyDLvrY6y3SyvLrX-yk8UcdO8RmnC89XNG4",
@@ -41,62 +24,39 @@
       messagingSenderId: "449814553435",
       appId: "1:449814553435:web:008c7695473689f425307e"
     };
-
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
-    const storage = firebase.storage();
+    const auth = firebase.auth();
+
+    const allowedAdmins = ["dinesh@gmail.com", "desaidinesh055@gmail.com"];
+
+    firebase.auth().onAuthStateChanged(user => {
+      if (!user || !allowedAdmins.includes(user.email)) {
+        alert("❌ Admin not logged in or not authorized");
+        window.location.href = "admin-login.html";
+        return;
+      }
+      loadTickets();
+    });
 
     function loadTickets() {
-      db.collection("support_tickets").orderBy("createdAt", "desc").get().then(snapshot => {
-        const container = document.getElementById("ticketContainer");
+      const container = document.getElementById("ticketsContainer");
+      db.collection("support_tickets").orderBy("createdAt", "desc").onSnapshot(snapshot => {
         container.innerHTML = "";
-
         snapshot.forEach(doc => {
-          const ticket = doc.data();
-          const id = doc.id;
-          const replyId = `reply-${id}`;
-          const imageInputId = `img-${id}`;
-
+          const data = doc.data();
           container.innerHTML += `
-            <div class="ticket-box">
-              <p><strong>🧾 Subject:</strong> ${ticket.subject}</p>
-              <p><strong>📁 Category:</strong> ${ticket.category}</p>
-              <p><strong>🧑 Customer ID:</strong> ${ticket.customerId}</p>
-              <p><strong>💬 Message:</strong> ${ticket.message}</p>
-              ${ticket.imageUrl ? `<p><strong>📷 Uploaded:</strong><br><img src="${ticket.imageUrl}" class="w-48 mt-2 rounded" />` : ""}
-              <p><strong>📌 Status:</strong> ${ticket.status}</p>
-              <textarea id="${replyId}" placeholder="Type your reply..." class="w-full border mt-3 p-2 rounded"></textarea>
-              <input type="file" id="${imageInputId}" class="mt-2" />
-              <button class="mt-2 bg-blue-600 text-white px-4 py-1 rounded" onclick="sendReply('${id}')">Send Reply</button>
-            </div>
-          `;
+            <div class="bg-white p-4 rounded shadow">
+              <h2 class="font-semibold text-lg">${data.subject}</h2>
+              <p><strong>Category:</strong> ${data.category}</p>
+              <p><strong>Status:</strong> ${data.status}</p>
+              <p><strong>Message:</strong> ${data.message}</p>
+              <p class="text-sm text-gray-500">Customer ID: ${data.customerId}</p>
+              <p class="text-xs text-gray-400">Created At: ${data.createdAt}</p>
+            </div>`;
         });
       });
     }
-
-    async function sendReply(ticketId) {
-      const message = document.getElementById(`reply-${ticketId}`).value.trim();
-      const fileInput = document.getElementById(`img-${ticketId}`);
-      let imageUrl = "";
-
-      if (fileInput.files.length > 0) {
-        const file = fileInput.files[0];
-        const storageRef = storage.ref().child(`ticket_replies/${ticketId}/${file.name}`);
-        await storageRef.put(file);
-        imageUrl = await storageRef.getDownloadURL();
-      }
-
-      await db.collection("support_tickets").doc(ticketId).update({
-        adminReply: message,
-        adminReplyImage: imageUrl || "",
-        status: "Responded"
-      });
-
-      alert("✅ Reply sent successfully");
-      loadTickets();
-    }
-
-    loadTickets();
   </script>
 </body>
 </html>

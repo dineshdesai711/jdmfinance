@@ -102,7 +102,7 @@
     onAuthStateChanged(auth, async (user) => {
       if (!user || !ADMIN_EMAILS.includes(user.email)) {
         alert("❌ Admin not logged in or not authorized");
-        return location.href = "login.html";
+        return location.href = "index.html";
       }
 
       const snapshot = await getDocs(collection(db, "support_tickets"));

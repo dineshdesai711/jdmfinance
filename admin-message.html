@@ -1,129 +1,168 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Admin Message Center - JDM Credit & Finance</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f1f1f1;
-      padding: 20px;
-    }
-    .container {
-      max-width: 600px;
-      margin: auto;
-      background: #fff;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    h2 {
-      text-align: center;
-      color: #0a3d62;
-    }
-    input, textarea, button {
-      width: 100%;
-      padding: 10px;
-      margin-top: 10px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
-    button {
-      background: #0a3d62;
-      color: white;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #074074;
-    }
-    .flex-row {
-      display: flex;
-      gap: 10px;
-    }
-    .flex-row input {
-      flex: 1;
-    }
+    body { font-family: Arial, sans-serif; background: #f4f4f4; padding: 20px; }
+    h2 { color: #0a3d62; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+    th, td { padding: 10px; border: 1px solid #ccc; text-align: left; }
+    th { background: #0a3d62; color: white; }
+    tr:hover { background: #f1f1f1; cursor: pointer; }
+    .message-panel { margin-top: 20px; background: #fff; padding: 15px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); border-radius: 8px; }
+    .btn { padding: 10px 15px; margin: 5px; background: #0a3d62; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    .btn:disabled { background: #aaa; }
+    select, textarea { padding: 10px; width: 100%; margin-top: 10px; }
+    .section-title { margin-top: 40px; color: #333; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h2>📨 Admin Message Center</h2>
 
-    <div class="flex-row">
-      <input type="text" id="searchId" placeholder="Enter Customer ID (e.g., JDM-PRI-XXXX-YYYY)" />
-      <button onclick="searchCustomer()">🔍 Search</button>
-    </div>
+<h2>📢 Admin Messaging Center - JDM Credit & Finance</h2>
 
-    <input type="text" id="name" placeholder="Customer Name" readonly />
-    <input type="text" id="mobile" placeholder="Mobile Number" readonly />
-    <input type="text" id="aadhaar" placeholder="Aadhaar" readonly />
-    <input type="text" id="pan" placeholder="PAN" readonly />
+<table id="customerTable">
+  <thead>
+    <tr>
+      <th><input type="checkbox" onclick="toggleSelectAll(this)"></th>
+      <th>Customer ID</th>
+      <th>Name</th>
+      <th>Mobile</th>
+    </tr>
+  </thead>
+  <tbody id="customerBody"></tbody>
+</table>
 
-    <textarea id="message" rows="5" placeholder="Write your WhatsApp message here..."></textarea>
-    <button onclick="sendWhatsApp()">📲 Send WhatsApp Message</button>
-  </div>
+<h3 class="section-title">Selected Customer's FD/RD Details</h3>
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Principal</th>
+      <th>Start Date</th>
+      <th>Maturity</th>
+    </tr>
+  </thead>
+  <tbody id="historyBody"></tbody>
+</table>
 
-  <!-- Firebase scripts -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<div class="message-panel">
+  <h3>📨 Send Message</h3>
+  <label>Select Template:</label>
+  <select id="templateSelect" onchange="applyTemplate()">
+    <option value="">-- Select Template --</option>
+    <option value="thank">Thank You for Opening FD</option>
+    <option value="renewal">FD/RD Maturity Reminder</option>
+    <option value="festival">Festival Greetings</option>
+    <option value="offer">New Interest Rate Offer</option>
+  </select>
 
-  <script>
-    // Firebase config
-    const firebaseConfig = {
-      apiKey: "AIzaSyDLvrY6y3SyvLrX-yk8UcdO8RmnC89XNG4",
-      authDomain: "jdms-207ba.firebaseapp.com",
-      projectId: "jdms-207ba",
-      storageBucket: "jdms-207ba.appspot.com",
-      messagingSenderId: "449814553435",
-      appId: "1:449814553435:web:008c7695473689f425307e"
-    };
+  <label>Message:</label>
+  <textarea id="messageBox" rows="5" placeholder="Your message here..."></textarea>
 
-    // Init Firebase
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+  <button class="btn" onclick="sendMessage()">📤 Send WhatsApp</button>
+</div>
 
-    // Search by customerId
-    function searchCustomer() {
-      const input = document.getElementById("searchId").value.trim();
-      if (!input) return alert("❗ Enter Customer ID");
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyDLvrY6y3SyvLrX-yk8UcdO8RmnC89XNG4",
+    authDomain: "jdms-207ba.firebaseapp.com",
+    projectId: "jdms-207ba",
+    storageBucket: "jdms-207ba.appspot.com",
+    messagingSenderId: "449814553435",
+    appId: "1:449814553435:web:008c7695473689f425307e"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
 
-      db.collection("customers")
-        .where("customerId", "==", input)
-        .get()
-        .then(snapshot => {
-          if (snapshot.empty) {
-            alert("❌ Customer not found!");
-            return;
-          }
+  let selectedCustomers = [];
 
-          snapshot.forEach(doc => {
-            const data = doc.data();
-            document.getElementById("name").value = data.name || "";
-            document.getElementById("mobile").value = data.mobile || "";
-            document.getElementById("aadhaar").value = data.aadhaar || "";
-            document.getElementById("pan").value = data.pan || "";
-          });
-        })
-        .catch(err => {
-          console.error("Search Error:", err.message);
-          alert("❌ Something went wrong while searching.");
-        });
+  function loadCustomers() {
+    db.collection("customers").get().then(snapshot => {
+      const body = document.getElementById("customerBody");
+      body.innerHTML = "";
+      snapshot.forEach(doc => {
+        const d = doc.data();
+        body.innerHTML += `
+          <tr onclick="loadHistory('${doc.id}')">
+            <td><input type='checkbox' value='${doc.id}|${d.name}|${d.mobile}' onchange='toggleSelect(this)'></td>
+            <td>${doc.id}</td><td>${d.name}</td><td>${d.mobile || 'N/A'}</td>
+          </tr>`;
+      });
+    });
+  }
+
+  function toggleSelect(checkbox) {
+    const val = checkbox.value;
+    if (checkbox.checked) {
+      if (!selectedCustomers.includes(val)) selectedCustomers.push(val);
+    } else {
+      selectedCustomers = selectedCustomers.filter(c => c !== val);
     }
+  }
 
-    // WhatsApp Message
-    function sendWhatsApp() {
-      const number = document.getElementById("mobile").value.trim();
-      const msg = document.getElementById("message").value.trim();
-
-      if (!number || !msg) {
-        alert("❗ Please provide mobile number and message.");
-        return;
+  function toggleSelectAll(master) {
+    const checkboxes = document.querySelectorAll("#customerBody input[type='checkbox']");
+    checkboxes.forEach(cb => {
+      cb.checked = master.checked;
+      const val = cb.value;
+      if (master.checked) {
+        if (!selectedCustomers.includes(val)) selectedCustomers.push(val);
+      } else {
+        selectedCustomers = [];
       }
+    });
+  }
 
-      const encodedMessage = encodeURIComponent(msg);
-      const whatsappURL = `https://wa.me/91${number}?text=${encodedMessage}`;
-      window.open(whatsappURL, "_blank");
+  function loadHistory(customerId) {
+    const historyBody = document.getElementById("historyBody");
+    historyBody.innerHTML = "";
+    ["fd", "rd"].forEach(type => {
+      db.collection(type).where("customerId", "==", customerId).get().then(snapshot => {
+        snapshot.forEach(doc => {
+          const d = doc.data();
+          historyBody.innerHTML += `<tr><td>${type.toUpperCase()}</td><td>${d.principal}</td><td>${d.startDate}</td><td>${d.maturityDate}</td></tr>`;
+        });
+      });
+    });
+  }
+
+  function applyTemplate() {
+    const template = document.getElementById("templateSelect").value;
+    const box = document.getElementById("messageBox");
+    if (template === "thank") {
+      box.value = "Thank you for choosing JDM Credit & Finance. We appreciate your trust in us.";
+    } else if (template === "renewal") {
+      box.value = "Your FD/RD is maturing soon. Kindly contact Mr. Ashutosh Sharma at 9876543210 for renewal assistance.";
+    } else if (template === "festival") {
+      box.value = "Wishing you and your family a joyful and prosperous festival. Happy celebrations from JDM Credit & Finance!";
+    } else if (template === "offer") {
+      box.value = "Check out our new FD/RD interest rates. Now earn more on your savings with JDM Credit & Finance.";
+    } else {
+      box.value = "";
     }
-  </script>
+  }
+
+  function sendMessage() {
+    if (selectedCustomers.length === 0) return alert("Please select at least one customer.");
+    const message = document.getElementById("messageBox").value;
+    if (!message.trim()) return alert("Please write a message.");
+
+    selectedCustomers.forEach(cust => {
+      const [id, name, mobile] = cust.split("|");
+      if (mobile) {
+        const url = `https://wa.me/91${mobile}?text=${encodeURIComponent(message)}`;
+        window.open(url, '_blank');
+      } else {
+        console.log(`No mobile for ${name}`);
+      }
+    });
+  }
+
+  loadCustomers();
+</script>
+
 </body>
 </html>

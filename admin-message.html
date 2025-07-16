@@ -26,9 +26,13 @@
     <tr>
       <th><input type="checkbox" onclick="toggleSelectAll(this)"></th>
       <th>Customer ID</th>
+      <th>Name</th>
+      <th>Mobile</th>
     </tr>
   </thead>
-  <tbody id="customerBody"></tbody>
+  <tbody id="customerBody">
+    <tr><td colspan="4">Loading customers...</td></tr>
+  </tbody>
 </table>
 
 <h3 class="section-title">Selected Customer's FD/RD Details</h3>
@@ -77,31 +81,40 @@
   const db = firebase.firestore();
 
   let selectedCustomers = [];
+  let selectedFDs = [];
 
-  async function loadCustomers() {
+  function loadCustomers() {
     const body = document.getElementById("customerBody");
-    body.innerHTML = "";
-    selectedCustomers = [];
+    body.innerHTML = "<tr><td colspan='4'>Loading...</td></tr>";
+    
+    db.collection("customers").get()
+      .then(snapshot => {
+        body.innerHTML = "";
+        if (snapshot.empty) {
+          body.innerHTML = "<tr><td colspan='4'>No customers found.</td></tr>";
+          return;
+        }
 
-    try {
-      const snapshot = await db.collection("customers").get();
-      if (snapshot.empty) {
-        body.innerHTML = `<tr><td colspan="2">No customers found.</td></tr>`;
-        return;
-      }
+        snapshot.forEach(doc => {
+          const d = doc.data();
+          const customerId = doc.id || 'N/A';
+          const name = d.name || 'N/A';
+          const mobile = d.mobile || 'N/A';
 
-      snapshot.forEach(doc => {
-        const customerId = doc.id;
-        body.innerHTML += `
-          <tr>
-            <td><input type='checkbox' value='${customerId}' onchange='toggleSelect(this)'></td>
-            <td onclick="loadHistory('${customerId}')">${customerId}</td>
-          </tr>`;
+          body.innerHTML += `
+            <tr onclick="loadHistory('${customerId}')">
+              <td><input type="checkbox" value="${customerId}|${name}|${mobile}" onchange="toggleSelect(this)"></td>
+              <td>${customerId}</td>
+              <td>${name}</td>
+              <td>${mobile}</td>
+            </tr>
+          `;
+        });
+      })
+      .catch(error => {
+        console.error("Failed to load customers:", error);
+        body.innerHTML = "<tr><td colspan='4'>⚠️ Failed to load customers.</td></tr>";
       });
-    } catch (error) {
-      console.error("❌ Error loading customers:", error);
-      body.innerHTML = `<tr><td colspan="2">Failed to load customers.</td></tr>`;
-    }
   }
 
   function toggleSelect(checkbox) {
@@ -126,23 +139,34 @@
     });
   }
 
-  async function loadHistory(customerId) {
+  function loadHistory(customerId) {
     const historyBody = document.getElementById("historyBody");
     historyBody.innerHTML = "";
-
-    for (const type of ["fd", "rd"]) {
-      const snapshot = await db.collection(type).where("customerId", "==", customerId).get();
-      snapshot.forEach(doc => {
-        const d = doc.data();
-        historyBody.innerHTML += `
-          <tr>
-            <td><input type="checkbox"></td>
-            <td>${type.toUpperCase()}</td>
-            <td>${d.principal || '-'}</td>
-            <td>${d.startDate || '-'}</td>
-            <td>${d.maturityDate || '-'}</td>
-          </tr>`;
+    selectedFDs = [];
+    ["fd", "rd"].forEach(type => {
+      db.collection(type).where("customerId", "==", customerId).get().then(snapshot => {
+        snapshot.forEach(doc => {
+          const d = doc.data();
+          const recordId = `${doc.id}|${type}|${d.customerId}|${d.maturityDate}`;
+          historyBody.innerHTML += `
+            <tr>
+              <td><input type="checkbox" onchange="toggleFDSelect(this)" value="${recordId}"></td>
+              <td>${type.toUpperCase()}</td>
+              <td>${d.principal}</td>
+              <td>${d.startDate}</td>
+              <td>${d.maturityDate}</td>
+            </tr>`;
+        });
       });
+    });
+  }
+
+  function toggleFDSelect(checkbox) {
+    const val = checkbox.value;
+    if (checkbox.checked) {
+      if (!selectedFDs.includes(val)) selectedFDs.push(val);
+    } else {
+      selectedFDs = selectedFDs.filter(f => f !== val);
     }
   }
 
@@ -167,9 +191,14 @@
     if (!message.trim()) return alert("Please write a message.");
     if (selectedCustomers.length === 0) return alert("Please select at least one customer.");
 
-    selectedCustomers.forEach(id => {
-      const url = `https://wa.me/?text=${encodeURIComponent("Customer ID: " + id + "\n\n" + message)}`;
-      window.open(url, '_blank');
+    selectedCustomers.forEach(cust => {
+      const [id, name, mobile] = cust.split("|");
+      if (mobile && mobile !== 'N/A') {
+        const url = `https://wa.me/91${mobile}?text=${encodeURIComponent(message)}`;
+        window.open(url, '_blank');
+      } else {
+        console.log(`⚠️ No valid mobile for ${name}`);
+      }
     });
   }
 

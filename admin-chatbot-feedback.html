@@ -43,23 +43,45 @@
       margin-top: 10px;
       border-radius: 6px;
       border: 1px solid #ccc;
+      font-size: 15px;
     }
     button {
       background: #007bff;
       color: white;
       border: none;
       cursor: pointer;
+      font-weight: bold;
     }
     button:hover {
       background: #0056b3;
     }
   </style>
+</head>
+<body>
+  <h1>📋 Admin Ticket Dashboard</h1>
+  <div class="summary" id="summary"></div>
+  <div id="ticketContainer">Loading tickets...</div>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
     import {
-      getFirestore, collection, getDocs, updateDoc, doc
+      getFirestore,
+      collection,
+      getDocs,
+      updateDoc,
+      doc
     } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
+    import {
+      getAuth,
+      onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
+
+    // 🔐 Only allowed 3 admin emails
+    const ADMIN_EMAILS = [
+      "dinesh@gmail.com",
+      "desaidinesh055@gmail.com",
+      "ashutoshsharma12@gmail.com"
+    ];
 
     const firebaseConfig = {
       apiKey: "YOUR_API_KEY",
@@ -74,8 +96,6 @@
     const db = getFirestore(app);
     const auth = getAuth(app);
 
-    const ADMIN_EMAILS = ["admin1@gmail.com", "admin2@gmail.com"];
-
     const summaryDiv = document.getElementById("summary");
     const ticketContainer = document.getElementById("ticketContainer");
 
@@ -87,6 +107,8 @@
 
       const snapshot = await getDocs(collection(db, "support_tickets"));
       let total = 0, resolved = 0, pending = 0;
+
+      ticketContainer.innerHTML = "";
 
       snapshot.forEach(docSnap => {
         total++;
@@ -103,7 +125,8 @@
           <p><strong>Subject:</strong> ${data.subject}</p>
           <p><strong>Description:</strong> ${data.description}</p>
           <p><strong>Status:</strong> ${data.status}</p>
-          <textarea id="reply-${docSnap.id}" placeholder="Type your reply here..."></textarea>
+          <p><strong>Admin Reply:</strong> ${data.adminReply || 'No reply yet'}</p>
+          <textarea id="reply-${docSnap.id}" placeholder="Type your reply here...">${data.adminReply || ''}</textarea>
           <select id="status-${docSnap.id}">
             <option ${data.status === 'Pending' ? 'selected' : ''}>Pending</option>
             <option ${data.status === 'Ongoing' ? 'selected' : ''}>Ongoing</option>
@@ -121,23 +144,22 @@
       `;
     });
 
+    // ✅ Global reply function
     window.replyToTicket = async (id) => {
-      const reply = document.getElementById(`reply-${id}`).value;
+      const reply = document.getElementById(`reply-${id}`).value.trim();
       const status = document.getElementById(`status-${id}`).value;
-      if (!reply) return alert("Please enter a reply.");
+
+      if (!reply) return alert("Please enter a reply before submitting.");
+
       await updateDoc(doc(db, "support_tickets", id), {
         adminReply: reply,
         status: status,
         updatedAt: new Date().toISOString()
       });
-      alert("Reply sent and status updated.");
+
+      alert("✅ Reply sent and ticket updated successfully.");
       location.reload();
     };
   </script>
-</head>
-<body>
-  <h1>📋 Admin Ticket Dashboard</h1>
-  <div class="summary" id="summary"></div>
-  <div id="ticketContainer"></div>
 </body>
 </html>

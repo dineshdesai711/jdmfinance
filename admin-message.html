@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Admin Message Center - JDM Credit & Finance</title>
   <style>
     body { font-family: Arial, sans-serif; background: #f4f4f4; padding: 20px; }
@@ -25,14 +25,12 @@
   <thead>
     <tr>
       <th><input type="checkbox" onclick="toggleSelectAll(this)"></th>
-      <th>UID</th>
+      <th>Customer ID</th>
       <th>Name</th>
       <th>Mobile</th>
     </tr>
   </thead>
-  <tbody id="customerBody">
-    <tr><td colspan="4">⏳ Loading customers...</td></tr>
-  </tbody>
+  <tbody id="customerBody"></tbody>
 </table>
 
 <h3 class="section-title">Selected Customer's FD/RD Details</h3>
@@ -66,8 +64,11 @@
   <button class="btn" onclick="sendMessage()">📤 Send WhatsApp</button>
 </div>
 
+<!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+
 <script>
   const firebaseConfig = {
     apiKey: "AIzaSyDLvrY6y3SyvLrX-yk8UcdO8RmnC89XNG4",
@@ -79,32 +80,38 @@
   };
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
+  const auth = firebase.auth();
+
+  const allowedAdmins = ["dinesh@gmail.com", "desaidinesh055@gmail.com"];
 
   let selectedCustomers = [];
   let selectedFDs = [];
 
+  // ✅ Admin Auth Check
+  auth.onAuthStateChanged(user => {
+    if (user && allowedAdmins.includes(user.email)) {
+      loadCustomers();
+    } else {
+      alert("⚠️ Access Denied. Only Admins are allowed.");
+      window.location.href = "login.html";
+    }
+  });
+
   function loadCustomers() {
-    const body = document.getElementById("customerBody");
     db.collection("customers").get().then(snapshot => {
+      const body = document.getElementById("customerBody");
       body.innerHTML = "";
-      if (snapshot.empty) {
-        body.innerHTML = `<tr><td colspan="4">No customers found.</td></tr>`;
-        return;
-      }
       snapshot.forEach(doc => {
         const d = doc.data();
-        const uid = doc.id;
         body.innerHTML += `
-          <tr onclick="loadHistory('${uid}')">
-            <td><input type='checkbox' value='${uid}|${d.name || 'Unknown'}|${d.mobile || ''}' onchange='toggleSelect(this)'></td>
-            <td>${uid}</td>
-            <td>${d.name || 'N/A'}</td>
-            <td>${d.mobile || 'N/A'}</td>
+          <tr onclick="loadHistory('${doc.id}')">
+            <td><input type='checkbox' value='${doc.id}|${d.name}|${d.mobile}' onchange='toggleSelect(this)'></td>
+            <td>${doc.id}</td><td>${d.name}</td><td>${d.mobile || 'N/A'}</td>
           </tr>`;
       });
     }).catch(err => {
       console.error("⚠️ Failed to load customers:", err);
-      body.innerHTML = `<tr><td colspan="4">⚠️ Failed to load customers.</td></tr>`;
+      document.getElementById("customerBody").innerHTML = "<tr><td colspan='4'>⚠️ Failed to load customers.</td></tr>";
     });
   }
 
@@ -130,19 +137,18 @@
     });
   }
 
-  function loadHistory(customerUid) {
+  function loadHistory(customerId) {
     const historyBody = document.getElementById("historyBody");
     historyBody.innerHTML = "";
     selectedFDs = [];
-
     ["fd", "rd"].forEach(type => {
-      db.collection(type).where("customerId", "==", customerUid).get().then(snapshot => {
+      db.collection(type).where("customerId", "==", customerId).get().then(snapshot => {
         snapshot.forEach(doc => {
           const d = doc.data();
-          const fdId = `${doc.id}|${type}|${customerUid}`;
+          const recordId = `${doc.id}|${type}|${d.customerId}|${d.maturityDate}`;
           historyBody.innerHTML += `
             <tr>
-              <td><input type="checkbox" onchange="toggleFDSelect(this)" value="${fdId}"></td>
+              <td><input type="checkbox" onchange="toggleFDSelect(this)" value="${recordId}"></td>
               <td>${type.toUpperCase()}</td>
               <td>${d.principal}</td>
               <td>${d.startDate}</td>
@@ -179,22 +185,20 @@
   }
 
   function sendMessage() {
-    const message = document.getElementById("messageBox").value.trim();
-    if (!message) return alert("❌ Please write a message.");
-    if (selectedCustomers.length === 0) return alert("❌ Please select at least one customer.");
+    const message = document.getElementById("messageBox").value;
+    if (!message.trim()) return alert("Please write a message.");
+    if (selectedCustomers.length === 0) return alert("Please select at least one customer.");
 
     selectedCustomers.forEach(cust => {
-      const [uid, name, mobile] = cust.split("|");
+      const [id, name, mobile] = cust.split("|");
       if (mobile) {
         const url = `https://wa.me/91${mobile}?text=${encodeURIComponent(message)}`;
         window.open(url, '_blank');
       } else {
-        console.log(`⚠️ No mobile number for ${name}`);
+        console.log(`No mobile number found for ${name}`);
       }
     });
   }
-
-  loadCustomers();
 </script>
 
 </body>

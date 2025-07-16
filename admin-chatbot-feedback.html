@@ -2,118 +2,101 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Admin - Chatbot Feedback & Support</title>
+  <title>Admin Support Manager - JDM Credit & Finance</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #f4f4f4;
-      padding: 20px;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f1f5f9;
     }
-
-    h2 {
-      color: #0a3d62;
-      margin-bottom: 20px;
+    .glass {
+      background: white;
+      border-radius: 1rem;
+      padding: 1.5rem;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
     }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: #fff;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-
-    th, td {
-      padding: 12px;
+    .ticket-box {
       border: 1px solid #ccc;
-      text-align: left;
-    }
-
-    th {
-      background: #0a3d62;
-      color: #fff;
-    }
-
-    tr:hover {
-      background: #f1f1f1;
-    }
-
-    .back-btn {
-      display: inline-block;
-      margin-bottom: 20px;
-      padding: 10px 15px;
-      background: #0a3d62;
-      color: white;
-      text-decoration: none;
-      border-radius: 6px;
-    }
-
-    .no-data {
-      text-align: center;
-      padding: 30px;
-      color: #999;
+      border-radius: 10px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      background: #fff;
     }
   </style>
 </head>
-<body>
+<body class="p-6">
+  <h1 class="text-3xl font-bold mb-6">🎫 Customer Tickets - Admin Panel</h1>
 
-<a href="admin-dashboard.html" class="back-btn">← Back to Dashboard</a>
-<h2>📨 Customer Feedback & Support Messages</h2>
+  <div id="ticketContainer" class="space-y-4"></div>
 
-<table id="supportTable">
-  <thead>
-    <tr>
-      <th>Customer ID</th>
-      <th>Name</th>
-      <th>Type</th>
-      <th>Message</th>
-      <th>Date/Time</th>
-    </tr>
-  </thead>
-  <tbody id="supportBody">
-    <tr><td colspan="5" class="no-data">Loading messages...</td></tr>
-  </tbody>
-</table>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDLvrY6y3SyvLrX-yk8UcdO8RmnC89XNG4",
+      authDomain: "jdms-207ba.firebaseapp.com",
+      projectId: "jdms-207ba",
+      storageBucket: "jdms-207ba.appspot.com",
+      messagingSenderId: "449814553435",
+      appId: "1:449814553435:web:008c7695473689f425307e"
+    };
 
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-<script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyDLvrY6y3SyvLrX-yk8UcdO8RmnC89XNG4",
-    authDomain: "jdms-207ba.firebaseapp.com",
-    projectId: "jdms-207ba",
-    storageBucket: "jdms-207ba.appspot.com",
-    messagingSenderId: "449814553435",
-    appId: "1:449814553435:web:008c7695473689f425307e"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const storage = firebase.storage();
 
-  const body = document.getElementById("supportBody");
+    function loadTickets() {
+      db.collection("support_tickets").orderBy("createdAt", "desc").get().then(snapshot => {
+        const container = document.getElementById("ticketContainer");
+        container.innerHTML = "";
 
-  db.collection("supportMessages").orderBy("timestamp", "desc").onSnapshot(snapshot => {
-    body.innerHTML = "";
-    if (snapshot.empty) {
-      body.innerHTML = '<tr><td colspan="5" class="no-data">No messages received yet.</td></tr>';
-    } else {
-      snapshot.forEach(doc => {
-        const d = doc.data();
-        const time = new Date(d.timestamp?.toDate?.() || Date.now()).toLocaleString();
-        body.innerHTML += `
-          <tr>
-            <td>${d.customerId || 'N/A'}</td>
-            <td>${d.customerName || 'N/A'}</td>
-            <td>${d.messageType || 'General'}</td>
-            <td>${d.messageText || ''}</td>
-            <td>${time}</td>
-          </tr>
-        `;
+        snapshot.forEach(doc => {
+          const ticket = doc.data();
+          const id = doc.id;
+          const replyId = `reply-${id}`;
+          const imageInputId = `img-${id}`;
+
+          container.innerHTML += `
+            <div class="ticket-box">
+              <p><strong>🧾 Subject:</strong> ${ticket.subject}</p>
+              <p><strong>📁 Category:</strong> ${ticket.category}</p>
+              <p><strong>🧑 Customer ID:</strong> ${ticket.customerId}</p>
+              <p><strong>💬 Message:</strong> ${ticket.message}</p>
+              ${ticket.imageUrl ? `<p><strong>📷 Uploaded:</strong><br><img src="${ticket.imageUrl}" class="w-48 mt-2 rounded" />` : ""}
+              <p><strong>📌 Status:</strong> ${ticket.status}</p>
+              <textarea id="${replyId}" placeholder="Type your reply..." class="w-full border mt-3 p-2 rounded"></textarea>
+              <input type="file" id="${imageInputId}" class="mt-2" />
+              <button class="mt-2 bg-blue-600 text-white px-4 py-1 rounded" onclick="sendReply('${id}')">Send Reply</button>
+            </div>
+          `;
+        });
       });
     }
-  }, err => {
-    body.innerHTML = `<tr><td colspan="5" class="no-data">⚠️ Error loading messages: ${err.message}</td></tr>`;
-  });
-</script>
 
+    async function sendReply(ticketId) {
+      const message = document.getElementById(`reply-${ticketId}`).value.trim();
+      const fileInput = document.getElementById(`img-${ticketId}`);
+      let imageUrl = "";
+
+      if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        const storageRef = storage.ref().child(`ticket_replies/${ticketId}/${file.name}`);
+        await storageRef.put(file);
+        imageUrl = await storageRef.getDownloadURL();
+      }
+
+      await db.collection("support_tickets").doc(ticketId).update({
+        adminReply: message,
+        adminReplyImage: imageUrl || "",
+        status: "Responded"
+      });
+
+      alert("✅ Reply sent successfully");
+      loadTickets();
+    }
+
+    loadTickets();
+  </script>
 </body>
 </html>

@@ -37,6 +37,7 @@
 <table>
   <thead>
     <tr>
+      <th>Select</th>
       <th>Type</th>
       <th>Principal</th>
       <th>Start Date</th>
@@ -78,29 +79,19 @@
   const db = firebase.firestore();
 
   let selectedCustomers = [];
+  let selectedFDs = [];
 
   function loadCustomers() {
-    const body = document.getElementById("customerBody");
-    body.innerHTML = "";
-
     db.collection("customers").get().then(snapshot => {
+      const body = document.getElementById("customerBody");
+      body.innerHTML = "";
       snapshot.forEach(doc => {
         const d = doc.data();
-        const row = document.createElement("tr");
-
-        row.innerHTML = `
-          <td><input type='checkbox' value='${doc.id}|${d.name}|${d.mobile}' onchange='toggleSelect(this)'></td>
-          <td>${doc.id}</td>
-          <td>${d.name}</td>
-          <td>${d.mobile || 'N/A'}</td>
-        `;
-        row.onclick = function (e) {
-          if (!e.target.matches("input")) {
-            loadHistory(doc.id);
-          }
-        };
-
-        body.appendChild(row);
+        body.innerHTML += `
+          <tr onclick="loadHistory('${doc.id}')">
+            <td><input type='checkbox' value='${doc.id}|${d.name}|${d.mobile}' onchange='toggleSelect(this)'></td>
+            <td>${doc.id}</td><td>${d.name}</td><td>${d.mobile || 'N/A'}</td>
+          </tr>`;
       });
     });
   }
@@ -130,14 +121,16 @@
   function loadHistory(customerId) {
     const historyBody = document.getElementById("historyBody");
     historyBody.innerHTML = "";
-
+    selectedFDs = [];
     ["fd", "rd"].forEach(type => {
       db.collection(type).where("customerId", "==", customerId).get().then(snapshot => {
         snapshot.forEach(doc => {
           const d = doc.data();
+          const recordId = `${doc.id}|${type}|${d.customerId}|${d.maturityDate}`;
           historyBody.innerHTML += `
             <tr>
-              <td><input type="checkbox" checked> ${type.toUpperCase()}</td>
+              <td><input type="checkbox" onchange="toggleFDSelect(this)" value="${recordId}"></td>
+              <td>${type.toUpperCase()}</td>
               <td>${d.principal}</td>
               <td>${d.startDate}</td>
               <td>${d.maturityDate}</td>
@@ -145,6 +138,15 @@
         });
       });
     });
+  }
+
+  function toggleFDSelect(checkbox) {
+    const val = checkbox.value;
+    if (checkbox.checked) {
+      if (!selectedFDs.includes(val)) selectedFDs.push(val);
+    } else {
+      selectedFDs = selectedFDs.filter(f => f !== val);
+    }
   }
 
   function applyTemplate() {
@@ -164,9 +166,10 @@
   }
 
   function sendMessage() {
-    if (selectedCustomers.length === 0) return alert("Please select at least one customer.");
     const message = document.getElementById("messageBox").value;
     if (!message.trim()) return alert("Please write a message.");
+
+    if (selectedCustomers.length === 0) return alert("Please select at least one customer.");
 
     selectedCustomers.forEach(cust => {
       const [id, name, mobile] = cust.split("|");
@@ -174,7 +177,7 @@
         const url = `https://wa.me/91${mobile}?text=${encodeURIComponent(message)}`;
         window.open(url, '_blank');
       } else {
-        console.log(`No mobile for ${name}`);
+        console.log(`No mobile number found for ${name}`);
       }
     });
   }

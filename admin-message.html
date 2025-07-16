@@ -4,184 +4,44 @@
   <meta charset="UTF-8">
   <title>Admin Message Center - JDM Credit & Finance</title>
   <style>
-    body { font-family: Arial, sans-serif; background: #f4f4f4; padding: 20px; }
-    h2 { color: #0a3d62; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
-    th, td { padding: 10px; border: 1px solid #ccc; text-align: left; }
-    th { background: #0a3d62; color: white; }
-    tr:hover { background: #f1f1f1; }
-    .message-panel { margin-top: 20px; background: #fff; padding: 15px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); border-radius: 8px; }
-    .btn { padding: 10px 15px; margin: 5px; background: #0a3d62; color: white; border: none; border-radius: 5px; cursor: pointer; }
-    .btn:disabled { background: #aaa; }
-    select, textarea { padding: 10px; width: 100%; margin-top: 10px; }
-    .section-title { margin-top: 40px; color: #333; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      padding: 20px;
+      color: #333;
+    }
+    h2 {
+      color: #0a3d62;
+    }
+    .coming-soon {
+      background: #fff3cd;
+      border: 1px solid #ffeeba;
+      padding: 30px;
+      margin-top: 50px;
+      border-radius: 10px;
+      color: #856404;
+      font-size: 1.2rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .dev-info {
+      margin-top: 20px;
+      font-size: 1rem;
+      color: #555;
+    }
   </style>
 </head>
 <body>
 
-<h2>📢 Admin Messaging Center - JDM Credit & Finance</h2>
+  <h2>📢 Admin Messaging Center - JDM Credit & Finance</h2>
 
-<table id="customerTable">
-  <thead>
-    <tr>
-      <th><input type="checkbox" onclick="toggleSelectAllCustomers(this)"></th>
-      <th>Customer ID</th>
-      <th>Name</th>
-      <th>Mobile</th>
-    </tr>
-  </thead>
-  <tbody id="customerBody"></tbody>
-</table>
-
-<h3 class="section-title">Selected Customer's FD/RD Details</h3>
-<table>
-  <thead>
-    <tr>
-      <th><input type="checkbox" onclick="toggleSelectAllFDs(this)"></th>
-      <th>Type</th>
-      <th>Principal</th>
-      <th>Start Date</th>
-      <th>Maturity</th>
-    </tr>
-  </thead>
-  <tbody id="historyBody"></tbody>
-</table>
-
-<div class="message-panel">
-  <h3>📨 Send Message</h3>
-  <label>Select Template:</label>
-  <select id="templateSelect" onchange="applyTemplate()">
-    <option value="">-- Select Template --</option>
-    <option value="thank">Thank You for Opening FD</option>
-    <option value="renewal">FD/RD Maturity Reminder</option>
-    <option value="festival">Festival Greetings</option>
-    <option value="offer">New Interest Rate Offer</option>
-  </select>
-
-  <label>Message:</label>
-  <textarea id="messageBox" rows="5" placeholder="Your message here..."></textarea>
-
-  <button class="btn" onclick="sendMessage('whatsapp')">📤 WhatsApp</button>
-  <button class="btn" onclick="sendMessage('email')">✉️ Email</button>
-  <button class="btn" onclick="sendMessage('sms')">📱 SMS</button>
-</div>
-
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-<script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyDLvrY6y3SyvLrX-yk8UcdO8RmnC89XNG4",
-    authDomain: "jdms-207ba.firebaseapp.com",
-    projectId: "jdms-207ba",
-    storageBucket: "jdms-207ba.appspot.com",
-    messagingSenderId: "449814553435",
-    appId: "1:449814553435:web:008c7695473689f425307e"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
-
-  let selectedCustomers = [];
-  let selectedFDs = [];
-
-  function loadCustomers() {
-    db.collection("customers").get().then(snapshot => {
-      const body = document.getElementById("customerBody");
-      body.innerHTML = "";
-      snapshot.forEach(doc => {
-        const d = doc.data();
-        body.innerHTML += `
-          <tr onclick="loadHistory('${doc.id}')">
-            <td><input type='checkbox' value='${doc.id}|${d.name}|${d.mobile}' onclick='event.stopPropagation(); toggleCustomerSelect(this)'></td>
-            <td>${doc.id}</td><td>${d.name}</td><td>${d.mobile || 'N/A'}</td>
-          </tr>`;
-      });
-    }).catch(err => {
-      alert("⚠️ Failed to load customers: " + err.message);
-    });
-  }
-
-  function toggleCustomerSelect(cb) {
-    const val = cb.value;
-    if (cb.checked) selectedCustomers.push(val);
-    else selectedCustomers = selectedCustomers.filter(c => c !== val);
-  }
-
-  function toggleSelectAllCustomers(master) {
-    const checkboxes = document.querySelectorAll("#customerBody input[type='checkbox']");
-    selectedCustomers = [];
-    checkboxes.forEach(cb => {
-      cb.checked = master.checked;
-      if (master.checked) selectedCustomers.push(cb.value);
-    });
-  }
-
-  function toggleFDSelect(cb) {
-    const val = cb.value;
-    if (cb.checked) selectedFDs.push(val);
-    else selectedFDs = selectedFDs.filter(f => f !== val);
-  }
-
-  function toggleSelectAllFDs(master) {
-    const checkboxes = document.querySelectorAll("#historyBody input[type='checkbox']");
-    selectedFDs = [];
-    checkboxes.forEach(cb => {
-      cb.checked = master.checked;
-      if (master.checked) selectedFDs.push(cb.value);
-    });
-  }
-
-  function loadHistory(customerId) {
-    document.getElementById("historyBody").innerHTML = "";
-    selectedFDs = [];
-    ["fd", "rd"].forEach(type => {
-      db.collection(type).where("customerId", "==", customerId).get().then(snapshot => {
-        snapshot.forEach(doc => {
-          const d = doc.data();
-          const val = `${type}|${doc.id}|${d.customerId}`;
-          document.getElementById("historyBody").innerHTML += `
-            <tr>
-              <td><input type='checkbox' value='${val}' onclick='toggleFDSelect(this)'></td>
-              <td>${type.toUpperCase()}</td>
-              <td>${d.principal}</td>
-              <td>${d.startDate}</td>
-              <td>${d.maturityDate}</td>
-            </tr>`;
-        });
-      });
-    });
-  }
-
-  function applyTemplate() {
-    const val = document.getElementById("templateSelect").value;
-    const box = document.getElementById("messageBox");
-    if (val === "thank") box.value = "Thank you for choosing JDM Credit & Finance.";
-    else if (val === "renewal") box.value = "Your FD/RD is maturing soon. Kindly contact us.";
-    else if (val === "festival") box.value = "Wishing you and your family a joyful festival!";
-    else if (val === "offer") box.value = "Check out our new FD/RD interest rates.";
-    else box.value = "";
-  }
-
-  function sendMessage(method) {
-    if (selectedCustomers.length === 0 && selectedFDs.length === 0) return alert("Select at least one customer or FD.");
-    const msg = document.getElementById("messageBox").value.trim();
-    if (!msg) return alert("Message cannot be empty");
-
-    const targets = selectedCustomers.length > 0 ? selectedCustomers : selectedFDs;
-    targets.forEach(target => {
-      const parts = target.split("|");
-      const mobile = parts[2];
-      if (mobile) {
-        let url = "";
-        if (method === "whatsapp") url = `https://wa.me/91${mobile}?text=${encodeURIComponent(msg)}`;
-        else if (method === "sms") url = `sms:91${mobile}?body=${encodeURIComponent(msg)}`;
-        else if (method === "email") url = `mailto:?subject=JDM Message&body=${encodeURIComponent(msg)}`;
-        window.open(url, "_blank");
-      }
-    });
-  }
-
-  loadCustomers();
-</script>
+  <div class="coming-soon">
+    🚧 This feature is currently <strong>under development</strong>.<br>
+    📞 For more information, please contact the developer.
+    <div class="dev-info">
+      ✉️ Email: support@jdmfinance.in <br>
+      📱 Phone: +91-9876543210
+    </div>
+  </div>
 
 </body>
 </html>

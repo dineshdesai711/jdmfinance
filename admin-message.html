@@ -81,19 +81,36 @@
   let selectedCustomers = [];
   let selectedFDs = [];
 
-  function loadCustomers() {
-    db.collection("customers").get().then(snapshot => {
-      const body = document.getElementById("customerBody");
-      body.innerHTML = "";
+  async function loadCustomers() {
+    const body = document.getElementById("customerBody");
+    body.innerHTML = "";
+    selectedCustomers = [];
+
+    try {
+      const snapshot = await db.collection("customers").get();
+      if (snapshot.empty) {
+        body.innerHTML = `<tr><td colspan="4">No customers found.</td></tr>`;
+        return;
+      }
+
       snapshot.forEach(doc => {
         const d = doc.data();
+        const name = d.name || "N/A";
+        const mobile = d.mobile || "";
+        const customerId = doc.id;
+
         body.innerHTML += `
-          <tr onclick="loadHistory('${doc.id}')">
-            <td><input type='checkbox' value='${doc.id}|${d.name}|${d.mobile}' onchange='toggleSelect(this)'></td>
-            <td>${doc.id}</td><td>${d.name}</td><td>${d.mobile || 'N/A'}</td>
+          <tr>
+            <td><input type='checkbox' value='${customerId}|${name}|${mobile}' onchange='toggleSelect(this)'></td>
+            <td>${customerId}</td>
+            <td>${name}</td>
+            <td>${mobile || 'N/A'}</td>
           </tr>`;
       });
-    });
+    } catch (error) {
+      console.error("❌ Error loading customers:", error);
+      body.innerHTML = `<tr><td colspan="4">Failed to load customers.</td></tr>`;
+    }
   }
 
   function toggleSelect(checkbox) {
@@ -118,26 +135,26 @@
     });
   }
 
-  function loadHistory(customerId) {
+  async function loadHistory(customerId) {
     const historyBody = document.getElementById("historyBody");
     historyBody.innerHTML = "";
     selectedFDs = [];
-    ["fd", "rd"].forEach(type => {
-      db.collection(type).where("customerId", "==", customerId).get().then(snapshot => {
-        snapshot.forEach(doc => {
-          const d = doc.data();
-          const recordId = `${doc.id}|${type}|${d.customerId}|${d.maturityDate}`;
-          historyBody.innerHTML += `
-            <tr>
-              <td><input type="checkbox" onchange="toggleFDSelect(this)" value="${recordId}"></td>
-              <td>${type.toUpperCase()}</td>
-              <td>${d.principal}</td>
-              <td>${d.startDate}</td>
-              <td>${d.maturityDate}</td>
-            </tr>`;
-        });
+
+    for (const type of ["fd", "rd"]) {
+      const snapshot = await db.collection(type).where("customerId", "==", customerId).get();
+      snapshot.forEach(doc => {
+        const d = doc.data();
+        const recordId = `${doc.id}|${type}|${d.customerId}|${d.maturityDate}`;
+        historyBody.innerHTML += `
+          <tr>
+            <td><input type="checkbox" onchange="toggleFDSelect(this)" value="${recordId}"></td>
+            <td>${type.toUpperCase()}</td>
+            <td>${d.principal}</td>
+            <td>${d.startDate}</td>
+            <td>${d.maturityDate}</td>
+          </tr>`;
       });
-    });
+    }
   }
 
   function toggleFDSelect(checkbox) {
@@ -168,7 +185,6 @@
   function sendMessage() {
     const message = document.getElementById("messageBox").value;
     if (!message.trim()) return alert("Please write a message.");
-
     if (selectedCustomers.length === 0) return alert("Please select at least one customer.");
 
     selectedCustomers.forEach(cust => {

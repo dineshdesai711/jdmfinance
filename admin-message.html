@@ -9,7 +9,7 @@
     table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
     th, td { padding: 10px; border: 1px solid #ccc; text-align: left; }
     th { background: #0a3d62; color: white; }
-    tr:hover { background: #f1f1f1; cursor: pointer; }
+    tr:hover { background: #f1f1f1; }
     .message-panel { margin-top: 20px; background: #fff; padding: 15px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); border-radius: 8px; }
     .btn { padding: 10px 15px; margin: 5px; background: #0a3d62; color: white; border: none; border-radius: 5px; cursor: pointer; }
     .btn:disabled { background: #aaa; }
@@ -24,7 +24,7 @@
 <table id="customerTable">
   <thead>
     <tr>
-      <th><input type="checkbox" onclick="toggleSelectAll(this)"></th>
+      <th><input type="checkbox" onclick="toggleSelectAllCustomers(this)"></th>
       <th>Customer ID</th>
       <th>Name</th>
       <th>Mobile</th>
@@ -37,7 +37,7 @@
 <table>
   <thead>
     <tr>
-      <th>Select</th>
+      <th><input type="checkbox" onclick="toggleSelectAllFDs(this)"></th>
       <th>Type</th>
       <th>Principal</th>
       <th>Start Date</th>
@@ -61,14 +61,13 @@
   <label>Message:</label>
   <textarea id="messageBox" rows="5" placeholder="Your message here..."></textarea>
 
-  <button class="btn" onclick="sendMessage()">📤 Send WhatsApp</button>
+  <button class="btn" onclick="sendMessage('whatsapp')">📤 WhatsApp</button>
+  <button class="btn" onclick="sendMessage('email')">✉️ Email</button>
+  <button class="btn" onclick="sendMessage('sms')">📱 SMS</button>
 </div>
 
-<!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-
 <script>
   const firebaseConfig = {
     apiKey: "AIzaSyDLvrY6y3SyvLrX-yk8UcdO8RmnC89XNG4",
@@ -80,22 +79,9 @@
   };
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
-  const auth = firebase.auth();
-
-  const allowedAdmins = ["dinesh@gmail.com", "desaidinesh055@gmail.com"];
 
   let selectedCustomers = [];
   let selectedFDs = [];
-
-  // ✅ Admin Auth Check
-  auth.onAuthStateChanged(user => {
-    if (user && allowedAdmins.includes(user.email)) {
-      loadCustomers();
-    } else {
-      alert("⚠️ Access Denied. Only Admins are allowed.");
-      window.location.href = "login.html";
-    }
-  });
 
   function loadCustomers() {
     db.collection("customers").get().then(snapshot => {
@@ -105,50 +91,56 @@
         const d = doc.data();
         body.innerHTML += `
           <tr onclick="loadHistory('${doc.id}')">
-            <td><input type='checkbox' value='${doc.id}|${d.name}|${d.mobile}' onchange='toggleSelect(this)'></td>
+            <td><input type='checkbox' value='${doc.id}|${d.name}|${d.mobile}' onclick='event.stopPropagation(); toggleCustomerSelect(this)'></td>
             <td>${doc.id}</td><td>${d.name}</td><td>${d.mobile || 'N/A'}</td>
           </tr>`;
       });
     }).catch(err => {
-      console.error("⚠️ Failed to load customers:", err);
-      document.getElementById("customerBody").innerHTML = "<tr><td colspan='4'>⚠️ Failed to load customers.</td></tr>";
+      alert("⚠️ Failed to load customers: " + err.message);
     });
   }
 
-  function toggleSelect(checkbox) {
-    const val = checkbox.value;
-    if (checkbox.checked) {
-      if (!selectedCustomers.includes(val)) selectedCustomers.push(val);
-    } else {
-      selectedCustomers = selectedCustomers.filter(c => c !== val);
-    }
+  function toggleCustomerSelect(cb) {
+    const val = cb.value;
+    if (cb.checked) selectedCustomers.push(val);
+    else selectedCustomers = selectedCustomers.filter(c => c !== val);
   }
 
-  function toggleSelectAll(master) {
+  function toggleSelectAllCustomers(master) {
     const checkboxes = document.querySelectorAll("#customerBody input[type='checkbox']");
+    selectedCustomers = [];
     checkboxes.forEach(cb => {
       cb.checked = master.checked;
-      const val = cb.value;
-      if (master.checked) {
-        if (!selectedCustomers.includes(val)) selectedCustomers.push(val);
-      } else {
-        selectedCustomers = [];
-      }
+      if (master.checked) selectedCustomers.push(cb.value);
+    });
+  }
+
+  function toggleFDSelect(cb) {
+    const val = cb.value;
+    if (cb.checked) selectedFDs.push(val);
+    else selectedFDs = selectedFDs.filter(f => f !== val);
+  }
+
+  function toggleSelectAllFDs(master) {
+    const checkboxes = document.querySelectorAll("#historyBody input[type='checkbox']");
+    selectedFDs = [];
+    checkboxes.forEach(cb => {
+      cb.checked = master.checked;
+      if (master.checked) selectedFDs.push(cb.value);
     });
   }
 
   function loadHistory(customerId) {
-    const historyBody = document.getElementById("historyBody");
-    historyBody.innerHTML = "";
+    document.getElementById("historyBody").innerHTML = "";
     selectedFDs = [];
     ["fd", "rd"].forEach(type => {
       db.collection(type).where("customerId", "==", customerId).get().then(snapshot => {
         snapshot.forEach(doc => {
           const d = doc.data();
-          const recordId = `${doc.id}|${type}|${d.customerId}|${d.maturityDate}`;
-          historyBody.innerHTML += `
+          const val = `${type}|${doc.id}|${d.customerId}`;
+          document.getElementById("historyBody").innerHTML += `
             <tr>
-              <td><input type="checkbox" onchange="toggleFDSelect(this)" value="${recordId}"></td>
+              <td><input type='checkbox' value='${val}' onclick='toggleFDSelect(this)'></td>
               <td>${type.toUpperCase()}</td>
               <td>${d.principal}</td>
               <td>${d.startDate}</td>
@@ -159,46 +151,36 @@
     });
   }
 
-  function toggleFDSelect(checkbox) {
-    const val = checkbox.value;
-    if (checkbox.checked) {
-      if (!selectedFDs.includes(val)) selectedFDs.push(val);
-    } else {
-      selectedFDs = selectedFDs.filter(f => f !== val);
-    }
-  }
-
   function applyTemplate() {
-    const template = document.getElementById("templateSelect").value;
+    const val = document.getElementById("templateSelect").value;
     const box = document.getElementById("messageBox");
-    if (template === "thank") {
-      box.value = "Thank you for choosing JDM Credit & Finance. We appreciate your trust in us.";
-    } else if (template === "renewal") {
-      box.value = "Your FD/RD is maturing soon. Kindly contact Mr. Ashutosh Sharma at 9876543210 for renewal assistance.";
-    } else if (template === "festival") {
-      box.value = "Wishing you and your family a joyful and prosperous festival. Happy celebrations from JDM Credit & Finance!";
-    } else if (template === "offer") {
-      box.value = "Check out our new FD/RD interest rates. Now earn more on your savings with JDM Credit & Finance.";
-    } else {
-      box.value = "";
-    }
+    if (val === "thank") box.value = "Thank you for choosing JDM Credit & Finance.";
+    else if (val === "renewal") box.value = "Your FD/RD is maturing soon. Kindly contact us.";
+    else if (val === "festival") box.value = "Wishing you and your family a joyful festival!";
+    else if (val === "offer") box.value = "Check out our new FD/RD interest rates.";
+    else box.value = "";
   }
 
-  function sendMessage() {
-    const message = document.getElementById("messageBox").value;
-    if (!message.trim()) return alert("Please write a message.");
-    if (selectedCustomers.length === 0) return alert("Please select at least one customer.");
+  function sendMessage(method) {
+    if (selectedCustomers.length === 0 && selectedFDs.length === 0) return alert("Select at least one customer or FD.");
+    const msg = document.getElementById("messageBox").value.trim();
+    if (!msg) return alert("Message cannot be empty");
 
-    selectedCustomers.forEach(cust => {
-      const [id, name, mobile] = cust.split("|");
+    const targets = selectedCustomers.length > 0 ? selectedCustomers : selectedFDs;
+    targets.forEach(target => {
+      const parts = target.split("|");
+      const mobile = parts[2];
       if (mobile) {
-        const url = `https://wa.me/91${mobile}?text=${encodeURIComponent(message)}`;
-        window.open(url, '_blank');
-      } else {
-        console.log(`No mobile number found for ${name}`);
+        let url = "";
+        if (method === "whatsapp") url = `https://wa.me/91${mobile}?text=${encodeURIComponent(msg)}`;
+        else if (method === "sms") url = `sms:91${mobile}?body=${encodeURIComponent(msg)}`;
+        else if (method === "email") url = `mailto:?subject=JDM Message&body=${encodeURIComponent(msg)}`;
+        window.open(url, "_blank");
       }
     });
   }
+
+  loadCustomers();
 </script>
 
 </body>

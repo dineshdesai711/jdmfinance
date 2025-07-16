@@ -1,34 +1,80 @@
-<!-- ✅ Admin Chatbot Feedback Page -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Admin Chatbot Feedback - JDM Credit & Finance</title>
+  <meta charset="UTF-8" />
+  <title>Admin - Chatbot Feedback & Support</title>
   <style>
-    body { font-family: Arial, sans-serif; background: #f4f4f4; padding: 20px; }
-    h2 { color: #0a3d62; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
-    th, td { padding: 10px; border: 1px solid #ccc; text-align: left; }
-    th { background: #0a3d62; color: white; }
-    tr:hover { background: #f1f1f1; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      padding: 20px;
+    }
+
+    h2 {
+      color: #0a3d62;
+      margin-bottom: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    th, td {
+      padding: 12px;
+      border: 1px solid #ccc;
+      text-align: left;
+    }
+
+    th {
+      background: #0a3d62;
+      color: #fff;
+    }
+
+    tr:hover {
+      background: #f1f1f1;
+    }
+
+    .back-btn {
+      display: inline-block;
+      margin-bottom: 20px;
+      padding: 10px 15px;
+      background: #0a3d62;
+      color: white;
+      text-decoration: none;
+      border-radius: 6px;
+    }
+
+    .no-data {
+      text-align: center;
+      padding: 30px;
+      color: #999;
+    }
   </style>
 </head>
 <body>
 
-<h2>📨 Customer Chatbot Feedback - Admin Panel</h2>
+<a href="admin-dashboard.html" class="back-btn">← Back to Dashboard</a>
+<h2>📨 Customer Feedback & Support Messages</h2>
 
-<table>
+<table id="supportTable">
   <thead>
     <tr>
       <th>Customer ID</th>
       <th>Name</th>
+      <th>Type</th>
       <th>Message</th>
-      <th>Timestamp</th>
+      <th>Date/Time</th>
     </tr>
   </thead>
-  <tbody id="feedbackBody"></tbody>
+  <tbody id="supportBody">
+    <tr><td colspan="5" class="no-data">Loading messages...</td></tr>
+  </tbody>
 </table>
 
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 <script>
@@ -43,20 +89,29 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 
-  db.collection("chatbot_feedback").orderBy("timestamp", "desc").onSnapshot(snapshot => {
-    const tbody = document.getElementById("feedbackBody");
-    tbody.innerHTML = "";
-    snapshot.forEach(doc => {
-      const d = doc.data();
-      const date = d.timestamp?.toDate().toLocaleString() || "-";
-      tbody.innerHTML += `
-        <tr>
-          <td>${d.customerId || '-'}</td>
-          <td>${d.name || '-'}</td>
-          <td>${d.message}</td>
-          <td>${date}</td>
-        </tr>`;
-    });
+  const body = document.getElementById("supportBody");
+
+  db.collection("supportMessages").orderBy("timestamp", "desc").onSnapshot(snapshot => {
+    body.innerHTML = "";
+    if (snapshot.empty) {
+      body.innerHTML = '<tr><td colspan="5" class="no-data">No messages received yet.</td></tr>';
+    } else {
+      snapshot.forEach(doc => {
+        const d = doc.data();
+        const time = new Date(d.timestamp?.toDate?.() || Date.now()).toLocaleString();
+        body.innerHTML += `
+          <tr>
+            <td>${d.customerId || 'N/A'}</td>
+            <td>${d.customerName || 'N/A'}</td>
+            <td>${d.messageType || 'General'}</td>
+            <td>${d.messageText || ''}</td>
+            <td>${time}</td>
+          </tr>
+        `;
+      });
+    }
+  }, err => {
+    body.innerHTML = `<tr><td colspan="5" class="no-data">⚠️ Error loading messages: ${err.message}</td></tr>`;
   });
 </script>
 

@@ -183,7 +183,7 @@
     let currentUser = null;
 
     onAuthStateChanged(auth, async (user) => {
-      if (!user) return location.href = \"login.html\";
+      if (!user) return location.href = \"index.html\";
       currentUser = user;
 
       // Live update ticket list

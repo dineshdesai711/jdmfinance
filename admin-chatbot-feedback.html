@@ -1,73 +1,143 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Customer Tickets - Admin Panel</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Support Dashboard - JDM Credit & Finance</title>
   <style>
     body {
-      background: #f4f6f8;
       font-family: 'Segoe UI', sans-serif;
+      background: #f4f6f8;
+      margin: 0;
+      padding: 20px;
     }
-    .glass {
-      background: rgba(255, 255, 255, 0.7);
-      backdrop-filter: blur(10px);
-      border-radius: 1rem;
-      padding: 1rem;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .summary {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 30px;
+    }
+    .summary div {
+      background: white;
+      padding: 15px 25px;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      font-weight: bold;
+    }
+    .ticket-card {
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .ticket-card p {
+      margin: 8px 0;
+    }
+    textarea, select, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0056b3;
     }
   </style>
-</head>
-<body class="p-6">
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+    import {
+      getFirestore, collection, getDocs, updateDoc, doc
+    } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
 
-  <h1 class="text-2xl font-bold mb-6">📇 Customer Tickets - Admin Panel</h1>
-  
-  <div id="ticketsContainer" class="space-y-4"></div>
-
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-
-  <script>
     const firebaseConfig = {
-      apiKey: "AIzaSyDLvrY6y3SyvLrX-yk8UcdO8RmnC89XNG4",
-      authDomain: "jdms-207ba.firebaseapp.com",
-      projectId: "jdms-207ba",
-      storageBucket: "jdms-207ba.appspot.com",
-      messagingSenderId: "449814553435",
-      appId: "1:449814553435:web:008c7695473689f425307e"
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT.appspot.com",
+      messagingSenderId: "SENDER_ID",
+      appId: "APP_ID"
     };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
 
-    function loadTickets() {
-      db.collection("support_tickets").orderBy("createdAt", "desc").get().then(snapshot => {
-        const container = document.getElementById("ticketsContainer");
-        if (snapshot.empty) {
-          container.innerHTML = `<p class="text-gray-600">No tickets found.</p>`;
-          return;
-        }
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
 
-        snapshot.forEach(doc => {
-          const d = doc.data();
-          const el = document.createElement("div");
-          el.className = "glass";
-          el.innerHTML = `
-            <p><strong>Customer ID:</strong> ${d.customerId}</p>
-            <p><strong>Subject:</strong> ${d.subject}</p>
-            <p><strong>Category:</strong> ${d.category}</p>
-            <p><strong>Message:</strong> ${d.message}</p>
-            <p><strong>Status:</strong> ${d.status}</p>
-            <p><strong>Date:</strong> ${new Date(d.createdAt).toLocaleString()}</p>
-          `;
-          container.appendChild(el);
-        });
-      }).catch(err => {
-        document.getElementById("ticketsContainer").innerHTML = `❌ Error: ${err.message}`;
+    const ADMIN_EMAILS = ["admin1@gmail.com", "admin2@gmail.com"];
+
+    const summaryDiv = document.getElementById("summary");
+    const ticketContainer = document.getElementById("ticketContainer");
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user || !ADMIN_EMAILS.includes(user.email)) {
+        alert("❌ Admin not logged in or not authorized");
+        return location.href = "login.html";
+      }
+
+      const snapshot = await getDocs(collection(db, "support_tickets"));
+      let total = 0, resolved = 0, pending = 0;
+
+      snapshot.forEach(docSnap => {
+        total++;
+        const data = docSnap.data();
+        if (data.status === "Resolved") resolved++;
+        else pending++;
+
+        const div = document.createElement("div");
+        div.className = "ticket-card";
+        div.innerHTML = `
+          <p><strong>Ticket ID:</strong> ${data.ticketId}</p>
+          <p><strong>Name:</strong> ${data.name}</p>
+          <p><strong>Email:</strong> ${data.email}</p>
+          <p><strong>Subject:</strong> ${data.subject}</p>
+          <p><strong>Description:</strong> ${data.description}</p>
+          <p><strong>Status:</strong> ${data.status}</p>
+          <textarea id="reply-${docSnap.id}" placeholder="Type your reply here..."></textarea>
+          <select id="status-${docSnap.id}">
+            <option ${data.status === 'Pending' ? 'selected' : ''}>Pending</option>
+            <option ${data.status === 'Ongoing' ? 'selected' : ''}>Ongoing</option>
+            <option ${data.status === 'Resolved' ? 'selected' : ''}>Resolved</option>
+          </select>
+          <button onclick="replyToTicket('${docSnap.id}')">Reply & Update</button>
+        `;
+        ticketContainer.appendChild(div);
       });
-    }
 
-    loadTickets();
+      summaryDiv.innerHTML = `
+        <div>Total: ${total}</div>
+        <div>Resolved: ${resolved}</div>
+        <div>Pending: ${pending}</div>
+      `;
+    });
+
+    window.replyToTicket = async (id) => {
+      const reply = document.getElementById(`reply-${id}`).value;
+      const status = document.getElementById(`status-${id}`).value;
+      if (!reply) return alert("Please enter a reply.");
+      await updateDoc(doc(db, "support_tickets", id), {
+        adminReply: reply,
+        status: status,
+        updatedAt: new Date().toISOString()
+      });
+      alert("Reply sent and status updated.");
+      location.reload();
+    };
   </script>
+</head>
+<body>
+  <h1>📋 Admin Ticket Dashboard</h1>
+  <div class="summary" id="summary"></div>
+  <div id="ticketContainer"></div>
 </body>
 </html>

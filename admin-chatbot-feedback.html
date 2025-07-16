@@ -1,0 +1,64 @@
+<!-- ✅ Admin Chatbot Feedback Page -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Chatbot Feedback - JDM Credit & Finance</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f4f4; padding: 20px; }
+    h2 { color: #0a3d62; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+    th, td { padding: 10px; border: 1px solid #ccc; text-align: left; }
+    th { background: #0a3d62; color: white; }
+    tr:hover { background: #f1f1f1; }
+  </style>
+</head>
+<body>
+
+<h2>📨 Customer Chatbot Feedback - Admin Panel</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Customer ID</th>
+      <th>Name</th>
+      <th>Message</th>
+      <th>Timestamp</th>
+    </tr>
+  </thead>
+  <tbody id="feedbackBody"></tbody>
+</table>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyDLvrY6y3SyvLrX-yk8UcdO8RmnC89XNG4",
+    authDomain: "jdms-207ba.firebaseapp.com",
+    projectId: "jdms-207ba",
+    storageBucket: "jdms-207ba.appspot.com",
+    messagingSenderId: "449814553435",
+    appId: "1:449814553435:web:008c7695473689f425307e"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  db.collection("chatbot_feedback").orderBy("timestamp", "desc").onSnapshot(snapshot => {
+    const tbody = document.getElementById("feedbackBody");
+    tbody.innerHTML = "";
+    snapshot.forEach(doc => {
+      const d = doc.data();
+      const date = d.timestamp?.toDate().toLocaleString() || "-";
+      tbody.innerHTML += `
+        <tr>
+          <td>${d.customerId || '-'}</td>
+          <td>${d.name || '-'}</td>
+          <td>${d.message}</td>
+          <td>${date}</td>
+        </tr>`;
+    });
+  });
+</script>
+
+</body>
+</html>

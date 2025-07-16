@@ -1,18 +1,31 @@
-<!-- admin-chatbot-feedback.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin - Customer Tickets</title>
+  <meta charset="UTF-8">
+  <title>Customer Tickets - Admin Panel</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background: #f4f6f8;
+      font-family: 'Segoe UI', sans-serif;
+    }
+    .glass {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(10px);
+      border-radius: 1rem;
+      padding: 1rem;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    }
+  </style>
 </head>
-<body class="bg-gray-100 min-h-screen p-4">
-  <h1 class="text-2xl font-bold mb-4">📋 Customer Tickets - Admin Panel</h1>
+<body class="p-6">
+
+  <h1 class="text-2xl font-bold mb-6">📇 Customer Tickets - Admin Panel</h1>
+  
   <div id="ticketsContainer" class="space-y-4"></div>
 
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
   <script>
@@ -26,37 +39,35 @@
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
-    const auth = firebase.auth();
-
-    const allowedAdmins = ["dinesh@gmail.com", "desaidinesh055@gmail.com"];
-
-    firebase.auth().onAuthStateChanged(user => {
-      if (!user || !allowedAdmins.includes(user.email)) {
-        alert("❌ Admin not logged in or not authorized");
-        window.location.href = "admin-login.html";
-        return;
-      }
-      loadTickets();
-    });
 
     function loadTickets() {
-      const container = document.getElementById("ticketsContainer");
-      db.collection("support_tickets").orderBy("createdAt", "desc").onSnapshot(snapshot => {
-        container.innerHTML = "";
+      db.collection("support_tickets").orderBy("createdAt", "desc").get().then(snapshot => {
+        const container = document.getElementById("ticketsContainer");
+        if (snapshot.empty) {
+          container.innerHTML = `<p class="text-gray-600">No tickets found.</p>`;
+          return;
+        }
+
         snapshot.forEach(doc => {
-          const data = doc.data();
-          container.innerHTML += `
-            <div class="bg-white p-4 rounded shadow">
-              <h2 class="font-semibold text-lg">${data.subject}</h2>
-              <p><strong>Category:</strong> ${data.category}</p>
-              <p><strong>Status:</strong> ${data.status}</p>
-              <p><strong>Message:</strong> ${data.message}</p>
-              <p class="text-sm text-gray-500">Customer ID: ${data.customerId}</p>
-              <p class="text-xs text-gray-400">Created At: ${data.createdAt}</p>
-            </div>`;
+          const d = doc.data();
+          const el = document.createElement("div");
+          el.className = "glass";
+          el.innerHTML = `
+            <p><strong>Customer ID:</strong> ${d.customerId}</p>
+            <p><strong>Subject:</strong> ${d.subject}</p>
+            <p><strong>Category:</strong> ${d.category}</p>
+            <p><strong>Message:</strong> ${d.message}</p>
+            <p><strong>Status:</strong> ${d.status}</p>
+            <p><strong>Date:</strong> ${new Date(d.createdAt).toLocaleString()}</p>
+          `;
+          container.appendChild(el);
         });
+      }).catch(err => {
+        document.getElementById("ticketsContainer").innerHTML = `❌ Error: ${err.message}`;
       });
     }
+
+    loadTickets();
   </script>
 </body>
 </html>

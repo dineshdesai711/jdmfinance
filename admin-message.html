@@ -1,155 +1,132 @@
+<!-- ✅ admin-message.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Admin - Customer Messages | JDM Credit and Finance</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Messages | JDM Credit and Finance</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-      background: #f9f9f9;
+    body { font-family: Arial, sans-serif; background: #f5f5f5; margin: 0; padding: 0; }
+    header { background-color: #003366; color: white; padding: 15px; text-align: center; }
+    header img { height: 40px; vertical-align: middle; margin-right: 10px; }
+    h1 { font-size: 24px; }
+    .container { padding: 20px; }
+    .customer-card {
+      background: white; padding: 15px; margin: 10px 0; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
-    h1 {
-      text-align: center;
-      color: #2b2b2b;
-    }
-    .logo {
-      text-align: center;
-      margin-bottom: 10px;
-    }
-    .logo img {
-      height: 60px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-    }
-    th, td {
-      padding: 10px;
-      border: 1px solid #ccc;
-    }
-    th {
-      background-color: #f1f1f1;
-    }
-    button {
-      padding: 6px 10px;
-      margin: 2px;
+    .actions button {
+      margin: 5px; padding: 8px 12px; background: #007BFF; color: white; border: none; border-radius: 4px;
       cursor: pointer;
     }
   </style>
 </head>
 <body>
+  <header>
+    <img src="logo.png" alt="Logo" />
+    <strong>JDM CREDIT AND FINANCE</strong> - Admin Messages
+  </header>
 
-  <div class="logo">
-    <img src="logo.png" alt="JDM Credit & Finance Logo" />
+  <div class="container" id="customer-list">
+    <h2>All Customers</h2>
+    <p>Loading customers...</p>
   </div>
 
-  <h1>📬 Admin - Message Customers</h1>
+  <!-- ✅ Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
 
-  <table id="customerTable">
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Customer ID</th>
-        <th>Aadhaar</th>
-        <th>FD Count</th>
-        <th>RD Count</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      <!-- Data will be inserted here -->
-    </tbody>
-  </table>
-
-  <script type="module">
-    // ✅ Firebase imports
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js";
-    import {
-      getFirestore,
-      collection,
-      query,
-      where,
-      getDocs,
-      onSnapshot,
-    } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
-
-    import {
-      getAuth,
-      onAuthStateChanged
-    } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-auth.js";
-
-    // ✅ Firebase config
+  <script>
+    // ✅ Your Firebase Config
     const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_PROJECT.firebaseapp.com",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_PROJECT.appspot.com",
-      messagingSenderId: "SENDER_ID",
-      appId: "YOUR_APP_ID"
+      apiKey: "AIzaSyDLvrY6y3SyvLrX-yk8UcdO8RmnC89XNG4",
+      authDomain: "jdms-207ba.firebaseapp.com",
+      projectId: "jdms-207ba",
+      storageBucket: "jdms-207ba.firebasestorage.app",
+      messagingSenderId: "449814553435",
+      appId: "1:449814553435:web:008c7695473689f425307e",
+      measurementId: "G-0BED7E1BFM"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const auth = getAuth();
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const auth = firebase.auth();
 
-    const adminEmails = ['admin1@gmail.com', 'admin2@gmail.com'];
+    // ✅ Your 2 fixed admin emails
+    const adminEmails = ["dinesh@gmail.com", "desaidinesh055@gmail.com"];
 
-    onAuthStateChanged(auth, async (user) => {
-      if (!user || !adminEmails.includes(user.email)) {
-        alert("❌ Admin not authorized");
-        window.location.href = 'index.html';
+    // ✅ On page load, show all customers and their FD/RD
+    window.onload = function () {
+      auth.onAuthStateChanged(user => {
+        if (!user) {
+          alert("You are not logged in!");
+          window.location.href = "index.html";
+          return;
+        }
+
+        if (!adminEmails.includes(user.email)) {
+          alert("❌ Admin not authorized");
+          return;
+        }
+
+        loadCustomers();
+      });
+    };
+
+    async function loadCustomers() {
+      const listDiv = document.getElementById("customer-list");
+      listDiv.innerHTML = "";
+
+      const snapshot = await db.collection("customers").get();
+      if (snapshot.empty) {
+        listDiv.innerHTML = "<p>No customers found.</p>";
         return;
       }
 
-      const tableBody = document.querySelector("#customerTable tbody");
+      snapshot.forEach(async doc => {
+        const data = doc.data();
+        const customerId = data.customerId;
 
-      const customerRef = collection(db, "customers");
+        // FD count
+        const fdSnap = await db.collection("fd").where("customerId", "==", customerId).get();
+        const fdCount = fdSnap.size;
 
-      // 🔄 Real-time listener
-      onSnapshot(customerRef, async (snapshot) => {
-        tableBody.innerHTML = "";
+        // RD count
+        const rdSnap = await db.collection("rd").where("customerId", "==", customerId).get();
+        const rdCount = rdSnap.size;
 
-        for (const doc of snapshot.docs) {
-          const customer = doc.data();
-          const customerId = doc.id;
-
-          // 🔢 FD count
-          const fdSnap = await getDocs(query(collection(db, "fd"), where("customerId", "==", customerId)));
-          const rdSnap = await getDocs(query(collection(db, "rd"), where("customerId", "==", customerId)));
-
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${customer.name}</td>
-            <td>${customerId}</td>
-            <td>${customer.aadhaar || "N/A"}</td>
-            <td>${fdSnap.size}</td>
-            <td>${rdSnap.size}</td>
-            <td>
-              <button onclick="sendWhatsApp('${customer.mobile}')">WhatsApp</button>
-              <button onclick="sendSMS('${customer.mobile}')">SMS</button>
-              <button onclick="sendEmail('${customer.email}')">Email</button>
-            </td>
-          `;
-          tableBody.appendChild(tr);
-        }
+        // ✅ Show customer card
+        const div = document.createElement("div");
+        div.className = "customer-card";
+        div.innerHTML = `
+          <strong>${data.name}</strong><br>
+          Customer ID: ${customerId} <br>
+          Aadhaar: ${data.aadhaar}<br>
+          Mobile: ${data.mobile}<br>
+          FD: ${fdCount} | RD: ${rdCount}
+          <div class="actions">
+            <button onclick="sendEmail('${data.email}')">📧 Email</button>
+            <button onclick="sendSMS('${data.mobile}')">📱 SMS</button>
+            <button onclick="sendWhatsApp('${data.mobile}')">🟢 WhatsApp</button>
+          </div>
+        `;
+        listDiv.appendChild(div);
       });
-    });
+    }
 
-    // ✅ Messaging stubs
-    window.sendWhatsApp = (mobile) => {
-      window.open(`https://wa.me/91${mobile}?text=Hello from JDM Credit & Finance`, '_blank');
-    };
+    // Dummy actions (replace with real API later)
+    function sendEmail(email) {
+      alert("Send email to: " + email);
+    }
 
-    window.sendSMS = (mobile) => {
-      alert(`📲 SMS would be sent to: ${mobile} (Integrate SMS API here)`);
-    };
+    function sendSMS(mobile) {
+      alert("Send SMS to: " + mobile);
+    }
 
-    window.sendEmail = (email) => {
-      window.location.href = `mailto:${email}?subject=JDM Finance Notification&body=Hello from JDM Credit & Finance`;
-    };
+    function sendWhatsApp(mobile) {
+      const msg = encodeURIComponent("Hello from JDM Credit & Finance!");
+      window.open(`https://wa.me/91${mobile}?text=${msg}`, "_blank");
+    }
   </script>
-
 </body>
 </html>

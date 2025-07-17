@@ -57,7 +57,6 @@
     </div>
   </div>
 
-  <!-- ✅ FD/RD Modal -->
   <div id="modal" class="modal" style="display: none;"></div>
   <div id="overlay" class="overlay" style="display: none;" onclick="closeModal()"></div>
 
@@ -66,7 +65,13 @@
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
 
+  <!-- ✅ EmailJS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+
   <script>
+    // ✅ Initialize EmailJS
+    emailjs.init("NMzRKDpW5oo88yVEb"); // <-- your public key
+
     const firebaseConfig = {
       apiKey: "AIzaSyDLvrY6y3SyvLrX-yk8UcdO8RmnC89XNG4",
       authDomain: "jdms-207ba.firebaseapp.com",
@@ -81,7 +86,6 @@
     const db = firebase.firestore();
     const auth = firebase.auth();
     const adminEmails = ["dinesh@gmail.com", "desaidinesh055@gmail.com"];
-
     const selectedCustomers = new Set();
 
     window.onload = () => {
@@ -108,7 +112,6 @@
       snapshot.forEach(async doc => {
         const data = doc.data();
         const customerId = data.customerId;
-
         const fdSnap = await db.collection("fd").where("customerId", "==", customerId).get();
         const rdSnap = await db.collection("rd").where("customerId", "==", customerId).get();
 
@@ -121,8 +124,7 @@
           Customer ID: ${customerId} | Mobile: ${data.mobile}<br>
           FD: ${fdSnap.size} | RD: ${rdSnap.size}
           <div class="actions">
-            <button onclick="event.stopPropagation(); sendWhatsApp('${data.mobile}')">🟢 WhatsApp</button>
-            <button onclick="event.stopPropagation(); sendEmail('${data.email}')">📧 Email</button>
+            <button onclick="event.stopPropagation(); sendEmail('${data.name}', '${data.email}')">📧 Email</button>
           </div>
         `;
         listDiv.appendChild(div);
@@ -147,13 +149,19 @@
       });
     }
 
-    function sendWhatsApp(mobile) {
-      const msg = encodeURIComponent("Hello from JDM Credit & Finance!");
-      window.open(`https://wa.me/91${mobile}?text=${msg}`, "_blank");
-    }
+    function sendEmail(name, email) {
+      const templateParams = {
+        to_name: name,
+        to_email: email,
+      };
 
-    function sendEmail(email) {
-      alert("📧 Email sent to " + email);
+      emailjs.send("service_99se3oc", "template_5shg0cq", templateParams)
+        .then(() => {
+          alert("✅ Email sent to " + email);
+        }, (error) => {
+          console.error("❌ Error:", error);
+          alert("Failed to send email.");
+        });
     }
 
     async function sendBulkMessage() {
@@ -171,7 +179,7 @@
         });
       }
 
-      alert("✅ Messages sent and logged.");
+      alert("✅ Messages logged.");
     }
 
     async function showDetails(customerId, name) {

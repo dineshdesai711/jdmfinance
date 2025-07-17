@@ -1,199 +1,193 @@
-<!-- ✅ Upgraded admin-message.html with Modern UI, Expandable FD/RD Tables, Select All/Individual Messaging -->
-<!-- 📩 Now supports WhatsApp redirection, Email logging, and future SMS capability -->
-<!-- 📧 Email will still use alert, backend integration can replace this -->
-<!-- 🟢 WhatsApp redirects from your own number to selected customer with custom message -->
-
-<!-- ✅ HTML starts here -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Admin Messages | JDM Credit and Finance</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <title>Admin Message Center - JDM Credit & Finance</title>
+  <link rel="icon" href="JDM LOGO.png" />
   <style>
     body {
-      font-family: 'Inter', sans-serif;
-      background: #f4f6f8;
+      font-family: 'Segoe UI', sans-serif;
       margin: 0;
+      background: #f2f4f8;
     }
+
     header {
-      background-color: #003366;
+      background: #1e1e2f;
       color: white;
-      padding: 15px 20px;
+      padding: 1rem 2rem;
       display: flex;
+      justify-content: space-between;
       align-items: center;
     }
+
     header img {
       height: 40px;
-      margin-right: 10px;
     }
+
+    h1 {
+      font-size: 1.5rem;
+    }
+
     .container {
-      padding: 20px;
-      max-width: 1100px;
-      margin: auto;
+      padding: 2rem;
     }
-    .toolbar {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-    select, button {
-      padding: 10px 12px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      font-size: 14px;
-    }
+
     .customer-card {
       background: white;
-      padding: 15px;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-      margin-bottom: 10px;
+      border-radius: 12px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+      transition: 0.3s;
     }
-    .card-header {
+
+    .customer-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       cursor: pointer;
     }
-    .card-header input[type=checkbox] {
-      margin-right: 10px;
+
+    .customer-header:hover {
+      background-color: #f0f0f0;
     }
+
+    .customer-info {
+      font-size: 1rem;
+    }
+
+    .customer-actions button {
+      background: #007bff;
+      color: white;
+      padding: 5px 12px;
+      border: none;
+      border-radius: 6px;
+      margin-left: 6px;
+      cursor: pointer;
+    }
+
+    .customer-actions button:hover {
+      background: #0056b3;
+    }
+
     .details {
-      margin-top: 10px;
       display: none;
+      margin-top: 1rem;
+      border-top: 1px solid #ddd;
+      padding-top: 1rem;
     }
+
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 10px;
+      margin-top: 1rem;
     }
-    table th, table td {
+
+    th, td {
       border: 1px solid #ddd;
-      padding: 8px;
+      padding: 0.75rem;
       text-align: left;
     }
-    .actions button {
-      background-color: #007BFF;
-      color: white;
-      border: none;
-      margin-right: 5px;
+
+    th {
+      background: #f7f9fb;
+    }
+
+    .select-box {
+      margin-bottom: 1rem;
     }
   </style>
 </head>
 <body>
   <header>
-    <img src="JDM LOGO.png" alt="Logo">
-    <h2>JDM CREDIT AND FINANCE - Admin Messages</h2>
+    <img src="JDM LOGO.png" alt="JDM Logo" />
+    <h1>Admin Message Center</h1>
   </header>
+
   <div class="container">
-    <div class="toolbar">
-      <input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)"> <label for="selectAll">Select All</label>
-      <select id="messageType">
-        <option value="">-- Select Message Type --</option>
-        <option value="FD_RD_CREATED">✅ FD/RD Created</option>
-        <option value="RENEWAL_REMINDER">🔁 Renewal Reminder</option>
-        <option value="FESTIVAL_WISH">🎉 Festival Wish</option>
-        <option value="SCHEME_UPDATE">📢 New Scheme / Interest Rate</option>
-      </select>
-      <button onclick="sendBulkMessage()">🚀 Send</button>
+    <div class="select-box">
+      <label><input type="checkbox" id="selectAll"> Select All Customers</label>
     </div>
-    <div id="customer-list">Loading...</div>
+
+    <!-- Example Customer Card (Dynamically repeated per customer) -->
+    <div class="customer-card" data-mobile="9876543210" data-email="rahul@gmail.com" data-name="Rahul Sharma">
+      <div class="customer-header" onclick="toggleDetails(this)">
+        <div class="customer-info">
+          <strong>Rahul Sharma</strong><br/>
+          📞 9876543210<br/>
+          FDs: 3 | RDs: 2
+        </div>
+        <div class="customer-actions">
+          <button onclick="sendWhatsApp(event)">WhatsApp</button>
+          <button onclick="sendSMS(event)">SMS</button>
+          <button onclick="sendEmail(event)">Email</button>
+        </div>
+      </div>
+      <div class="details">
+        <h4>FD Details</h4>
+        <table>
+          <tr><th>Amount</th><th>Start Date</th><th>Maturity</th><th>Status</th></tr>
+          <tr><td>₹10,000</td><td>01-01-2024</td><td>01-01-2026</td><td>Active</td></tr>
+          <tr><td>₹15,000</td><td>01-03-2024</td><td>01-03-2025</td><td>Active</td></tr>
+          <tr><td>₹20,000</td><td>01-06-2024</td><td>01-06-2026</td><td>Active</td></tr>
+        </table>
+
+        <h4>RD Details</h4>
+        <table>
+          <tr><th>Amount</th><th>Start Date</th><th>Maturity</th><th>Status</th></tr>
+          <tr><td>₹1,000/month</td><td>01-02-2024</td><td>01-02-2025</td><td>Active</td></tr>
+          <tr><td>₹1,500/month</td><td>01-05-2024</td><td>01-05-2026</td><td>Active</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- More .customer-card blocks can be added similarly -->
   </div>
 
-  <!-- ✅ Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
-
   <script>
-    const firebaseConfig = { /* your config as is */ };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-    const auth = firebase.auth();
-    const adminEmails = ["dinesh@gmail.com", "desaidinesh055@gmail.com"];
-    const selectedCustomers = new Set();
+    // Toggle FD/RD table visibility
+    function toggleDetails(header) {
+      const details = header.nextElementSibling;
+      details.style.display = details.style.display === 'block' ? 'none' : 'block';
+    }
 
-    window.onload = () => {
-      auth.onAuthStateChanged(user => {
-        if (!user || !adminEmails.includes(user.email)) return location.href = 'index.html';
-        loadCustomers();
+    // Send WhatsApp message
+    function sendWhatsApp(event) {
+      event.stopPropagation();
+      const card = event.target.closest('.customer-card');
+      const mobile = card.getAttribute('data-mobile');
+      const name = card.getAttribute('data-name');
+      const message = `Hello ${name}, this is a reminder from JDM Credit & Finance regarding your FD/RD account. Please check your latest status.`;
+
+      window.open(`https://wa.me/91${mobile}?text=${encodeURIComponent(message)}`, '_blank');
+    }
+
+    // Send SMS (Placeholder)
+    function sendSMS(event) {
+      event.stopPropagation();
+      alert('📱 SMS API integration pending.');
+    }
+
+    // Send Email (Placeholder)
+    function sendEmail(event) {
+      event.stopPropagation();
+      const card = event.target.closest('.customer-card');
+      const email = card.getAttribute('data-email');
+      const name = card.getAttribute('data-name');
+      const subject = `Reminder from JDM Credit & Finance`;
+      const body = `Hello ${name},\n\nThis is a gentle reminder from JDM Credit & Finance regarding your FD/RD accounts.\n\nThank you.`;
+
+      window.open(`mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
+    }
+
+    // Select all checkbox
+    document.getElementById('selectAll').addEventListener('change', function () {
+      const allCards = document.querySelectorAll('.customer-card');
+      allCards.forEach(card => {
+        card.style.border = this.checked ? '2px solid green' : '1px solid #ddd';
       });
-    };
-
-    async function loadCustomers() {
-      const wrapper = document.getElementById("customer-list");
-      wrapper.innerHTML = "";
-      const snap = await db.collection("customers").get();
-      snap.forEach(async doc => {
-        const c = doc.data();
-        const fds = await db.collection("fd").where("customerId", "==", c.customerId).get();
-        const rds = await db.collection("rd").where("customerId", "==", c.customerId).get();
-
-        const card = document.createElement("div");
-        card.className = "customer-card";
-        card.innerHTML = `
-          <div class="card-header" onclick="toggleDetails('${c.customerId}')">
-            <div><input type="checkbox" class="custCheckbox" data-id="${c.customerId}" onclick="event.stopPropagation(); toggleCustomer('${c.customerId}')"> <strong>${c.name}</strong></div>
-            <div>${c.mobile} | FD: ${fds.size}, RD: ${rds.size}</div>
-          </div>
-          <div class="actions">
-            <button onclick="event.stopPropagation(); sendWhatsApp('${c.mobile}', '${c.name}')">WhatsApp</button>
-            <button onclick="event.stopPropagation(); sendEmail('${c.email}')">Email</button>
-          </div>
-          <div class="details" id="details-${c.customerId}">
-            <table><tr><th colspan="3">FD</th></tr>
-            ${fds.docs.map(f => `<tr><td>₹${f.data().amount}</td><td>${f.data().tenure} mo</td><td>${f.data().maturityDate}</td></tr>`).join('') || '<tr><td colspan="3">No FD</td></tr>'}</table>
-            <table><tr><th colspan="3">RD</th></tr>
-            ${rds.docs.map(r => `<tr><td>₹${r.data().amount}</td><td>${r.data().tenure} mo</td><td>${r.data().startDate}</td></tr>`).join('') || '<tr><td colspan="3">No RD</td></tr>'}</table>
-          </div>
-        `;
-        wrapper.appendChild(card);
-      });
-    }
-
-    function toggleDetails(id) {
-      const el = document.getElementById("details-" + id);
-      el.style.display = el.style.display === "block" ? "none" : "block";
-    }
-
-    function toggleCustomer(id) {
-      selectedCustomers.has(id) ? selectedCustomers.delete(id) : selectedCustomers.add(id);
-    }
-
-    function toggleSelectAll(cb) {
-      document.querySelectorAll('.custCheckbox').forEach(el => {
-        el.checked = cb.checked;
-        const id = el.dataset.id;
-        cb.checked ? selectedCustomers.add(id) : selectedCustomers.delete(id);
-      });
-    }
-
-    function sendWhatsApp(mobile, name) {
-      const type = document.getElementById("messageType").value;
-      if (!type) return alert("Select message type first");
-      let msg = "Hello " + name + ", ";
-      if (type === "FD_RD_CREATED") msg += "your FD/RD has been created successfully.";
-      if (type === "RENEWAL_REMINDER") msg += "your FD/RD is due for renewal. Kindly visit soon.";
-      if (type === "FESTIVAL_WISH") msg += "we wish you and your family a joyful festival season!";
-      if (type === "SCHEME_UPDATE") msg += "please check our new interest rates & schemes.";
-      window.open(`https://wa.me/91${mobile}?text=${encodeURIComponent(msg)}`, '_blank');
-    }
-
-    function sendEmail(email) {
-      alert("📧 Simulated email sent to: " + email);
-    }
-
-    async function sendBulkMessage() {
-      const type = document.getElementById("messageType").value;
-      if (!type || selectedCustomers.size === 0) return alert("Please select message type and customers");
-      for (const id of selectedCustomers) {
-        await db.collection("messages").add({ customerId: id, messageType: type, timestamp: new Date() });
-      }
-      alert("✅ Messages logged.");
-    }
+    });
   </script>
 </body>
 </html>

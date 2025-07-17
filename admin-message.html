@@ -2,48 +2,149 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Admin Message Center - JDM Credit & Finance</title>
+  <title>Admin Broadcast | JDM Credit and Finance</title>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f4f4f4;
+      background: #f2f4f7;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background-color: #003366;
+      color: white;
+      padding: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    header img {
+      height: 50px;
+      margin-right: 15px;
+    }
+    h1 {
+      font-size: 1.5rem;
+    }
+    .container {
       padding: 20px;
-      color: #333;
     }
-    h2 {
-      color: #0a3d62;
-    }
-    .coming-soon {
-      background: #fff3cd;
-      border: 1px solid #ffeeba;
-      padding: 30px;
-      margin-top: 50px;
+    .customer-card {
+      background: white;
+      padding: 15px;
+      margin-bottom: 15px;
       border-radius: 10px;
-      color: #856404;
-      font-size: 1.2rem;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
-    .dev-info {
-      margin-top: 20px;
-      font-size: 1rem;
-      color: #555;
+    .actions button {
+      margin-right: 10px;
+      margin-top: 5px;
+      padding: 5px 10px;
+      cursor: pointer;
+    }
+    .top-controls {
+      margin-bottom: 20px;
     }
   </style>
 </head>
 <body>
 
-  <h2>📢 Admin Messaging Center - JDM Credit & Finance</h2>
-
-  <div class="coming-soon">
-    🚧 This feature is currently <strong>under development</strong>.<br>
-    📞 For more information, please contact the developer.
-    <div class="dev-info">
-      ✉️ Email: desaidinesh055@gmail.com <br>
-      📱 Phone: +91-9694442721
-    </div>
+<header>
+  <div style="display: flex; align-items: center;">
+    <img src="logo.png" alt="JDM Logo" />
+    <h1>JDM Credit and Finance - Admin Message Panel</h1>
   </div>
-     
-      <a href="admin-dashboard.html" class="btn-back">⬅️ Back to Admin Dashboard</a>
+</header>
+
+<div class="container">
+  <div class="top-controls">
+    <button onclick="selectAll()">Select All</button>
+    <button onclick="sendBroadcast()">Send Message to Selected</button>
+  </div>
+
+  <div id="customerList"></div>
+</div>
+
+<script>
+  const firebaseConfig = {
+    // 🔐 Replace with your Firebase config
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_AUTH_DOMAIN",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_STORAGE_BUCKET",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  const allowedAdmins = [
+    "dinesh@gmail.com",
+    "desaidinesh055@gmail.com",
+    "admin3@example.com"
+  ];
+
+  auth.onAuthStateChanged(async (user) => {
+    if (!user || !allowedAdmins.includes(user.email)) {
+      alert("❌ Admin not logged in or not authorized");
+      window.location.href = "index.html";
+      return;
+    }
+
+    const customerList = document.getElementById('customerList');
+    const customersSnap = await db.collection("customers").get();
+    customersSnap.forEach(async (doc) => {
+      const data = doc.data();
+      const id = doc.id;
+
+      // Count FD & RD
+      const fdSnap = await db.collection("fd").where("customerId", "==", id).get();
+      const rdSnap = await db.collection("rd").where("customerId", "==", id).get();
+
+      const div = document.createElement("div");
+      div.className = "customer-card";
+      div.innerHTML = `
+        <input type="checkbox" class="select-customer" value="${id}">
+        <strong>${data.name}</strong> (${data.customerId})<br>
+        Email: ${data.email} | Mobile: ${data.mobile}<br>
+        Aadhaar: ${data.aadhaar}<br>
+        FD Count: ${fdSnap.size} | RD Count: ${rdSnap.size}<br>
+        <div class="actions">
+          <button onclick="sendEmail('${data.email}')">Email</button>
+          <button onclick="sendWhatsApp('${data.mobile}')">WhatsApp</button>
+          <button onclick="sendSMS('${data.mobile}')">SMS</button>
+        </div>
+      `;
+      customerList.appendChild(div);
+    });
+  });
+
+  function selectAll() {
+    document.querySelectorAll(".select-customer").forEach(cb => cb.checked = true);
+  }
+
+  function sendBroadcast() {
+    const selected = Array.from(document.querySelectorAll(".select-customer:checked"))
+                          .map(cb => cb.value);
+    alert("✅ Message will be sent to: \n" + selected.join(", "));
+    // Actual messaging logic to be added later
+  }
+
+  function sendEmail(email) {
+    alert("📧 Email sent to: " + email);
+  }
+
+  function sendWhatsApp(mobile) {
+    alert("💬 WhatsApp message sent to: " + mobile);
+  }
+
+  function sendSMS(mobile) {
+    alert("📱 SMS sent to: " + mobile);
+  }
+</script>
 
 </body>
 </html>

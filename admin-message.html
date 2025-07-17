@@ -1,155 +1,132 @@
+<!-- ✅ admin-message.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Admin Message - JDM Credit & Finance</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Messages | JDM Credit and Finance</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f4f4;
-      padding: 20px;
-    }
-
+    body { font-family: Arial, sans-serif; background: #f5f5f5; margin: 0; padding: 0; }
+    header { background-color: #003366; color: white; padding: 15px; text-align: center; }
+    header img { height: 40px; vertical-align: middle; margin-right: 10px; }
+    h1 { font-size: 24px; }
+    .container { padding: 20px; }
     .customer-card {
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      margin-bottom: 15px;
-      padding: 15px;
+      background: white; padding: 15px; margin: 10px 0; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .actions button {
+      margin: 5px; padding: 8px 12px; background: #007BFF; color: white; border: none; border-radius: 4px;
       cursor: pointer;
-    }
-
-    .customer-card h3 {
-      margin: 0 0 5px;
-    }
-
-    .fd-rd-list {
-      margin-top: 10px;
-      display: none;
-      border-top: 1px solid #ddd;
-      padding-top: 10px;
-    }
-
-    .fd-rd-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: #f9f9f9;
-      margin-bottom: 5px;
-      padding: 8px;
-      border-radius: 8px;
-    }
-
-    .fd-rd-row input[type="checkbox"] {
-      margin-right: 10px;
-    }
-
-    .send-buttons {
-      margin-top: 10px;
-    }
-
-    .send-buttons button {
-      margin-right: 10px;
     }
   </style>
 </head>
 <body>
+  <header>
+    <img src="logo.png" alt="Logo" />
+    <strong>JDM CREDIT AND FINANCE</strong> - Admin Messages
+  </header>
 
-  <h1>📬 Send Message to Customers</h1>
-  <div id="customer-list"></div>
+  <div class="container" id="customer-list">
+    <h2>All Customers</h2>
+    <p>Loading customers...</p>
+  </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getFirestore, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  <!-- ✅ Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
 
+  <script>
+    // ✅ Your Firebase Config
     const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_AUTH_DOMAIN",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_BUCKET",
-      messagingSenderId: "YOUR_SENDER_ID",
-      appId: "YOUR_APP_ID"
+      apiKey: "AIzaSyDLvrY6y3SyvLrX-yk8UcdO8RmnC89XNG4",
+      authDomain: "jdms-207ba.firebaseapp.com",
+      projectId: "jdms-207ba",
+      storageBucket: "jdms-207ba.firebasestorage.app",
+      messagingSenderId: "449814553435",
+      appId: "1:449814553435:web:008c7695473689f425307e",
+      measurementId: "G-0BED7E1BFM"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const auth = firebase.auth();
 
-    const customerList = document.getElementById("customer-list");
+    // ✅ Your 2 fixed admin emails
+    const adminEmails = ["dinesh@gmail.com", "desaidinesh055@gmail.com"];
+
+    // ✅ On page load, show all customers and their FD/RD
+    window.onload = function () {
+      auth.onAuthStateChanged(user => {
+        if (!user) {
+          alert("You are not logged in!");
+          window.location.href = "index.html";
+          return;
+        }
+
+        if (!adminEmails.includes(user.email)) {
+          alert("❌ Admin not authorized");
+          return;
+        }
+
+        loadCustomers();
+      });
+    };
 
     async function loadCustomers() {
-      const snapshot = await getDocs(collection(db, "customers"));
-      snapshot.forEach(async (doc) => {
+      const listDiv = document.getElementById("customer-list");
+      listDiv.innerHTML = "";
+
+      const snapshot = await db.collection("customers").get();
+      if (snapshot.empty) {
+        listDiv.innerHTML = "<p>No customers found.</p>";
+        return;
+      }
+
+      snapshot.forEach(async doc => {
         const data = doc.data();
-        const customerDiv = document.createElement("div");
-        customerDiv.className = "customer-card";
-        customerDiv.innerHTML = `
-          <h3>${data.name}</h3>
-          <p>📇 Customer ID: <b>${data.customerID}</b></p>
-          <div class="fd-rd-list" id="list-${data.customerID}"></div>
-        `;
+        const customerId = data.customerId;
 
-        customerDiv.addEventListener("click", () => {
-          const listDiv = customerDiv.querySelector(`#list-${data.customerID}`);
-          if (listDiv.style.display === "none" || listDiv.style.display === "") {
-            listDiv.innerHTML = `<p>Loading FD/RD records...</p>`;
-            listDiv.style.display = "block";
-            loadFDandRD(data.customerID, listDiv);
-          } else {
-            listDiv.style.display = "none";
-          }
-        });
+        // FD count
+        const fdSnap = await db.collection("fd").where("customerId", "==", customerId).get();
+        const fdCount = fdSnap.size;
 
-        customerList.appendChild(customerDiv);
+        // RD count
+        const rdSnap = await db.collection("rd").where("customerId", "==", customerId).get();
+        const rdCount = rdSnap.size;
+
+        // ✅ Show customer card
+        const div = document.createElement("div");
+        div.className = "customer-card";
+        div.innerHTML = 
+          <strong>${data.name}</strong><br>
+          Customer ID: ${customerId} <br>
+          Aadhaar: ${data.aadhaar}<br>
+          Mobile: ${data.mobile}<br>
+          FD: ${fdCount} | RD: ${rdCount}
+          <div class="actions">
+            <button onclick="sendEmail('${data.email}')">📧 Email</button>
+            <button onclick="sendSMS('${data.mobile}')">📱 SMS</button>
+            <button onclick="sendWhatsApp('${data.mobile}')">🟢 WhatsApp</button>
+          </div>
+        ;
+        listDiv.appendChild(div);
       });
     }
 
-    async function loadFDandRD(customerID, container) {
-      const fdQuery = query(collection(db, "fd"), where("customerID", "==", customerID));
-      const rdQuery = query(collection(db, "rd"), where("customerID", "==", customerID));
-      const [fdSnap, rdSnap] = await Promise.all([
-        getDocs(fdQuery),
-        getDocs(rdQuery)
-      ]);
-
-      let content = "<h4>📁 FD Records</h4>";
-      if (fdSnap.empty) content += "<p>No FD Records</p>";
-      else {
-        fdSnap.forEach(doc => {
-          const fd = doc.data();
-          content += `
-            <div class="fd-rd-row">
-              <div><input type="checkbox" /> ${fd.name} - ₹${fd.principalAmount}</div>
-              <div>${fd.startDate} to ${fd.maturityDate}</div>
-            </div>`;
-        });
-      }
-
-      content += "<h4>📁 RD Records</h4>";
-      if (rdSnap.empty) content += "<p>No RD Records</p>";
-      else {
-        rdSnap.forEach(doc => {
-          const rd = doc.data();
-          content += `
-            <div class="fd-rd-row">
-              <div><input type="checkbox" /> ${rd.name} - ₹${rd.principalAmount}</div>
-              <div>${rd.startDate} to ${rd.maturityDate}</div>
-            </div>`;
-        });
-      }
-
-      content += `
-        <div class="send-buttons">
-          <button onclick="alert('📤 Send SMS to selected coming soon!')">Send SMS</button>
-          <button onclick="alert('📧 Send Email coming soon!')">Send Email</button>
-          <button onclick="alert('🟢 WhatsApp Msg coming soon!')">Send WhatsApp</button>
-        </div>
-      `;
-
-      container.innerHTML = content;
+    // Dummy actions (replace with real API later)
+    function sendEmail(email) {
+      alert("Send email to: " + email);
     }
 
-    loadCustomers();
+    function sendSMS(mobile) {
+      alert("Send SMS to: " + mobile);
+    }
+
+    function sendWhatsApp(mobile) {
+      const msg = encodeURIComponent("Hello from JDM Credit & Finance!");
+      window.open(https://wa.me/91${mobile}?text=${msg}, "_blank");
+    }
   </script>
 </body>
 </html>

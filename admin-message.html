@@ -3,191 +3,210 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Admin Message Center - JDM Credit & Finance</title>
-  <link rel="icon" href="JDM LOGO.png" />
+  <title>Admin Message Panel - JDM Credit & Finance</title>
   <style>
     body {
-      font-family: 'Segoe UI', sans-serif;
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
       margin: 0;
-      background: #f2f4f8;
+      padding: 0;
     }
-
-    header {
-      background: #1e1e2f;
-      color: white;
-      padding: 1rem 2rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    header img {
-      height: 40px;
-    }
-
-    h1 {
-      font-size: 1.5rem;
-    }
-
     .container {
-      padding: 2rem;
+      padding: 20px;
     }
-
+    h1 {
+      text-align: center;
+      color: #222;
+    }
     .customer-card {
       background: white;
-      border-radius: 12px;
-      padding: 1rem;
-      margin-bottom: 1.5rem;
-      box-shadow: 0 0 10px rgba(0,0,0,0.05);
-      transition: 0.3s;
+      margin: 15px 0;
+      border-radius: 10px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+      padding: 15px;
     }
-
     .customer-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       cursor: pointer;
     }
-
-    .customer-header:hover {
-      background-color: #f0f0f0;
+    .customer-header h3 {
+      margin: 0;
     }
-
-    .customer-info {
-      font-size: 1rem;
-    }
-
-    .customer-actions button {
-      background: #007bff;
-      color: white;
-      padding: 5px 12px;
-      border: none;
-      border-radius: 6px;
-      margin-left: 6px;
-      cursor: pointer;
-    }
-
-    .customer-actions button:hover {
-      background: #0056b3;
-    }
-
-    .details {
+    .customer-details {
       display: none;
-      margin-top: 1rem;
-      border-top: 1px solid #ddd;
-      padding-top: 1rem;
+      margin-top: 10px;
+      border-top: 1px solid #ccc;
+      padding-top: 10px;
     }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 1rem;
+    .actions {
+      margin-top: 10px;
     }
-
-    th, td {
-      border: 1px solid #ddd;
-      padding: 0.75rem;
-      text-align: left;
+    .actions button {
+      margin-right: 10px;
+      padding: 5px 10px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      background-color: #4caf50;
+      color: white;
     }
-
-    th {
-      background: #f7f9fb;
+    .checkbox {
+      margin-right: 10px;
+      transform: scale(1.2);
     }
-
-    .select-box {
-      margin-bottom: 1rem;
+    .select-all {
+      margin-bottom: 10px;
+    }
+    .fd-rd-entry {
+      padding: 5px;
+      margin-bottom: 8px;
+      background: #f9f9f9;
+      border-radius: 5px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .fd-rd-entry input[type="checkbox"] {
+      margin-right: 10px;
+      transform: scale(1.1);
     }
   </style>
 </head>
 <body>
-  <header>
-    <img src="JDM LOGO.png" alt="JDM Logo" />
-    <h1>Admin Message Center</h1>
-  </header>
-
   <div class="container">
-    <div class="select-box">
-      <label><input type="checkbox" id="selectAll"> Select All Customers</label>
+    <h1>All Customers - Message Panel</h1>
+    <div class="select-all">
+      <input type="checkbox" id="selectAll" class="checkbox" /> <label for="selectAll">Select All Customers</label>
     </div>
-
-    <!-- Example Customer Card (Dynamically repeated per customer) -->
-    <div class="customer-card" data-mobile="9876543210" data-email="rahul@gmail.com" data-name="Rahul Sharma">
-      <div class="customer-header" onclick="toggleDetails(this)">
-        <div class="customer-info">
-          <strong>Rahul Sharma</strong><br/>
-          📞 9876543210<br/>
-          FDs: 3 | RDs: 2
-        </div>
-        <div class="customer-actions">
-          <button onclick="sendWhatsApp(event)">WhatsApp</button>
-          <button onclick="sendSMS(event)">SMS</button>
-          <button onclick="sendEmail(event)">Email</button>
-        </div>
-      </div>
-      <div class="details">
-        <h4>FD Details</h4>
-        <table>
-          <tr><th>Amount</th><th>Start Date</th><th>Maturity</th><th>Status</th></tr>
-          <tr><td>₹10,000</td><td>01-01-2024</td><td>01-01-2026</td><td>Active</td></tr>
-          <tr><td>₹15,000</td><td>01-03-2024</td><td>01-03-2025</td><td>Active</td></tr>
-          <tr><td>₹20,000</td><td>01-06-2024</td><td>01-06-2026</td><td>Active</td></tr>
-        </table>
-
-        <h4>RD Details</h4>
-        <table>
-          <tr><th>Amount</th><th>Start Date</th><th>Maturity</th><th>Status</th></tr>
-          <tr><td>₹1,000/month</td><td>01-02-2024</td><td>01-02-2025</td><td>Active</td></tr>
-          <tr><td>₹1,500/month</td><td>01-05-2024</td><td>01-05-2026</td><td>Active</td></tr>
-        </table>
-      </div>
-    </div>
-
-    <!-- More .customer-card blocks can be added similarly -->
+    <div id="customerList">Loading...</div>
   </div>
 
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+
   <script>
-    // Toggle FD/RD table visibility
-    function toggleDetails(header) {
-      const details = header.nextElementSibling;
-      details.style.display = details.style.display === 'block' ? 'none' : 'block';
-    }
+    const firebaseConfig = {
+      apiKey: "AIzaSyDg-wGBH5UhpB97nAgcCV1gZqpOh8nYvMM",
+      authDomain: "jdm-credit.firebaseapp.com",
+      projectId: "jdm-credit",
+      storageBucket: "jdm-credit.appspot.com",
+      messagingSenderId: "1006744433930",
+      appId: "1:1006744433930:web:1a53c46e4f6bb45cd542a9"
+    };
 
-    // Send WhatsApp message
-    function sendWhatsApp(event) {
-      event.stopPropagation();
-      const card = event.target.closest('.customer-card');
-      const mobile = card.getAttribute('data-mobile');
-      const name = card.getAttribute('data-name');
-      const message = `Hello ${name}, this is a reminder from JDM Credit & Finance regarding your FD/RD account. Please check your latest status.`;
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+  </script>
+    </div>
+  </div>
+</div>
 
-      window.open(`https://wa.me/91${mobile}?text=${encodeURIComponent(message)}`, '_blank');
-    }
+<!-- Firebase + Script Section -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getFirestore, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    // Send SMS (Placeholder)
-    function sendSMS(event) {
-      event.stopPropagation();
-      alert('📱 SMS API integration pending.');
-    }
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_AUTH_DOMAIN",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_STORAGE_BUCKET",
+    messagingSenderId: "YOUR_MSG_ID",
+    appId: "YOUR_APP_ID"
+  };
 
-    // Send Email (Placeholder)
-    function sendEmail(event) {
-      event.stopPropagation();
-      const card = event.target.closest('.customer-card');
-      const email = card.getAttribute('data-email');
-      const name = card.getAttribute('data-name');
-      const subject = `Reminder from JDM Credit & Finance`;
-      const body = `Hello ${name},\n\nThis is a gentle reminder from JDM Credit & Finance regarding your FD/RD accounts.\n\nThank you.`;
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
 
-      window.open(`mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
-    }
+  const customerList = document.getElementById('customer-list');
+  const allCheckbox = document.getElementById('select-all');
 
-    // Select all checkbox
-    document.getElementById('selectAll').addEventListener('change', function () {
-      const allCards = document.querySelectorAll('.customer-card');
-      allCards.forEach(card => {
-        card.style.border = this.checked ? '2px solid green' : '1px solid #ddd';
+  let selectedCustomers = new Set();
+
+  async function loadCustomers() {
+    const querySnapshot = await getDocs(collection(db, "customers"));
+    querySnapshot.forEach(async (doc) => {
+      const data = doc.data();
+      const customerId = doc.id;
+      const name = data.name || "Unnamed";
+      const mobile = data.mobile || "N/A";
+
+      const fdSnap = await getDocs(query(collection(db, "fd"), where("customerId", "==", customerId)));
+      const rdSnap = await getDocs(query(collection(db, "rd"), where("customerId", "==", customerId)));
+
+      const customerItem = document.createElement("div");
+      customerItem.className = "customer-item";
+
+      customerItem.innerHTML = `
+        <div class="customer-header">
+          <input type="checkbox" class="select-customer" data-id="${customerId}">
+          <strong>${name}</strong> | Mobile: ${mobile} | FDs: ${fdSnap.size} | RDs: ${rdSnap.size}
+          <div class="action-buttons">
+            <button onclick="sendWhatsApp('${mobile}')">WhatsApp</button>
+            <button onclick="sendSMS('${mobile}')">SMS</button>
+            <button onclick="sendEmail('${data.email || ""}')">Email</button>
+          </div>
+        </div>
+        <div class="customer-details" id="details-${customerId}">
+          <h4>FDs</h4>
+          ${fdSnap.docs.map(doc => {
+            const fd = doc.data();
+            return `
+              <label><input type="checkbox" class="fd-select" data-id="${doc.id}" data-type="fd"> 
+              ${fd.startDate} | ₹${fd.principal} | Maturity: ₹${fd.maturityAmount}</label><br>`;
+          }).join('')}
+          <h4>RDs</h4>
+          ${rdSnap.docs.map(doc => {
+            const rd = doc.data();
+            return `
+              <label><input type="checkbox" class="rd-select" data-id="${doc.id}" data-type="rd"> 
+              ${rd.startDate} | ₹${rd.principal} | Maturity: ₹${rd.maturityAmount}</label><br>`;
+          }).join('')}
+        </div>
+      `;
+
+      customerList.appendChild(customerItem);
+
+      customerItem.querySelector('.customer-header').addEventListener('click', () => {
+        const detailDiv = document.getElementById(`details-${customerId}`);
+        detailDiv.style.display = detailDiv.style.display === "block" ? "none" : "block";
+      });
+
+      customerItem.querySelector('.select-customer').addEventListener('change', (e) => {
+        if (e.target.checked) selectedCustomers.add(customerId);
+        else selectedCustomers.delete(customerId);
       });
     });
-  </script>
+  }
+
+  loadCustomers();
+
+  allCheckbox.addEventListener('change', () => {
+    const checkboxes = document.querySelectorAll('.select-customer');
+    checkboxes.forEach(chk => {
+      chk.checked = allCheckbox.checked;
+      const id = chk.dataset.id;
+      if (allCheckbox.checked) selectedCustomers.add(id);
+      else selectedCustomers.delete(id);
+    });
+  });
+
+  window.sendWhatsApp = (mobile) => {
+    const msg = encodeURIComponent("Dear customer, please check your FD/RD update from JDM Credit & Finance.");
+    window.open(`https://wa.me/91${mobile}?text=${msg}`, '_blank');
+  }
+
+  window.sendSMS = (mobile) => {
+    alert("🚧 SMS API integration pending. Will be sent to: " + mobile);
+  }
+
+  window.sendEmail = (email) => {
+    if (!email) return alert("Email not available for this customer.");
+    window.location.href = `mailto:${email}?subject=JDM Update&body=Dear customer, please check your latest FD/RD updates.`;
+  }
+
+</script>
 </body>
 </html>

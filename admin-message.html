@@ -2,151 +2,48 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Admin Message | JDM Credit & Finance</title>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-  <script src="https://cdn.emailjs.com/dist/email.min.js"></script>
+  <title>Admin Message Center - JDM Credit & Finance</title>
   <style>
-    body { font-family: Arial; padding: 20px; background: #f9f9f9; }
-    h2 { color: #333; }
-    .container { display: flex; gap: 40px; }
-    .customer-list, .template-section { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px #ccc; }
-    .customer-list { width: 40%; height: 500px; overflow-y: auto; }
-    .template-section { width: 55%; }
-    .fd-rd-table { margin-top: 10px; border-collapse: collapse; width: 100%; }
-    .fd-rd-table td, .fd-rd-table th { border: 1px solid #ccc; padding: 6px; font-size: 14px; }
-    .fd-rd-table th { background-color: #f2f2f2; }
-    button { padding: 8px 16px; background: #007BFF; color: white; border: none; border-radius: 5px; cursor: pointer; }
-    select, textarea { width: 100%; padding: 8px; margin-top: 10px; }
-    label { display: block; margin-top: 15px; }
-    input[type="checkbox"] { margin-right: 5px; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      padding: 20px;
+      color: #333;
+    }
+    h2 {
+      color: #0a3d62;
+    }
+    .coming-soon {
+      background: #fff3cd;
+      border: 1px solid #ffeeba;
+      padding: 30px;
+      margin-top: 50px;
+      border-radius: 10px;
+      color: #856404;
+      font-size: 1.2rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .dev-info {
+      margin-top: 20px;
+      font-size: 1rem;
+      color: #555;
+    }
   </style>
 </head>
 <body>
-  <h2>📨 Admin Message Panel</h2>
-  <div class="container">
-    <div class="customer-list">
-      <label><input type="checkbox" id="selectAll"> <strong>Select All Customers</strong></label>
-      <div id="customerContainer"></div>
-    </div>
 
-    <div class="template-section">
-      <label for="template">Select Email Template:</label>
-      <select id="template">
-        <option value="festival">🎉 Festival Wish</option>
-        <option value="fd_renew">🔁 Renew FD</option>
-        <option value="rd_renew">🔁 Renew RD</option>
-        <option value="interest_update">📈 Interest Rate Update</option>
-      </select>
+  <h2>📢 Admin Messaging Center - JDM Credit & Finance</h2>
 
-      <label for="emailMessage">Email Preview:</label>
-      <textarea id="emailMessage" rows="10" readonly></textarea>
-
-      <button onclick="sendEmails()">Send Email</button>
-
-      <div id="fdRdDetails"></div>
+  <div class="coming-soon">
+    🚧 This feature is currently <strong>under development</strong>.<br>
+    📞 For more information, please contact the developer.
+    <div class="dev-info">
+      ✉️ Email: desaidinesh055@gmail.com <br>
+      📱 Phone: +91-9694442721
     </div>
   </div>
+     
+      <a href="admin-dashboard.html" class="btn-back">⬅️ Back to Admin Dashboard</a>
 
-  <script>
-    // Initialize Firebase
-    const firebaseConfig = {
-      apiKey: "AIzaSyDkz9yEXAMPLE",
-      authDomain: "jdm-credit.firebaseapp.com",
-      projectId: "jdm-credit",
-      storageBucket: "jdm-credit.appspot.com",
-      messagingSenderId: "853828627652",
-      appId: "1:853828627652:web:53a50eEXAMPLE"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-
-    emailjs.init("NMzRKDpW5oo88yVEb"); // public key
-
-    const customerContainer = document.getElementById("customerContainer");
-    const fdRdDetails = document.getElementById("fdRdDetails");
-    const emailMessage = document.getElementById("emailMessage");
-
-    let customerData = [];
-
-    async function loadCustomers() {
-      const snapshot = await db.collection("customers").get();
-      customerData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-      customerContainer.innerHTML = customerData.map((c, i) =>
-        `<label><input type="checkbox" class="customerCheck" data-id="${c.id}" data-email="${c.email}" data-name="${c.name}">${c.name} (${c.customerID})</label><br>`
-      ).join('');
-    }
-
-    document.getElementById("selectAll").addEventListener("change", e => {
-      const checked = e.target.checked;
-      document.querySelectorAll(".customerCheck").forEach(cb => cb.checked = checked);
-    });
-
-    customerContainer.addEventListener("dblclick", async e => {
-      if (!e.target.classList.contains("customerCheck")) return;
-      const id = e.target.dataset.id;
-      const fdSnap = await db.collection("fd").where("customerID", "==", id).get();
-      const rdSnap = await db.collection("rd").where("customerID", "==", id).get();
-
-      const rows = [...fdSnap.docs, ...rdSnap.docs].map(d => {
-        const data = d.data();
-        return `<tr>
-          <td>${data.type || 'FD'}</td>
-          <td>${data.startDate || '-'}</td>
-          <td>${data.maturityDate || '-'}</td>
-          <td>${data.principalAmount || '-'}</td>
-          <td>${data.maturityAmount || '-'}</td>
-        </tr>`;
-      }).join('');
-
-      fdRdDetails.innerHTML = `<table class="fd-rd-table">
-        <tr><th>Type</th><th>Start Date</th><th>Maturity Date</th><th>Amount</th><th>Maturity</th></tr>${rows}
-      </table>`;
-    });
-
-    function getEmailBody(template, name, data) {
-      switch (template) {
-        case "festival":
-          return `Hi ${name},<br>🌟 Wishing you and your family a Happy Festival!<br>From: JDM Credit & Finance`;
-        case "fd_renew":
-          return `Hello ${name},<br>Your FD of ₹${data.principalAmount} is maturing on ${data.maturityDate}. Kindly renew in time.<br>Regards, JDM`;
-        case "rd_renew":
-          return `Dear ${name},<br>Your RD of ₹${data.principalAmount} will mature on ${data.maturityDate}. Renew now to continue earning.<br>Team JDM`;
-        case "interest_update":
-          return `Hi ${name},<br>📢 We've updated our interest rates! Visit our website for new FD/RD plans.<br>– JDM Credit & Finance`;
-      }
-    }
-
-    async function sendEmails() {
-      const selected = Array.from(document.querySelectorAll(".customerCheck:checked"));
-      const template = document.getElementById("template").value;
-
-      for (let c of selected) {
-        const name = c.dataset.name;
-        const email = c.dataset.email;
-        const customerID = c.dataset.id;
-
-        let data = {};
-        const snapshot = await db.collection("fd").where("customerID", "==", customerID).limit(1).get();
-        if (!snapshot.empty) data = snapshot.docs[0].data();
-
-        const message = getEmailBody(template, name, data);
-        emailMessage.value = message;
-
-        await emailjs.send("service_99se3oc", "template_5shg0cq", {
-          to_email: email,
-          to_name: name,
-          message: message,
-        });
-
-        console.log("✅ Email sent to", name);
-      }
-
-      alert("Emails sent successfully!");
-    }
-
-    loadCustomers();
-  </script>
 </body>
 </html>

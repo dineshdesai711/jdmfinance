@@ -2,281 +2,202 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Customer Help & Support - JDM Credit & Finance</title>
+  <title>Customer Support - JDM</title>
   <style>
     body {
-      font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(to right, #f8f9fa, #e0e0e0);
-      margin: 0;
-      padding: 0;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f4f4f4;
     }
-
-    .support-container {
-      max-width: 960px;
-      margin: auto;
-      padding: 30px;
+    h2 {
+      color: #2c3e50;
+    }
+    .chatbot, form, .admin-section, .ticket-status {
       background: #fff;
-      box-shadow: 0 0 15px rgba(0,0,0,0.1);
-      border-radius: 12px;
-      margin-top: 40px;
-      animation: fadeIn 1s ease-in-out;
+      padding: 15px;
+      margin-top: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
     }
-
-    header {
-      text-align: center;
-      margin-bottom: 30px;
-    }
-
-    h1, h2 {
-      color: #333;
-    }
-
-    .bot-section, .ticket-section, .status-section {
-      margin-bottom: 40px;
-    }
-
-    .chat-box {
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      height: 150px;
-      padding: 10px;
-      overflow-y: auto;
-      background-color: #f9f9f9;
-      margin-bottom: 10px;
-    }
-
-    .bot-msg, .user-msg {
-      margin: 8px 0;
-      padding: 10px;
-      border-radius: 10px;
-      max-width: 80%;
-    }
-
-    .bot-msg {
-      background: #e1f0ff;
-      color: #1a1a1a;
-      align-self: flex-start;
-    }
-
-    .user-msg {
-      background: #d1ffd1;
-      color: #0f0f0f;
-      align-self: flex-end;
-      text-align: right;
-    }
-
-    #userInput {
-      width: 70%;
-      padding: 10px;
-    }
-
-    #sendBtn {
-      padding: 10px 20px;
-      margin-left: 10px;
-    }
-
-    form label {
-      display: block;
-      margin-top: 15px;
-    }
-
-    select, textarea, input, button {
+    input, textarea, select {
       width: 100%;
       padding: 10px;
-      border-radius: 6px;
+      margin-top: 8px;
+      margin-bottom: 12px;
       border: 1px solid #ccc;
-      margin-top: 5px;
-      font-size: 16px;
+      border-radius: 5px;
     }
-
     button {
-      background-color: #007bff;
+      background-color: #3498db;
       color: white;
+      padding: 10px 20px;
       border: none;
-      margin-top: 10px;
+      border-radius: 5px;
       cursor: pointer;
     }
-
     button:hover {
-      background-color: #0056b3;
+      background-color: #2980b9;
     }
-
-    .ticket-card {
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      padding: 15px;
-      margin-bottom: 10px;
-      background: #fafafa;
-      transition: transform 0.3s ease;
+    table {
+      width: 100%;
+      margin-top: 20px;
+      border-collapse: collapse;
     }
-
-    .ticket-card:hover {
-      transform: scale(1.02);
+    th, td {
+      padding: 10px;
+      border: 1px solid #ddd;
     }
-
-    @keyframes fadeIn {
-      from {opacity: 0; transform: translateY(20px);}
-      to {opacity: 1; transform: translateY(0);}
+    .ticket-status {
+      display: none;
     }
   </style>
+</head>
+<body>
 
-  <!-- Firebase SDK -->
+  <h2>🛠 Customer Help & Support</h2>
+
+  <div class="chatbot">
+    <p>🤖 Hello! I’m your assistant. How can I help you today?</p>
+    <p>(Chatbot integration coming soon...)</p>
+  </div>
+
+  <form id="ticketForm">
+    <h3>Raise a Support Ticket</h3>
+    <input type="text" id="subject" placeholder="Subject" required />
+    <textarea id="body" placeholder="Describe your issue..." required></textarea>
+    <button type="submit">Submit Ticket</button>
+  </form>
+
+  <div class="ticket-status" id="ticketResponse">
+    <h3>🎫 Ticket Raised Successfully!</h3>
+    <p><strong>Status:</strong> <span id="ticketStatus">Open</span></p>
+    <p><strong>Reply:</strong> <span id="ticketReply">Waiting for admin response...</span></p>
+  </div>
+
+  <div class="admin-section" id="adminSection" style="display: none;">
+    <h3>📋 Admin - All Support Tickets</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Ticket ID</th>
+          <th>Customer ID</th>
+          <th>Subject</th>
+          <th>Status</th>
+          <th>Reply</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="ticketTableBody"></tbody>
+    </table>
+  </div>
+
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, query, where, getDocs, onSnapshot } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
+    // Firebase imports
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs, updateDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore-lite.js";
 
+    // Firebase Config
     const firebaseConfig = {
       apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_PROJECT.firebaseapp.com",
+      authDomain: "YOUR_AUTH_DOMAIN",
       projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_PROJECT.appspot.com",
-      messagingSenderId: "SENDER_ID",
-      appId: "APP_ID"
+      storageBucket: "YOUR_STORAGE_BUCKET",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
     };
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    const auth = getAuth(app);
 
-    const chatBox = document.getElementById("chatBox");
-    const userInput = document.getElementById("userInput");
-    const sendBtn = document.getElementById("sendBtn");
-
-    const botReplies = {
-      "fd": "FD related queries are usually resolved within 48 hours.",
-      "rd": "For RD help, please submit a support ticket below.",
-      "payment": "If your payment failed, check your bank and raise a ticket.",
-      "website": "If the website isn't loading properly, try clearing cache."
+    // Fake logged-in user data (replace with real login logic)
+    const user = {
+      role: "customer", // or 'admin'
+      name: "Rahul Sharma",
+      email: "rahul@gmail.com",
+      customerId: "JDM123456"
     };
 
-    function addChatMessage(message, sender = 'bot') {
-      const msgDiv = document.createElement("div");
-      msgDiv.classList.add(sender === 'bot' ? 'bot-msg' : 'user-msg');
-      msgDiv.innerText = message;
-      chatBox.appendChild(msgDiv);
-      chatBox.scrollTop = chatBox.scrollHeight;
-    }
+    // Ticket Form
+    const form = document.getElementById("ticketForm");
+    const ticketResponse = document.getElementById("ticketResponse");
+    const ticketStatus = document.getElementById("ticketStatus");
+    const ticketReply = document.getElementById("ticketReply");
 
-    sendBtn.addEventListener("click", () => {
-      const msg = userInput.value.trim();
-      if (!msg) return;
-      addChatMessage(msg, 'user');
-      let found = false;
-      for (let key in botReplies) {
-        if (msg.toLowerCase().includes(key)) {
-          addChatMessage(botReplies[key], 'bot');
-          found = true;
-          break;
-        }
-      }
-      if (!found) {
-        addChatMessage(\"Please submit a support ticket below for further help.\", 'bot');
-      }
-      userInput.value = \"\";
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const subject = document.getElementById("subject").value;
+      const body = document.getElementById("body").value;
+      const ticketId = "TCK" + Math.floor(Math.random() * 1000000);
+
+      await addDoc(collection(db, "supportTickets"), {
+        ticketId,
+        custId: user.customerId,
+        name: user.name,
+        email: user.email,
+        subject,
+        body,
+        status: "Open",
+        reply: "",
+        timestamp: serverTimestamp()
+      });
+
+      ticketResponse.style.display = "block";
+      form.reset();
     });
 
-    const ticketForm = document.getElementById(\"ticketForm\");
-    const ticketList = document.getElementById(\"ticketList\");
+    // Admin Section Load
+    const adminSection = document.getElementById("adminSection");
+    const tableBody = document.getElementById("ticketTableBody");
 
-    let currentUser = null;
+    async function loadTicketsForAdmin() {
+      const snapshot = await getDocs(collection(db, "supportTickets"));
+      tableBody.innerHTML = "";
 
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) return location.href = \"index.html\";
-      currentUser = user;
+      snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        const row = document.createElement("tr");
 
-      // Live update ticket list
-      const q = query(collection(db, \"support_tickets\"), where(\"email\", \"==\", user.email));
-      onSnapshot(q, (snapshot) => {
-        ticketList.innerHTML = \"\";
-        if (snapshot.empty) {
-          ticketList.innerHTML = \"<p>No tickets raised yet.</p>\";
-        }
-        snapshot.forEach(doc => {
-          const data = doc.data();
-          const div = document.createElement(\"div\");
-          div.className = \"ticket-card\";
-          div.innerHTML = `
-            <p><strong>Ticket No:</strong> ${data.ticketId}</p>
-            <p><strong>Subject:</strong> ${data.subject}</p>
-            <p><strong>Status:</strong> ${data.status}</p>
-            <p><strong>Your Issue:</strong> ${data.description}</p>
-            <p><strong>Admin Reply:</strong> ${data.adminReply || 'No reply yet'}</p>
-          `;
-          ticketList.appendChild(div);
+        row.innerHTML = `
+          <td>${data.ticketId}</td>
+          <td>${data.custId}</td>
+          <td>${data.subject}</td>
+          <td>
+            <select data-id="${docSnap.id}" class="status-select">
+              <option ${data.status === "Open" ? "selected" : ""}>Open</option>
+              <option ${data.status === "Ongoing" ? "selected" : ""}>Ongoing</option>
+              <option ${data.status === "Resolved" ? "selected" : ""}>Resolved</option>
+            </select>
+          </td>
+          <td>
+            <input type="text" value="${data.reply}" data-id="${docSnap.id}" class="reply-input">
+          </td>
+          <td>
+            <button data-id="${docSnap.id}" class="save-btn">Save</button>
+          </td>
+        `;
+        tableBody.appendChild(row);
+      });
+
+      document.querySelectorAll(".save-btn").forEach(button => {
+        button.addEventListener("click", async () => {
+          const id = button.dataset.id;
+          const status = document.querySelector(`.status-select[data-id='${id}']`).value;
+          const reply = document.querySelector(`.reply-input[data-id='${id}']`).value;
+
+          const ticketRef = doc(db, "supportTickets", id);
+          await updateDoc(ticketRef, { status, reply });
+
+          alert("✅ Ticket updated successfully!");
         });
       });
-    });
+    }
 
-    ticketForm.addEventListener(\"submit\", async (e) => {
-      e.preventDefault();
-      const subject = document.getElementById(\"subject\").value;
-      const description = document.getElementById(\"description\").value;
-
-      const ticketId = \"TICKET\" + Date.now().toString().slice(-6);
-
-      await addDoc(collection(db, \"support_tickets\"), {
-        email: currentUser.email,
-        name: currentUser.displayName || \"Unknown\",
-        subject,
-        description,
-        ticketId,
-        status: \"Pending\",
-        adminReply: \"\",
-        createdAt: new Date().toISOString()
-      });
-
-      alert(\"Ticket submitted successfully with ID: \" + ticketId);
-      ticketForm.reset();
-    });
+    // Show admin panel only if user is admin
+    if (user.role === "admin") {
+      adminSection.style.display = "block";
+      loadTicketsForAdmin();
+    }
   </script>
-</head>
-<body>
-  <div class=\"support-container\">
-    <header>
-      <h1>💬 Customer Help & Support</h1>
-      <p>We're here to help you. Raise a ticket or chat with our assistant.</p>
-    </header>
-
-    <!-- Bot Reply Section -->
-    <section class=\"bot-section\">
-      <h2>🤖 Instant Assistant</h2>
-      <div class=\"chat-box\" id=\"chatBox\">
-        <div class=\"bot-msg\">Hi! How can I assist you today? (Try keywords like FD, RD, payment)</div>
-      </div>
-      <input type=\"text\" id=\"userInput\" placeholder=\"Type your question here...\" />
-      <button id=\"sendBtn\">Send</button>
-    </section>
-
-    <!-- Ticket Raise Form -->
-    <section class=\"ticket-section\">
-      <h2>📩 Raise a Support Ticket</h2>
-      <form id=\"ticketForm\">
-        <label>Subject:
-          <select id=\"subject\" required>
-            <option value=\"\">-- Select Issue Type --</option>
-            <option>FD Issue</option>
-            <option>RD Issue</option>
-            <option>Website Related</option>
-            <option>Payment Issue</option>
-            <option>Other</option>
-          </select>
-        </label>
-
-        <label>Your Issue:
-          <textarea id=\"description\" required placeholder=\"Explain your issue in detail...\"></textarea>
-        </label>
-
-        <button type=\"submit\">Submit Ticket</button>
-      </form>
-    </section>
-
-    <!-- Ticket Status Display -->
-    <section class=\"status-section\">
-      <h2>📜 Your Submitted Tickets</h2>
-      <div id=\"ticketList\">Loading your tickets...</div>
-    </section>
-  </div>
 </body>
 </html>

@@ -2,202 +2,170 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Customer Support - JDM</title>
+  <title>Customer Support - JDM Credit and Finance</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
       font-family: Arial, sans-serif;
+      background: #f2f4f8;
+      margin: 0;
       padding: 20px;
-      background: #f4f4f4;
     }
-    h2 {
-      color: #2c3e50;
+    h1 {
+      text-align: center;
+      color: #2e3a59;
     }
-    .chatbot, form, .admin-section, .ticket-status {
-      background: #fff;
-      padding: 15px;
-      margin-top: 20px;
+    .section {
+      background: white;
+      padding: 20px;
+      margin: 20px auto;
+      max-width: 700px;
       border-radius: 8px;
-      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
     }
-    input, textarea, select {
+    textarea, input {
       width: 100%;
       padding: 10px;
-      margin-top: 8px;
-      margin-bottom: 12px;
+      margin-top: 10px;
       border: 1px solid #ccc;
-      border-radius: 5px;
+      border-radius: 4px;
+      resize: vertical;
     }
     button {
-      background-color: #3498db;
+      background-color: #0066cc;
       color: white;
-      padding: 10px 20px;
+      padding: 10px 15px;
       border: none;
-      border-radius: 5px;
+      border-radius: 4px;
       cursor: pointer;
+      margin-top: 10px;
     }
     button:hover {
-      background-color: #2980b9;
+      background-color: #004d99;
     }
-    table {
-      width: 100%;
-      margin-top: 20px;
-      border-collapse: collapse;
-    }
-    th, td {
-      padding: 10px;
+    .ticket {
       border: 1px solid #ddd;
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 5px;
     }
-    .ticket-status {
-      display: none;
+    .ticket .status {
+      font-weight: bold;
+      color: green;
+    }
+    .admin-section {
+      background: #fff8e1;
     }
   </style>
 </head>
 <body>
+  <h1>Customer Support</h1>
 
-  <h2>🛠 Customer Help & Support</h2>
-
-  <div class="chatbot">
-    <p>🤖 Hello! I’m your assistant. How can I help you today?</p>
-    <p>(Chatbot integration coming soon...)</p>
+  <!-- Chatbot Placeholder -->
+  <div class="section">
+    <h2>🤖 Chatbot (Coming Soon)</h2>
+    <p>This section will allow you to chat with our AI assistant.</p>
+    <p><em>Under development...</em></p>
   </div>
 
-  <form id="ticketForm">
-    <h3>Raise a Support Ticket</h3>
-    <input type="text" id="subject" placeholder="Subject" required />
-    <textarea id="body" placeholder="Describe your issue..." required></textarea>
-    <button type="submit">Submit Ticket</button>
-  </form>
-
-  <div class="ticket-status" id="ticketResponse">
-    <h3>🎫 Ticket Raised Successfully!</h3>
-    <p><strong>Status:</strong> <span id="ticketStatus">Open</span></p>
-    <p><strong>Reply:</strong> <span id="ticketReply">Waiting for admin response...</span></p>
+  <!-- Raise Complaint -->
+  <div class="section">
+    <h2>📨 Raise a Support Ticket</h2>
+    <input type="text" id="customerId" placeholder="Enter Customer ID" required />
+    <input type="email" id="email" placeholder="Enter your Email" required />
+    <textarea id="issue" rows="4" placeholder="Describe your issue..." required></textarea>
+    <button onclick="submitTicket()">Submit</button>
   </div>
 
-  <div class="admin-section" id="adminSection" style="display: none;">
-    <h3>📋 Admin - All Support Tickets</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>Ticket ID</th>
-          <th>Customer ID</th>
-          <th>Subject</th>
-          <th>Status</th>
-          <th>Reply</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody id="ticketTableBody"></tbody>
-    </table>
+  <!-- View Previous Complaints -->
+  <div class="section">
+    <h2>📋 Your Tickets</h2>
+    <div id="tickets"></div>
   </div>
 
-  <script type="module">
-    // Firebase imports
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, updateDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore-lite.js";
+  <!-- Firebase Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
-    // Firebase Config
+  <script>
     const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_AUTH_DOMAIN",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_STORAGE_BUCKET",
-      messagingSenderId: "YOUR_SENDER_ID",
-      appId: "YOUR_APP_ID"
+      apiKey: "YOUR-API-KEY",
+      authDomain: "YOUR-AUTH-DOMAIN",
+      projectId: "YOUR-PROJECT-ID",
+      storageBucket: "YOUR-STORAGE-BUCKET",
+      messagingSenderId: "YOUR-MSG-ID",
+      appId: "YOUR-APP-ID"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-    // Fake logged-in user data (replace with real login logic)
-    const user = {
-      role: "customer", // or 'admin'
-      name: "Rahul Sharma",
-      email: "rahul@gmail.com",
-      customerId: "JDM123456"
-    };
+    function submitTicket() {
+      const customerId = document.getElementById('customerId').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const message = document.getElementById('issue').value.trim();
 
-    // Ticket Form
-    const form = document.getElementById("ticketForm");
-    const ticketResponse = document.getElementById("ticketResponse");
-    const ticketStatus = document.getElementById("ticketStatus");
-    const ticketReply = document.getElementById("ticketReply");
+      if (!customerId || !email || !message) {
+        alert("Please fill all fields.");
+        return;
+      }
 
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
+      const ticket = {
+        customerId,
+        email,
+        message,
+        status: 'Open',
+        reply: '',
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      };
 
-      const subject = document.getElementById("subject").value;
-      const body = document.getElementById("body").value;
-      const ticketId = "TCK" + Math.floor(Math.random() * 1000000);
-
-      await addDoc(collection(db, "supportTickets"), {
-        ticketId,
-        custId: user.customerId,
-        name: user.name,
-        email: user.email,
-        subject,
-        body,
-        status: "Open",
-        reply: "",
-        timestamp: serverTimestamp()
+      db.collection("supportTickets").add(ticket).then(() => {
+        alert("Ticket submitted successfully.");
+        document.getElementById('issue').value = '';
+        loadTickets(email);
+      }).catch((error) => {
+        console.error("Error writing ticket: ", error);
       });
+    }
 
-      ticketResponse.style.display = "block";
-      form.reset();
-    });
+    function loadTickets(emailFilter = '') {
+      const ticketContainer = document.getElementById('tickets');
+      ticketContainer.innerHTML = "Loading...";
 
-    // Admin Section Load
-    const adminSection = document.getElementById("adminSection");
-    const tableBody = document.getElementById("ticketTableBody");
+      db.collection("supportTickets")
+        .where("email", "==", emailFilter)
+        .orderBy("timestamp", "desc")
+        .get()
+        .then((querySnapshot) => {
+          if (querySnapshot.empty) {
+            ticketContainer.innerHTML = "No tickets found.";
+            return;
+          }
 
-    async function loadTicketsForAdmin() {
-      const snapshot = await getDocs(collection(db, "supportTickets"));
-      tableBody.innerHTML = "";
+          let output = "";
+          querySnapshot.forEach((doc) => {
+            const t = doc.data();
+            output += `
+              <div class="ticket">
+                <p><strong>Message:</strong> ${t.message}</p>
+                <p class="status"><strong>Status:</strong> ${t.status}</p>
+                <p><strong>Reply:</strong> ${t.reply || 'No reply yet'}</p>
+              </div>`;
+          });
 
-      snapshot.forEach(docSnap => {
-        const data = docSnap.data();
-        const row = document.createElement("tr");
-
-        row.innerHTML = `
-          <td>${data.ticketId}</td>
-          <td>${data.custId}</td>
-          <td>${data.subject}</td>
-          <td>
-            <select data-id="${docSnap.id}" class="status-select">
-              <option ${data.status === "Open" ? "selected" : ""}>Open</option>
-              <option ${data.status === "Ongoing" ? "selected" : ""}>Ongoing</option>
-              <option ${data.status === "Resolved" ? "selected" : ""}>Resolved</option>
-            </select>
-          </td>
-          <td>
-            <input type="text" value="${data.reply}" data-id="${docSnap.id}" class="reply-input">
-          </td>
-          <td>
-            <button data-id="${docSnap.id}" class="save-btn">Save</button>
-          </td>
-        `;
-        tableBody.appendChild(row);
-      });
-
-      document.querySelectorAll(".save-btn").forEach(button => {
-        button.addEventListener("click", async () => {
-          const id = button.dataset.id;
-          const status = document.querySelector(`.status-select[data-id='${id}']`).value;
-          const reply = document.querySelector(`.reply-input[data-id='${id}']`).value;
-
-          const ticketRef = doc(db, "supportTickets", id);
-          await updateDoc(ticketRef, { status, reply });
-
-          alert("✅ Ticket updated successfully!");
+          ticketContainer.innerHTML = output;
+        })
+        .catch((error) => {
+          ticketContainer.innerHTML = "Error loading tickets.";
+          console.error("Error getting documents: ", error);
         });
-      });
     }
 
-    // Show admin panel only if user is admin
-    if (user.role === "admin") {
-      adminSection.style.display = "block";
-      loadTicketsForAdmin();
-    }
+    // Auto-load tickets if email is filled
+    document.getElementById('email').addEventListener('blur', () => {
+      const email = document.getElementById('email').value.trim();
+      if (email) loadTickets(email);
+    });
   </script>
 </body>
 </html>

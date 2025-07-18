@@ -3,171 +3,122 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>📩 Customer Tickets - Admin Panel</title>
+  <title>Admin Feedback Panel - JDM Credit & Finance</title>
   <style>
     body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #f1f4f9;
-      padding: 20px;
-      margin: 0;
+      font-family: Arial, sans-serif;
+      margin: 2rem;
+      background: #f2f2f2;
     }
     h1 {
       text-align: center;
-      color: #222;
-      margin-bottom: 30px;
+      color: #333;
     }
-    .summary {
-      display: flex;
-      justify-content: center;
-      gap: 20px;
-      margin-bottom: 20px;
+    .ticket {
+      background: #fff;
+      padding: 1rem;
+      margin: 1rem 0;
+      border-radius: 8px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.1);
     }
-    .summary div {
-      background: white;
-      padding: 15px 25px;
-      border-radius: 10px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      font-weight: bold;
+    .ticket p {
+      margin: 0.3rem 0;
     }
-    .ticket-card {
-      background: white;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      margin-bottom: 20px;
+    .reply-box {
+      margin-top: 0.5rem;
     }
-    textarea, select, button {
+    .reply-box textarea {
       width: 100%;
-      padding: 10px;
-      font-size: 15px;
-      margin-top: 10px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
+      height: 60px;
+      padding: 5px;
     }
-    button {
-      background: #007bff;
-      color: white;
+    .reply-box select, .reply-box button {
+      margin-top: 0.5rem;
+    }
+    .status {
       font-weight: bold;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #0056b3;
     }
   </style>
 </head>
 <body>
-  <h1>📋 Customer Tickets - Admin Panel</h1>
-  <div class="summary" id="summary"></div>
-  <div id="ticketContainer">Loading tickets...</div>
+  <h1>Admin Feedback Panel - JDM Credit & Finance</h1>
+  <div id="ticketsContainer">Loading tickets...</div>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+    // Firebase Setup
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import {
-      getFirestore, collection, getDocs, updateDoc, doc
-    } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
-    import {
-      getAuth, onAuthStateChanged
-    } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
+      getFirestore, collection, getDocs, doc, updateDoc
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      authDomain: "YOUR_PROJECT.firebaseapp.com",
       projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_PROJECT_ID.appspot.com",
-      messagingSenderId: "YOUR_SENDER_ID",
+      storageBucket: "YOUR_PROJECT.appspot.com",
+      messagingSenderId: "YOUR_ID",
       appId: "YOUR_APP_ID"
     };
 
-    const ADMIN_EMAILS = [
-      "dinesh@gmail.com",
-      "desaidinesh055@gmail.com",
-      "ashutoshsharma12@gmail.com"
-    ];
-
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    const auth = getAuth(app);
 
-    const ticketContainer = document.getElementById("ticketContainer");
-    const summaryDiv = document.getElementById("summary");
-
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        alert("🔐 Please login first.");
-        return location.href = "index.html";
-      }
-
-      console.log("Logged in as:", user.email);
-
-      if (!ADMIN_EMAILS.includes(user.email)) {
-        alert("❌ Not authorized admin!");
-        return location.href = "index.html";
-      }
-
-      // ✅ Load support tickets now
-      loadTickets();
-    });
+    const ticketsContainer = document.getElementById('ticketsContainer');
 
     async function loadTickets() {
-      const snapshot = await getDocs(collection(db, "support_tickets"));
-      ticketContainer.innerHTML = "";
+      const ticketsRef = collection(db, "supportTickets");
+      const querySnapshot = await getDocs(ticketsRef);
 
-      let total = 0, pending = 0, resolved = 0;
-
-      if (snapshot.empty) {
-        ticketContainer.innerHTML = "<p>No support tickets found.</p>";
+      ticketsContainer.innerHTML = "";
+      if (querySnapshot.empty) {
+        ticketsContainer.innerHTML = "<p>No tickets found.</p>";
         return;
       }
 
-      snapshot.forEach(docSnap => {
-        const data = docSnap.data();
-        total++;
-        if (data.status === "Resolved") resolved++;
-        else pending++;
+      querySnapshot.forEach(docSnap => {
+        const ticket = docSnap.data();
+        const ticketDiv = document.createElement("div");
+        ticketDiv.className = "ticket";
 
-        const div = document.createElement("div");
-        div.className = "ticket-card";
-        div.innerHTML = `
-          <p><strong>Ticket ID:</strong> ${data.ticketId}</p>
-          <p><strong>Name:</strong> ${data.name}</p>
-          <p><strong>Email:</strong> ${data.email}</p>
-          <p><strong>Subject:</strong> ${data.subject}</p>
-          <p><strong>Description:</strong> ${data.description}</p>
-          <p><strong>Status:</strong> ${data.status}</p>
-          <p><strong>Admin Reply:</strong> ${data.adminReply || 'No reply yet'}</p>
-          <textarea id="reply-${docSnap.id}" placeholder="Write your reply...">${data.adminReply || ''}</textarea>
-          <select id="status-${docSnap.id}">
-            <option ${data.status === "Pending" ? "selected" : ""}>Pending</option>
-            <option ${data.status === "Ongoing" ? "selected" : ""}>Ongoing</option>
-            <option ${data.status === "Resolved" ? "selected" : ""}>Resolved</option>
-          </select>
-          <button onclick="replyToTicket('${docSnap.id}')">Reply & Update</button>
+        ticketDiv.innerHTML = `
+          <p><strong>Email:</strong> ${ticket.email}</p>
+          <p><strong>Subject:</strong> ${ticket.subject}</p>
+          <p><strong>Message:</strong> ${ticket.message}</p>
+          <p class="status"><strong>Status:</strong> ${ticket.status || 'Open'}</p>
+          <p><strong>Reply:</strong> ${ticket.reply || '<em>No reply yet</em>'}</p>
+          <div class="reply-box">
+            <textarea placeholder="Enter admin reply...">${ticket.reply || ''}</textarea>
+            <br/>
+            <select>
+              <option value="Open" ${ticket.status === 'Open' ? 'selected' : ''}>Open</option>
+              <option value="Ongoing" ${ticket.status === 'Ongoing' ? 'selected' : ''}>Ongoing</option>
+              <option value="Done" ${ticket.status === 'Done' ? 'selected' : ''}>Done</option>
+            </select>
+            <button>Update</button>
+          </div>
         `;
-        ticketContainer.appendChild(div);
-      });
 
-      summaryDiv.innerHTML = `
-        <div>Total: ${total}</div>
-        <div>Resolved: ${resolved}</div>
-        <div>Pending: ${pending}</div>
-      `;
+        // Add update logic
+        const button = ticketDiv.querySelector("button");
+        button.addEventListener("click", async () => {
+          const newReply = ticketDiv.querySelector("textarea").value.trim();
+          const newStatus = ticketDiv.querySelector("select").value;
+
+          const ticketRef = doc(db, "supportTickets", docSnap.id);
+          await updateDoc(ticketRef, {
+            reply: newReply,
+            status: newStatus
+          });
+
+          alert("Ticket updated!");
+          loadTickets();
+        });
+
+        ticketsContainer.appendChild(ticketDiv);
+      });
     }
 
-    window.replyToTicket = async (ticketId) => {
-      const reply = document.getElementById(`reply-${ticketId}`).value.trim();
-      const status = document.getElementById(`status-${ticketId}`).value;
-
-      if (!reply) return alert("Please enter a reply.");
-
-      await updateDoc(doc(db, "support_tickets", ticketId), {
-        adminReply: reply,
-        status: status,
-        updatedAt: new Date().toISOString()
-      });
-
-      alert("✅ Ticket updated successfully.");
-      location.reload();
-    };
+    loadTickets();
   </script>
 </body>
 </html>

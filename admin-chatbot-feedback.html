@@ -3,37 +3,30 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Admin Feedback Panel - JDM Credit & Finance</title>
+  <title>Admin - Chatbot Feedback & Support</title>
+  <link rel="stylesheet" href="style.css" />
   <style>
     body {
       font-family: Arial, sans-serif;
-      margin: 2rem;
-      background: #f2f2f2;
+      padding: 20px;
+      background: #f4f6f7;
     }
-    h1 {
-      text-align: center;
-      color: #333;
+    h2 {
+      margin-bottom: 20px;
     }
     .ticket {
       background: #fff;
-      padding: 1rem;
-      margin: 1rem 0;
-      border-radius: 8px;
-      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+      padding: 15px;
+      margin-bottom: 10px;
+      border-left: 5px solid #3498db;
+      border-radius: 5px;
     }
     .ticket p {
-      margin: 0.3rem 0;
+      margin: 5px 0;
     }
-    .reply-box {
-      margin-top: 0.5rem;
-    }
-    .reply-box textarea {
-      width: 100%;
-      height: 60px;
+    select {
       padding: 5px;
-    }
-    .reply-box select, .reply-box button {
-      margin-top: 0.5rem;
+      margin-top: 5px;
     }
     .status {
       font-weight: bold;
@@ -41,84 +34,67 @@
   </style>
 </head>
 <body>
-  <h1>Admin Feedback Panel - JDM Credit & Finance</h1>
+  <h2>Admin - View All Customer Support Tickets</h2>
   <div id="ticketsContainer">Loading tickets...</div>
 
-  <script type="module">
-    // Firebase Setup
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import {
-      getFirestore, collection, getDocs, doc, updateDoc
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  <!-- Firebase scripts -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
 
+  <script>
     const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_PROJECT.firebaseapp.com",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_PROJECT.appspot.com",
-      messagingSenderId: "YOUR_ID",
-      appId: "YOUR_APP_ID"
+      apiKey: "YOUR-API-KEY",
+      authDomain: "YOUR-AUTH-DOMAIN",
+      projectId: "YOUR-PROJECT-ID",
+      storageBucket: "YOUR-STORAGE-BUCKET",
+      messagingSenderId: "YOUR-MESSAGING-SENDER-ID",
+      appId: "YOUR-APP-ID"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
     const ticketsContainer = document.getElementById('ticketsContainer');
 
-    async function loadTickets() {
-      const ticketsRef = collection(db, "supportTickets");
-      const querySnapshot = await getDocs(ticketsRef);
-
-      ticketsContainer.innerHTML = "";
-      if (querySnapshot.empty) {
-        ticketsContainer.innerHTML = "<p>No tickets found.</p>";
-        return;
-      }
-
-      querySnapshot.forEach(docSnap => {
-        const ticket = docSnap.data();
-        const ticketDiv = document.createElement("div");
-        ticketDiv.className = "ticket";
-
-        ticketDiv.innerHTML = `
-          <p><strong>Email:</strong> ${ticket.email}</p>
-          <p><strong>Subject:</strong> ${ticket.subject}</p>
-          <p><strong>Message:</strong> ${ticket.message}</p>
-          <p class="status"><strong>Status:</strong> ${ticket.status || 'Open'}</p>
-          <p><strong>Reply:</strong> ${ticket.reply || '<em>No reply yet</em>'}</p>
-          <div class="reply-box">
-            <textarea placeholder="Enter admin reply...">${ticket.reply || ''}</textarea>
-            <br/>
-            <select>
-              <option value="Open" ${ticket.status === 'Open' ? 'selected' : ''}>Open</option>
-              <option value="Ongoing" ${ticket.status === 'Ongoing' ? 'selected' : ''}>Ongoing</option>
-              <option value="Done" ${ticket.status === 'Done' ? 'selected' : ''}>Done</option>
+    function renderTickets(tickets) {
+      ticketsContainer.innerHTML = '';
+      tickets.forEach(doc => {
+        const data = doc.data();
+        const div = document.createElement('div');
+        div.className = 'ticket';
+        div.innerHTML = `
+          <p><strong>Name:</strong> ${data.name}</p>
+          <p><strong>Email:</strong> ${data.email}</p>
+          <p><strong>Message:</strong> ${data.message}</p>
+          <p><strong>Status:</strong> 
+            <select data-id="${doc.id}">
+              <option ${data.status === 'Open' ? 'selected' : ''}>Open</option>
+              <option ${data.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+              <option ${data.status === 'Resolved' ? 'selected' : ''}>Resolved</option>
             </select>
-            <button>Update</button>
-          </div>
+          </p>
+          <p><small><strong>Submitted:</strong> ${data.createdAt?.toDate().toLocaleString()}</small></p>
         `;
+        ticketsContainer.appendChild(div);
+      });
 
-        // Add update logic
-        const button = ticketDiv.querySelector("button");
-        button.addEventListener("click", async () => {
-          const newReply = ticketDiv.querySelector("textarea").value.trim();
-          const newStatus = ticketDiv.querySelector("select").value;
-
-          const ticketRef = doc(db, "supportTickets", docSnap.id);
-          await updateDoc(ticketRef, {
-            reply: newReply,
-            status: newStatus
-          });
-
-          alert("Ticket updated!");
-          loadTickets();
+      // Add event listener to all dropdowns
+      document.querySelectorAll('select').forEach(select => {
+        select.addEventListener('change', async (e) => {
+          const docId = e.target.getAttribute('data-id');
+          const newStatus = e.target.value;
+          await db.collection('supportTickets').doc(docId).update({ status: newStatus });
+          alert("✅ Status updated");
         });
-
-        ticketsContainer.appendChild(ticketDiv);
       });
     }
 
-    loadTickets();
+    db.collection('supportTickets')
+      .orderBy('createdAt', 'desc')
+      .onSnapshot(snapshot => {
+        renderTickets(snapshot.docs);
+      });
   </script>
 </body>
 </html>

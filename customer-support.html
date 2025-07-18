@@ -2,90 +2,59 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Customer Support - JDM Credit and Finance</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Customer Support - JDM Credit & Finance</title>
+  <link rel="stylesheet" href="style.css" />
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f2f4f8;
-      margin: 0;
       padding: 20px;
+      background: #f9f9f9;
     }
-    h1 {
-      text-align: center;
-      color: #2e3a59;
+    h2 {
+      color: #222;
     }
-    .section {
-      background: white;
+    form {
+      background: #fff;
       padding: 20px;
-      margin: 20px auto;
-      max-width: 700px;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+      border-radius: 10px;
+      box-shadow: 0 0 10px #ccc;
+      max-width: 500px;
+      margin-bottom: 30px;
     }
-    textarea, input {
+    input, textarea, button {
       width: 100%;
       padding: 10px;
       margin-top: 10px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      resize: vertical;
+      border-radius: 5px;
+      border: 1px solid #aaa;
     }
     button {
-      background-color: #0066cc;
+      background-color: #2e86de;
       color: white;
-      padding: 10px 15px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      margin-top: 10px;
-    }
-    button:hover {
-      background-color: #004d99;
-    }
-    .ticket {
-      border: 1px solid #ddd;
-      margin-top: 10px;
-      padding: 10px;
-      border-radius: 5px;
-    }
-    .ticket .status {
       font-weight: bold;
-      color: green;
+      cursor: pointer;
     }
-    .admin-section {
-      background: #fff8e1;
+    .status {
+      color: green;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
-  <h1>Customer Support</h1>
+  <h2>Customer Support - Submit Your Issue</h2>
+  <form id="supportForm">
+    <input type="text" id="name" placeholder="Your Name" required />
+    <input type="email" id="email" placeholder="Your Email" required />
+    <textarea id="message" placeholder="Describe your issue..." required></textarea>
+    <button type="submit">Submit Ticket</button>
+    <p class="status" id="statusMsg"></p>
+  </form>
 
-  <!-- Chatbot Placeholder -->
-  <div class="section">
-    <h2>🤖 Chatbot (Coming Soon)</h2>
-    <p>This section will allow you to chat with our AI assistant.</p>
-    <p><em>Under development...</em></p>
-  </div>
-
-  <!-- Raise Complaint -->
-  <div class="section">
-    <h2>📨 Raise a Support Ticket</h2>
-    <input type="text" id="customerId" placeholder="Enter Customer ID" required />
-    <input type="email" id="email" placeholder="Enter your Email" required />
-    <textarea id="issue" rows="4" placeholder="Describe your issue..." required></textarea>
-    <button onclick="submitTicket()">Submit</button>
-  </div>
-
-  <!-- View Previous Complaints -->
-  <div class="section">
-    <h2>📋 Your Tickets</h2>
-    <div id="tickets"></div>
-  </div>
-
-  <!-- Firebase Scripts -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <!-- Firebase scripts -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
 
   <script>
     const firebaseConfig = {
@@ -93,78 +62,41 @@
       authDomain: "YOUR-AUTH-DOMAIN",
       projectId: "YOUR-PROJECT-ID",
       storageBucket: "YOUR-STORAGE-BUCKET",
-      messagingSenderId: "YOUR-MSG-ID",
+      messagingSenderId: "YOUR-MESSAGING-SENDER-ID",
       appId: "YOUR-APP-ID"
     };
 
-    firebase.initializeApp(firebaseConfig);
+    const app = firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    function submitTicket() {
-      const customerId = document.getElementById('customerId').value.trim();
-      const email = document.getElementById('email').value.trim();
-      const message = document.getElementById('issue').value.trim();
+    const supportForm = document.getElementById('supportForm');
+    const statusMsg = document.getElementById('statusMsg');
 
-      if (!customerId || !email || !message) {
-        alert("Please fill all fields.");
+    supportForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('name').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const message = document.getElementById('message').value.trim();
+
+      if (!name || !email || !message) {
+        statusMsg.textContent = "All fields are required!";
         return;
       }
 
-      const ticket = {
-        customerId,
-        email,
-        message,
-        status: 'Open',
-        reply: '',
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-      };
-
-      db.collection("supportTickets").add(ticket).then(() => {
-        alert("Ticket submitted successfully.");
-        document.getElementById('issue').value = '';
-        loadTickets(email);
-      }).catch((error) => {
-        console.error("Error writing ticket: ", error);
-      });
-    }
-
-    function loadTickets(emailFilter = '') {
-      const ticketContainer = document.getElementById('tickets');
-      ticketContainer.innerHTML = "Loading...";
-
-      db.collection("supportTickets")
-        .where("email", "==", emailFilter)
-        .orderBy("timestamp", "desc")
-        .get()
-        .then((querySnapshot) => {
-          if (querySnapshot.empty) {
-            ticketContainer.innerHTML = "No tickets found.";
-            return;
-          }
-
-          let output = "";
-          querySnapshot.forEach((doc) => {
-            const t = doc.data();
-            output += `
-              <div class="ticket">
-                <p><strong>Message:</strong> ${t.message}</p>
-                <p class="status"><strong>Status:</strong> ${t.status}</p>
-                <p><strong>Reply:</strong> ${t.reply || 'No reply yet'}</p>
-              </div>`;
-          });
-
-          ticketContainer.innerHTML = output;
-        })
-        .catch((error) => {
-          ticketContainer.innerHTML = "Error loading tickets.";
-          console.error("Error getting documents: ", error);
+      try {
+        await db.collection('supportTickets').add({
+          name,
+          email,
+          message,
+          status: 'Open',
+          createdAt: new Date()
         });
-    }
-
-    // Auto-load tickets if email is filled
-    document.getElementById('email').addEventListener('blur', () => {
-      const email = document.getElementById('email').value.trim();
-      if (email) loadTickets(email);
+        supportForm.reset();
+        statusMsg.textContent = "✅ Your support ticket has been submitted!";
+      } catch (err) {
+        console.error(err);
+        statusMsg.textContent = "❌ Error submitting ticket. Try again.";
+      }
     });
   </script>
 </body>
